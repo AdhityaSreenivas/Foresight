@@ -1,0 +1,1161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Activity Pattern Analysis — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Ranked operational activity patterns, precursor frequency, Activity × Location heatmap, and multi-dimensional associations in Admin Flow.{% endblock %}
+
+{% block admin_nav_patterns %}active{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* Dimension Navigation Tabs */
+.dimension-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border, #e2e8f0);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.dimension-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.15rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-secondary, #64748b);
+    border-radius: var(--radius-sm, 6px) var(--radius-sm, 6px) 0 0;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.dimension-tab:hover {
+    color: var(--text-primary, #0f172a);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.dimension-tab.active {
+    color: var(--brand, #657044);
+    border-bottom-color: var(--brand, #657044);
+    background: rgba(101, 112, 68, 0.06);
+    font-weight: 700;
+}
+
+.dimension-tab .tab-badge {
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: var(--border, #e2e8f0);
+    color: var(--text-secondary, #64748b);
+}
+
+.dimension-tab.active .tab-badge {
+    background: var(--brand, #657044);
+    color: #fff;
+}
+
+/* 4 Summary KPI Cards Grid */
+.summary-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.summary-kpi-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-kpi-card.highlight {
+    border-left: 4px solid var(--brand, #657044);
+    background: linear-gradient(135deg, #fdfdfc 0%, #f7f9f2 100%);
+}
+
+.kpi-title {
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary, #64748b);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.kpi-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.kpi-main-number {
+    font-size: 1.85rem;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-primary, #0f172a);
+    line-height: 1.1;
+}
+
+.kpi-subtext {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.4;
+}
+
+/* Filter Toolbar */
+.filter-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.filter-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1 1 170px;
+}
+
+.filter-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-secondary, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.filter-input, .filter-select {
+    padding: 0.48rem 0.75rem;
+    border: 1px solid var(--border, #cbd5e1);
+    border-radius: 5px;
+    font-size: 0.88rem;
+    background: var(--bg, #f8fafc);
+    color: var(--text-primary, #0f172a);
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.filter-input:focus, .filter-select:focus {
+    border-color: var(--brand, #657044);
+    background: #ffffff;
+}
+
+/* Chart Card & Toggle */
+.chart-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.toggle-group {
+    display: inline-flex;
+    background: var(--bg, #f1f5f9);
+    border: 1px solid var(--border, #cbd5e1);
+    border-radius: 6px;
+    padding: 3px;
+    gap: 3px;
+}
+
+.btn-toggle {
+    border: none;
+    background: transparent;
+    padding: 0.42rem 0.95rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary, #64748b);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.btn-toggle:hover {
+    color: var(--text-primary, #0f172a);
+}
+
+.btn-toggle.active {
+    background: #ffffff;
+    color: var(--text-primary, #0f172a);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-weight: 700;
+}
+
+.btn-toggle.active[data-metric="volume"] {
+    color: #2b4c5b;
+}
+
+.btn-toggle.active[data-metric="psif"] {
+    color: var(--risk-critical, #9C3B32);
+}
+
+.btn-toggle .toggle-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.btn-toggle[data-metric="volume"] .toggle-indicator {
+    background: #5C7C8A;
+}
+
+.btn-toggle[data-metric="psif"] .toggle-indicator {
+    background: var(--risk-critical, #9C3B32);
+}
+
+/* Heatmap Matrix Card */
+.matrix-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.matrix-table th {
+    padding: 0.65rem 0.6rem;
+    font-weight: 700;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary, #64748b);
+    border-bottom: 2px solid var(--border, #e2e8f0);
+    background: var(--bg, #f8fafc);
+}
+
+.matrix-table td {
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.matrix-cell {
+    text-align: center;
+    font-family: var(--font-mono, monospace);
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 0.35rem 0.45rem;
+    transition: transform 0.1s ease;
+}
+
+.matrix-cell:hover {
+    transform: scale(1.08);
+}
+
+.cell-intensity-0 { background: #f8fafc; color: #94a3b8; }
+.cell-intensity-1 { background: rgba(101, 112, 68, 0.12); color: #4e5833; font-weight: 700; }
+.cell-intensity-2 { background: rgba(101, 112, 68, 0.28); color: #2d331d; font-weight: 800; }
+.cell-intensity-3 { background: rgba(101, 112, 68, 0.50); color: #1a1e10; font-weight: 800; }
+.cell-intensity-4 { background: #657044; color: #ffffff; font-weight: 800; }
+
+/* Ranked Breakdown Table */
+.ranked-table-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.74rem;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+}
+
+.rank-1 { background: rgba(101, 112, 68, 0.25); color: #3b4226; border: 1px solid #657044; }
+.rank-2, .rank-3 { background: rgba(92, 124, 138, 0.18); color: #1e3a47; border: 1px solid #cbd5e1; }
+.rank-other { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+.association-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.association-tag.iogp {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.association-tag.barrier {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
+}
+
+.association-tag.location {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-color: #e9d5ff;
+}
+
+.denominator-note {
+    background: var(--bg, #f8fafc);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 4px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.76rem;
+    color: var(--text-secondary, #64748b);
+    font-family: var(--font-mono, monospace);
+}
+
+.progress-track {
+    width: 60px;
+    height: 6px;
+    background: var(--border, #e2e8f0);
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.progress-fill-psif {
+    height: 100%;
+    background: var(--risk-critical, #9C3B32);
+}
+
+.progress-fill-share {
+    height: 100%;
+    background: #5C7C8A;
+}
+
+.btn-inspect-activity {
+    background: transparent;
+    border: 1px solid var(--border, #cbd5e1);
+    color: var(--text-primary, #0f172a);
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.15s ease;
+}
+
+.btn-inspect-activity:hover {
+    background: var(--brand, #657044);
+    color: #ffffff;
+    border-color: var(--brand, #657044);
+}
+
+/* Activity Detail Modal */
+.activity-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.activity-modal-backdrop.open {
+    display: flex;
+}
+
+.activity-modal-container {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 760px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.activity-modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.activity-modal-body {
+    padding: 1.5rem;
+}
+
+.incident-excerpt-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Empty State */
+.empty-state-card {
+    background: var(--surface, #ffffff);
+    border: 1px dashed var(--border, #cbd5e1);
+    border-radius: 8px;
+    padding: 3.5rem 2rem;
+    text-align: center;
+}
+
+.empty-icon-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(101, 112, 68, 0.15);
+    margin-bottom: 1.25rem;
+    color: var(--brand, #657044);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="page-header" style="margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <span class="badge" style="background: var(--brand, #657044); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; text-transform: uppercase;">Admin Flow</span>
+            <span class="badge" style="background: rgba(101, 112, 68, 0.15); color: #2d331d; font-size: 0.7rem; font-weight: 600;">Site: {{ activity_data.site_context }}</span>
+            <span class="badge" style="background: var(--bg, #f8fafc); border: 1px solid var(--border, #e2e8f0); color: var(--text-secondary, #64748b); font-size: 0.7rem;">Pattern Analysis</span>
+        </div>
+        <h1 class="page-title" style="margin-bottom: 0.25rem;">Activity Pattern Analysis</h1>
+        <p class="page-subtitle" style="color: var(--text-secondary, #64748b); font-size: 0.95rem;">
+            Which work activities recur across the current incident dataset? Surface recurring operational tasks decoupled from IOGP safety rule classifications.
+        </p>
+    </div>
+
+    <!-- Dimension Navigation Tabs -->
+    <div class="dimension-tabs" role="tablist">
+        <a href="{% url 'admin_flow:patterns' %}" class="dimension-tab" role="tab" aria-selected="false" title="Pattern Analysis Hub">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Pattern Hub</span>
+        </a>
+        <a href="{% url 'admin_flow:patterns_activity' %}" class="dimension-tab active" role="tab" aria-selected="true" id="tab-activity-patterns">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Activity Patterns</span>
+            <span class="tab-badge" id="badge-activities-count">{{ activity_data.distinct_activities_count|default:0 }}</span>
+        </a>
+        <a href="{% url 'admin_flow:patterns_barrier' %}" class="dimension-tab" role="tab" aria-selected="false" title="Barrier / Critical-Control Pattern Analysis">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Barrier Patterns</span>
+            <span class="tab-badge">{{ patterns.recurring_counts.barriers }}</span>
+        </a>
+        <a href="{% url 'admin_flow:patterns_location' %}" class="dimension-tab" role="tab" aria-selected="false" title="Internal Site Location Patterns">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span>Location Patterns</span>
+            <span class="tab-badge">{{ patterns.recurring_counts.locations }}</span>
+        </a>
+    </div>
+
+    {% if activity_data.has_data %}
+        <!-- 4 TOP KPI SUMMARY CARDS -->
+        <div class="summary-kpi-grid">
+            <!-- Card 1: Most Frequent Activity -->
+            <div class="summary-kpi-card highlight" id="top-pattern-callout">
+                <div>
+                    <div class="kpi-title" style="color: var(--brand, #657044);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>MOST FREQUENT ACTIVITY</span>
+                    </div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary, #0f172a); line-height: 1.2; margin-bottom: 0.35rem;" id="top-activity-name">
+                        {{ activity_data.top_activity.activity|default:activity_data.top_activity.category }}
+                    </div>
+                </div>
+                <div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-main-number" id="top-activity-count">{{ activity_data.top_activity.incident_count }}</span>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary, #64748b); font-weight: 600;">incidents ({{ activity_data.top_activity.dataset_share }}%)</span>
+                    </div>
+                    <div class="kpi-subtext" id="top-activity-caption">
+                        {{ activity_data.top_activity.callout_caption }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Total Activities -->
+            <div class="summary-kpi-card">
+                <div>
+                    <div class="kpi-title">TOTAL UNIQUE ACTIVITIES</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-main-number">{{ activity_data.summary.unique_activities_count|default:activity_data.distinct_activities_count }}</span>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary, #64748b); font-weight: 600;">tasks identified</span>
+                    </div>
+                </div>
+                <div class="kpi-subtext">
+                    Distinct work activities observed in {{ activity_data.total_filtered_incidents }} scoped incident reports.
+                </div>
+            </div>
+
+            <!-- Card 3: Recurring Activities -->
+            <div class="summary-kpi-card">
+                <div>
+                    <div class="kpi-title">RECURRING ACTIVITY PATTERNS</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-main-number" style="color: #2b4c5b;">{{ activity_data.summary.recurring_pattern_count|default:activity_data.recurring_count }}</span>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary, #64748b); font-weight: 600;">recurring</span>
+                    </div>
+                </div>
+                <div class="kpi-subtext">
+                    Activities appearing in <strong>&ge;2 incidents</strong>. Excludes one-off single observations.
+                </div>
+            </div>
+
+            <!-- Card 4: Activity Coverage -->
+            <div class="summary-kpi-card">
+                <div>
+                    <div class="kpi-title">ACTIVITY DATA COVERAGE</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-main-number" style="color: #15803d;">{{ activity_data.summary.activity_coverage_rate }}%</span>
+                        <span style="font-size: 0.82rem; color: var(--text-secondary, #64748b); font-weight: 600;">attributed</span>
+                    </div>
+                </div>
+                <div class="kpi-subtext">
+                    Known: <strong>{{ activity_data.summary.known_activity_incidents }}</strong> / {{ activity_data.summary.total_incidents }} incidents (Unknown: {{ activity_data.summary.unknown_activity_incidents }}).
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTER TOOLBAR -->
+        <div class="filter-card">
+            <form method="get" action="{% url 'admin_flow:patterns_activity' %}" class="filter-form" id="activity-filter-form">
+                <div class="filter-group">
+                    <label for="filter-date-from" class="filter-label">Date From</label>
+                    <input type="date" id="filter-date-from" name="date_from" value="{{ activity_data.filters.date_from }}" class="filter-input">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filter-date-to" class="filter-label">Date To</label>
+                    <input type="date" id="filter-date-to" name="date_to" value="{{ activity_data.filters.date_to }}" class="filter-input">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filter-psif" class="filter-label">PSIF Classification</label>
+                    <select id="filter-psif" name="psif" class="filter-select">
+                        <option value="all" {% if activity_data.filters.psif_filter == "all" %}selected{% endif %}>All Observations</option>
+                        <option value="psif" {% if activity_data.filters.psif_filter == "psif" %}selected{% endif %}>PSIF Only</option>
+                        <option value="not_psif" {% if activity_data.filters.psif_filter == "not_psif" %}selected{% endif %}>NOT PSIF Only</option>
+                    </select>
+                </div>
+
+                <div class="filter-group" style="flex: 2 1 220px;">
+                    <label for="filter-query" class="filter-label">Search Activity / Work Task</label>
+                    <input type="text" id="filter-query" name="q" value="{{ activity_data.filters.query }}" placeholder="Filter by painting, cleaning, excavation, maintenance..." class="filter-input">
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                    <button type="submit" class="btn btn-primary" id="btn-apply-filters" style="padding: 0.48rem 1.15rem; font-size: 0.88rem; background: var(--brand, #657044); border-color: var(--brand, #657044); color: #fff;">
+                        Filter
+                    </button>
+                    {% if activity_data.has_active_filters %}
+                    <a href="{% url 'admin_flow:patterns_activity' %}" class="btn btn-secondary" id="btn-reset-filters" style="padding: 0.48rem 0.95rem; font-size: 0.88rem;">
+                        Reset
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- PRIMARY VISUAL: RANKED HORIZONTAL BAR CHART -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.25rem 0; color: var(--text-primary, #0f172a);">
+                        Activity Frequency Distribution
+                    </h2>
+                    <div style="font-size: 0.84rem; color: var(--text-secondary, #64748b);">
+                        Ranked horizontal frequency distribution of operational tasks sorted descending by incident volume.
+                    </div>
+                </div>
+
+                <!-- DUAL VIEW TOGGLE -->
+                <div class="toggle-group" role="group" aria-label="Metric Volume View Toggle">
+                    <button type="button" class="btn-toggle active" data-metric="volume" id="toggle-incident-volume" aria-pressed="true">
+                        <span class="toggle-indicator"></span>
+                        <span>Incident Volume</span>
+                    </button>
+                    <button type="button" class="btn-toggle" data-metric="psif" id="toggle-psif-volume" aria-pressed="false">
+                        <span class="toggle-indicator"></span>
+                        <span>PSIF-Linked Volume</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chart Canvas Container -->
+            <div id="chart-wrapper" style="position: relative; width: 100%; min-height: 380px;">
+                <canvas id="activityPatternChart"></canvas>
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; border-top: 1px solid var(--border, #e2e8f0); padding-top: 0.75rem; font-size: 0.78rem; color: var(--text-secondary, #64748b);">
+                <div>
+                    <span>Ranked by observed incident volume. Toggle to inspect PSIF-linked precursors per work activity.</span>
+                </div>
+                <div class="denominator-note">
+                    Percentage denominator: incident count / {{ activity_data.total_filtered_incidents }} total incidents
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIVITY × LOCATION HEATMAP MATRIX -->
+        {% if activity_data.location_matrix.rows %}
+        <div class="matrix-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0 0 0.25rem 0; color: var(--text-primary, #0f172a);">
+                        Activity × Internal Location Heatmap
+                    </h3>
+                    <div style="font-size: 0.82rem; color: var(--text-secondary, #64748b);">
+                        Cross-dimensional concentration of operational activities across site operating zones.
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-secondary, #64748b);">
+                    <span>Intensity:</span>
+                    <span class="matrix-cell cell-intensity-0" style="padding: 1px 6px;">0</span>
+                    <span class="matrix-cell cell-intensity-1" style="padding: 1px 6px;">Low</span>
+                    <span class="matrix-cell cell-intensity-2" style="padding: 1px 6px;">Med</span>
+                    <span class="matrix-cell cell-intensity-3" style="padding: 1px 6px;">High</span>
+                    <span class="matrix-cell cell-intensity-4" style="padding: 1px 6px;">Peak</span>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; width: 240px;">Work Activity</th>
+                            {% for col in activity_data.location_matrix.columns %}
+                            <th style="text-align: center;">{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in activity_data.location_matrix.rows %}
+                        <tr>
+                            <td style="font-weight: 700; color: var(--text-primary, #0f172a);">
+                                {{ row.activity }}
+                            </td>
+                            {% for cell in row.cells %}
+                            <td style="text-align: center;">
+                                <div class="matrix-cell cell-intensity-{{ cell.intensity }}" title="{{ row.activity }} in {{ cell.location }}: {{ cell.count }} incidents">
+                                    {{ cell.count }}
+                                </div>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SECONDARY INFORMATION: RANKED BREAKDOWN WITH ASSOCIATIONS -->
+        <div class="ranked-table-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0 0 0.25rem 0; color: var(--text-primary, #0f172a);">
+                        Recurring Activity Portfolio &amp; Observed Associations
+                    </h3>
+                    <div style="font-size: 0.82rem; color: var(--text-secondary, #64748b);">
+                        Independent activity groupings with observed location, barrier, and IOGP rule correlations (associations do not imply causality).
+                    </div>
+                </div>
+                <div class="denominator-note" id="denominator-banner">
+                    Percentage denominator: incident count / {{ activity_data.total_filtered_incidents }} total incidents
+                </div>
+            </div>
+
+            <div class="table-container" style="overflow-x: auto;">
+                <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.86rem;" id="table-activity-patterns">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border, #e2e8f0); text-align: left; background: var(--bg, #f8fafc);">
+                            <th style="padding: 0.75rem 0.5rem; width: 50px; text-align: center; font-weight: 700;">Rank</th>
+                            <th style="padding: 0.75rem 0.75rem; font-weight: 700;">Activity Name</th>
+                            <th style="padding: 0.75rem 0.65rem; text-align: right; font-weight: 700;">Incidents</th>
+                            <th style="padding: 0.75rem 0.65rem; text-align: right; font-weight: 700; color: var(--risk-critical, #9C3B32);">PSIF-Linked</th>
+                            <th style="padding: 0.75rem 0.65rem; text-align: right; font-weight: 700;">PSIF Rate</th>
+                            <th style="padding: 0.75rem 0.75rem; font-weight: 700;">Top Location</th>
+                            <th style="padding: 0.75rem 0.75rem; font-weight: 700;">Top Protective Barrier</th>
+                            <th style="padding: 0.75rem 0.75rem; font-weight: 700;">Associated IOGP Rule</th>
+                            <th style="padding: 0.75rem 0.5rem; text-align: center; font-weight: 700;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for act in activity_data.activities %}
+                        <tr style="border-bottom: 1px solid var(--border, #e2e8f0);">
+                            <td style="padding: 0.75rem 0.5rem; text-align: center;">
+                                <span class="rank-badge {% if act.rank == 1 %}rank-1{% elif act.rank <= 3 %}rank-2{% else %}rank-other{% endif %}">
+                                    {{ act.rank }}
+                                </span>
+                            </td>
+                            <td style="padding: 0.75rem 0.75rem;">
+                                <div style="font-weight: 800; color: var(--text-primary, #0f172a); font-size: 0.9rem;">
+                                    {{ act.activity }}
+                                </div>
+                                {% if act.is_recurring %}
+                                <div style="font-size: 0.7rem; color: var(--brand, #657044); font-weight: 700; display: inline-flex; align-items: center; gap: 0.2rem; margin-top: 2px;">
+                                    <span>● Recurring Pattern (&ge;2 observations)</span>
+                                </div>
+                                {% else %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary, #64748b);">
+                                    <span>○ Single Observation</span>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 0.75rem 0.65rem; text-align: right; font-family: var(--font-mono, monospace); font-weight: 700;" class="tabular-nums">
+                                <div>{{ act.incident_count }}</div>
+                                <div style="font-size: 0.72rem; color: var(--text-secondary, #64748b); font-weight: normal;">{{ act.dataset_share }}%</div>
+                            </td>
+                            <td style="padding: 0.75rem 0.65rem; text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: {% if act.psif_linked_count > 0 %}var(--risk-critical, #9C3B32){% else %}var(--text-secondary, #64748b){% endif %};" class="tabular-nums">
+                                {{ act.psif_linked_count }}
+                            </td>
+                            <td style="padding: 0.75rem 0.65rem; text-align: right;">
+                                {% if act.incident_count > 0 %}
+                                <div style="display: inline-flex; align-items: center; gap: 0.35rem; justify-content: flex-end;">
+                                    <div class="progress-track">
+                                        <div class="progress-fill-psif" style="width: {{ act.psif_linkage_rate }}%;"></div>
+                                    </div>
+                                    <span style="font-family: var(--font-mono, monospace); font-weight: 600; font-size: 0.8rem;">{{ act.psif_linkage_rate }}%</span>
+                                </div>
+                                {% else %}
+                                <span style="color: var(--text-secondary, #64748b); font-family: var(--font-mono, monospace);">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 0.75rem 0.75rem;">
+                                <span class="association-tag location" title="Observed top location association">
+                                    {{ act.top_location }}
+                                </span>
+                            </td>
+                            <td style="padding: 0.75rem 0.75rem;">
+                                <span class="association-tag barrier" title="Observed protective barrier association">
+                                    {{ act.top_barrier }}
+                                </span>
+                            </td>
+                            <td style="padding: 0.75rem 0.75rem;">
+                                <span class="association-tag iogp" title="Associated IOGP Life-Saving Rule domain">
+                                    {{ act.top_iogp_rule }}
+                                </span>
+                            </td>
+                            <td style="padding: 0.75rem 0.5rem; text-align: center;">
+                                <button type="button" class="btn-inspect-activity" onclick="openActivityDetailModal('{{ forloop.counter0 }}')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    <span>Inspect</span>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- EMPTY STATE (No Admin Flow Data) -->
+        <div class="empty-state-card" id="empty-state-container">
+            <div class="empty-icon-circle">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+            </div>
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary, #0f172a); margin-bottom: 0.5rem;" id="empty-state-title">
+                No activity patterns available yet.
+            </h2>
+            <p style="color: var(--text-secondary, #64748b); max-width: 520px; margin: 0 auto 1.5rem auto; font-size: 0.95rem; line-height: 1.5;">
+                Upload a site dataset or submit single operational observations to begin surfacing recurring operational work activities and precursor accumulations.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                <a href="{% url 'admin_flow:upload' %}" class="btn btn-primary" id="btn-empty-upload" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--brand, #657044); border-color: var(--brand, #657044); color: #fff;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Upload Dataset</span>
+                </a>
+                <a href="{% url 'admin_flow:submit' %}" class="btn btn-secondary" id="btn-empty-submit" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Submit Report</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- ACTIVITY DETAIL MODAL -->
+<div class="activity-modal-backdrop" id="activityDetailModal" onclick="closeActivityDetailModal(event)">
+    <div class="activity-modal-container" onclick="event.stopPropagation()">
+        <div class="activity-modal-header">
+            <div>
+                <div style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand, #657044);" id="modal-activity-badge">
+                    OPERATIONAL ACTIVITY DETAIL
+                </div>
+                <h3 style="font-size: 1.3rem; font-weight: 800; margin: 0; color: var(--text-primary, #0f172a);" id="modal-activity-title">
+                    Activity Name
+                </h3>
+            </div>
+            <button type="button" onclick="closeActivityDetailModal()" style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">
+                &times;
+            </button>
+        </div>
+        <div class="activity-modal-body">
+            <!-- Modal Stats Row -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                <div>
+                    <div style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Incidents</div>
+                    <div style="font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono, monospace);" id="modal-incident-count">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase;">PSIF-Linked</div>
+                    <div style="font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono, monospace); color: #9C3B32;" id="modal-psif-count">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Linkage Rate</div>
+                    <div style="font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono, monospace);" id="modal-psif-rate">0.0%</div>
+                </div>
+            </div>
+
+            <!-- Associations Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem;">
+                    <div style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; color: #6b21a8; margin-bottom: 0.5rem;">
+                        Top Locations (Observed)
+                    </div>
+                    <div id="modal-locations-list" style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.84rem;"></div>
+                </div>
+                <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem;">
+                    <div style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; color: #0369a1; margin-bottom: 0.5rem;">
+                        Top Protective Measures
+                    </div>
+                    <div id="modal-barriers-list" style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.84rem;"></div>
+                </div>
+            </div>
+
+            <!-- Associated IOGP Rules -->
+            <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; color: #92400e; margin-bottom: 0.5rem;">
+                    Associated IOGP Life-Saving Rules
+                </div>
+                <div id="modal-iogp-list" style="display: flex; flex-wrap: wrap; gap: 0.4rem; font-size: 0.84rem;"></div>
+            </div>
+
+            <!-- Representative Incident Reports -->
+            <div>
+                <div style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-primary, #0f172a); margin-bottom: 0.75rem;">
+                    Representative Admin Flow Incidents
+                </div>
+                <div id="modal-sample-incidents"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Raw Chart.js & Activity Data Serialization via json_script -->
+{{ activity_data.chart_labels|json_script:"chart-labels-data" }}
+{{ activity_data.chart_incident_counts|json_script:"chart-incident-counts-data" }}
+{{ activity_data.chart_psif_counts|json_script:"chart-psif-counts-data" }}
+{{ activity_data.activities|json_script:"activities-raw-data" }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const labelsEl = document.getElementById('chart-labels-data');
+    const countsEl = document.getElementById('chart-incident-counts-data');
+    const psifEl = document.getElementById('chart-psif-counts-data');
+
+    if (!labelsEl || !countsEl || !psifEl) return;
+
+    const labels = JSON.parse(labelsEl.textContent || '[]');
+    const incidentCounts = JSON.parse(countsEl.textContent || '[]');
+    const psifCounts = JSON.parse(psifEl.textContent || '[]');
+
+    const canvas = document.getElementById('activityPatternChart');
+    if (!canvas || labels.length === 0) return;
+
+    const chartWrapper = document.getElementById('chart-wrapper');
+    if (chartWrapper) {
+        const dynamicHeight = Math.max(360, labels.length * 42);
+        chartWrapper.style.height = dynamicHeight + 'px';
+    }
+
+    let currentMetric = 'volume';
+
+    const ctx = canvas.getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Incident Volume',
+                data: incidentCounts,
+                backgroundColor: 'rgba(92, 124, 138, 0.85)',
+                hoverBackgroundColor: '#2b4c5b',
+                borderRadius: 4,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const val = context.raw;
+                            const idx = context.dataIndex;
+                            const psif = psifCounts[idx] || 0;
+                            if (currentMetric === 'volume') {
+                                return ` ${val} incidents (${psif} PSIF-linked)`;
+                            } else {
+                                const total = incidentCounts[idx] || 1;
+                                const rate = Math.round((val / total) * 100);
+                                return ` ${val} PSIF precursors (${rate}% of ${total} incidents)`;
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: {
+                        precision: 0,
+                        font: { family: 'monospace', weight: 'bold' }
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { weight: '600', size: 12 },
+                        color: '#0f172a'
+                    }
+                }
+            }
+        }
+    });
+
+    // Toggle logic
+    const toggleVolume = document.getElementById('toggle-incident-volume');
+    const togglePsif = document.getElementById('toggle-psif-volume');
+
+    if (toggleVolume && togglePsif) {
+        toggleVolume.addEventListener('click', function() {
+            if (currentMetric === 'volume') return;
+            currentMetric = 'volume';
+            toggleVolume.classList.add('active');
+            toggleVolume.setAttribute('aria-pressed', 'true');
+            togglePsif.classList.remove('active');
+            togglePsif.setAttribute('aria-pressed', 'false');
+
+            chart.data.datasets[0].label = 'Incident Volume';
+            chart.data.datasets[0].data = incidentCounts;
+            chart.data.datasets[0].backgroundColor = 'rgba(92, 124, 138, 0.85)';
+            chart.data.datasets[0].hoverBackgroundColor = '#2b4c5b';
+            chart.update();
+        });
+
+        togglePsif.addEventListener('click', function() {
+            if (currentMetric === 'psif') return;
+            currentMetric = 'psif';
+            togglePsif.classList.add('active');
+            togglePsif.setAttribute('aria-pressed', 'true');
+            toggleVolume.classList.remove('active');
+            toggleVolume.setAttribute('aria-pressed', 'false');
+
+            chart.data.datasets[0].label = 'PSIF-Linked Volume';
+            chart.data.datasets[0].data = psifCounts;
+            chart.data.datasets[0].backgroundColor = 'rgba(156, 59, 50, 0.85)';
+            chart.data.datasets[0].hoverBackgroundColor = '#7a2d26';
+            chart.update();
+        });
+    }
+});
+
+// Modal Logic
+let activitiesDataStore = [];
+try {
+    const rawEl = document.getElementById('activities-raw-data');
+    if (rawEl) {
+        activitiesDataStore = JSON.parse(rawEl.textContent || '[]');
+    }
+} catch(e) {
+    console.error('Could not parse activities data:', e);
+}
+
+function openActivityDetailModal(index) {
+    const act = activitiesDataStore[index];
+    if (!act) return;
+
+    document.getElementById('modal-activity-title').textContent = act.activity;
+    document.getElementById('modal-incident-count').textContent = act.incident_count;
+    document.getElementById('modal-psif-count').textContent = act.psif_linked_count;
+    document.getElementById('modal-psif-rate').textContent = act.psif_linkage_rate + '%';
+
+    // Locations
+    const locContainer = document.getElementById('modal-locations-list');
+    locContainer.innerHTML = '';
+    if (act.top_locations && act.top_locations.length > 0) {
+        act.top_locations.forEach(l => {
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.justifyContent = 'space-between';
+            div.innerHTML = `<span>${l.name}</span><strong style="font-family: monospace;">${l.count}</strong>`;
+            locContainer.appendChild(div);
+        });
+    } else {
+        locContainer.innerHTML = '<span style="color: #94a3b8;">No location data recorded</span>';
+    }
+
+    // Barriers
+    const barContainer = document.getElementById('modal-barriers-list');
+    barContainer.innerHTML = '';
+    if (act.top_barriers && act.top_barriers.length > 0) {
+        act.top_barriers.forEach(b => {
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.justifyContent = 'space-between';
+            div.innerHTML = `<span>${b.name}</span><strong style="font-family: monospace;">${b.count}</strong>`;
+            barContainer.appendChild(div);
+        });
+    } else {
+        barContainer.innerHTML = '<span style="color: #94a3b8;">No protective barrier signals recorded</span>';
+    }
+
+    // IOGP
+    const iogpContainer = document.getElementById('modal-iogp-list');
+    iogpContainer.innerHTML = '';
+    if (act.associated_iogp && act.associated_iogp.length > 0) {
+        act.associated_iogp.forEach(r => {
+            const span = document.createElement('span');
+            span.className = 'association-tag iogp';
+            span.textContent = `${r.name} (${r.count})`;
+            iogpContainer.appendChild(span);
+        });
+    } else {
+        iogpContainer.innerHTML = '<span style="color: #94a3b8;">No direct IOGP rule association</span>';
+    }
+
+    // Sample incidents
+    const incContainer = document.getElementById('modal-sample-incidents');
+    incContainer.innerHTML = '';
+    if (act.sample_incidents && act.sample_incidents.length > 0) {
+        act.sample_incidents.forEach(inc => {
+            const card = document.createElement('div');
+            card.className = 'incident-excerpt-card';
+            const psifBadge = inc.is_psif 
+                ? '<span style="background: #fee2e2; color: #991b1b; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 0.72rem;">PSIF</span>'
+                : '<span style="background: #f1f5f9; color: #475569; padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 0.72rem;">Non-PSIF</span>';
+            
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">${inc.incident_date} • ${inc.location}</span>
+                    ${psifBadge}
+                </div>
+                <div style="font-size: 0.84rem; color: #1e293b; line-height: 1.4;">
+                    ${inc.narrative_snippet}
+                </div>
+            `;
+            incContainer.appendChild(card);
+        });
+    } else {
+        incContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.85rem;">No incident excerpts available</div>';
+    }
+
+    document.getElementById('activityDetailModal').classList.add('open');
+}
+
+function closeActivityDetailModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    document.getElementById('activityDetailModal').classList.remove('open');
+}
+</script>
+{% endblock %}

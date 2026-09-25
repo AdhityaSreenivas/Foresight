@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>FORESIGHT — Incident Classification & Investigation</title>
+  <style>
+  /* =========================================================================
+     FORESIGHT ENTERPRISE SAFETY INVESTIGATION INTERFACE
+     Restrained, calm, premium industrial safety aesthetic
+     ========================================================================= */
+  :root {
+    --bg-page: #F8FAFC;
+    --surface-white: #FFFFFF;
+    --border-subtle: #E2E8F0;
+    --border-hover: #CBD5E1;
+
+    --text-heading: #0F172A;
+    --text-body: #334155;
+    --text-muted: #64748B;
+    --text-dim: #94A3B8;
+
+    --accent-psif: #DC2626;
+    --accent-psif-soft: #FEF2F2;
+    --accent-nonpsif: #16A34A;
+    --accent-iogp: #0284C7;
+    --accent-iogp-soft: #F0F9FF;
+
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-ui);
+    background-color: var(--bg-page);
+    color: var(--text-body);
+    line-height: 1.55;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-layout {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+  }
+
+  /* --- MINIMAL UTILITY BAR --- */
+  .utility-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+  .nav-back-link {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .nav-back-link:hover {
+    color: var(--text-heading);
+  }
+  .incident-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .incident-picker-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .incident-select-control {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-heading);
+    background: var(--surface-white);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 5px 10px;
+    outline: none;
+    cursor: pointer;
+  }
+  .incident-select-control:focus {
+    border-color: var(--accent-iogp);
+  }
+
+  /* --- 1. INCIDENT HEADER --- */
+  .incident-header-surface {
+    background: var(--surface-white);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  }
+  .header-topline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .header-incident-id {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-heading);
+    letter-spacing: 0.02em;
+  }
+  .status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: #F1F5F9;
+    color: var(--text-muted);
+  }
+  .status-badge.verified {
+    background: #EFF6FF;
+    color: #1D4ED8;
+  }
+  .status-badge.routine {
+    background: #F0FDF4;
+    color: #15803D;
+  }
+  .status-badge.review {
+    background: #FFFBEB;
+    color: #B45309;
+  }
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-heading);
+    line-height: 1.3;
+    margin-bottom: 14px;
+  }
+
+  .header-metadata-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .metadata-item strong {
+    color: var(--text-body);
+    font-weight: 600;
+  }
+  .metadata-dot {
+    color: var(--border-hover);
+    user-select: none;
+  }
+
+  .narrative-container {
+    background: transparent;
+  }
+  .narrative-title {
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .narrative-text {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-body);
+  }
+
+  /* --- 2. ONE UNIFIED 2x2 INVESTIGATION PANEL --- */
+  .investigation-panel {
+    background: var(--surface-white);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .classification-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "psif reasoning"
+      "nonpsif iogp";
+  }
+
+  .panel-cell {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Internal dividers only - unified connected surface */
+  .cell-psif {
+    grid-area: psif;
+    border-right: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-white);
+  }
+  .cell-psif.active-state {
+    border-left: 4px solid var(--accent-psif);
+    background: #FFFDFD;
+  }
+
+  .cell-nonpsif {
+    grid-area: nonpsif;
+    border-right: 1px solid var(--border-subtle);
+    background: #FAFAFA;
+  }
+  .cell-nonpsif.active-state {
+    border-left: 4px solid var(--accent-nonpsif);
+    background: #F0FDF4;
+  }
+
+  .cell-reasoning {
+    grid-area: reasoning;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-white);
+  }
+
+  .cell-iogp {
+    grid-area: iogp;
+    background: var(--surface-white);
+  }
+
+  /* Module Typography & Content Hierarchy */
+  .module-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .module-label.psif-label {
+    color: var(--accent-psif);
+  }
+  .module-label.iogp-label {
+    color: var(--accent-iogp);
+  }
+
+  .classification-name {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 2px;
+  }
+  .classification-name.psif {
+    color: var(--accent-psif);
+  }
+  .classification-name.nonpsif {
+    font-size: 20px;
+    color: var(--text-muted);
+  }
+  .cell-nonpsif.active-state .classification-name.nonpsif {
+    color: var(--accent-nonpsif);
+  }
+
+  .classification-subtitle {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin-bottom: 10px;
+  }
+  .classification-subtitle.muted {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .summary-statement {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-body);
+    margin-bottom: 10px;
+  }
+  .summary-statement.muted {
+    color: var(--text-muted);
+  }
+
+  .evidence-indicator-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .evidence-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-psif);
+    display: inline-block;
+  }
+
+  /* Reasoning sequence */
+  .reasoning-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .reasoning-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .reasoning-sequence-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .reasoning-sequence-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .seq-index {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent-iogp);
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--accent-iogp-soft);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .seq-body {
+    flex: 1;
+  }
+  .seq-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin-bottom: 1px;
+  }
+  .seq-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-body);
+  }
+  .seq-arrow {
+    padding-left: 7px;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  /* IOGP summary */
+  .iogp-overview-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .iogp-overview-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .iogp-sublabel {
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .iogp-value-lead {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-heading);
+  }
+  .iogp-desc-sub {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-body);
+    margin-top: 1px;
+  }
+
+  /* --- 3. TWO FULL-WIDTH HORIZONTAL DOUBLE-CLICK ROWS --- */
+  .investigation-rows-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .investigation-row-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--surface-white);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    cursor: pointer !important;
+    user-select: none;
+    outline: none;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .investigation-row-bar * {
+    pointer-events: none !important;
+  }
+  .investigation-row-bar:hover {
+    background: #F8FAFC;
+    border-color: var(--border-hover);
+  }
+  .investigation-row-bar:focus-visible {
+    border-color: var(--accent-iogp);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  }
+  .investigation-row-bar.psif-row {
+    border-left: 4px solid var(--accent-psif);
+  }
+  .investigation-row-bar.iogp-row {
+    border-left: 4px solid var(--accent-iogp);
+  }
+
+  .row-bar-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-heading);
+    letter-spacing: 0.02em;
+  }
+  .row-bar-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .row-bar-affordance {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .investigation-row-bar:hover .row-bar-affordance {
+    color: var(--text-heading);
+  }
+
+  /* --- SINGLE CLICK TOAST HINT --- */
+  .click-hint-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #0F172A;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .click-hint-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* --- MODAL DIALOGS --- */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-frame {
+    background: var(--surface-white);
+    width: 1040px;
+    max-width: 94vw;
+    max-height: 92vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 18px 24px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .modal-header-meta h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-heading);
+  }
+  .modal-header-meta p {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .modal-close-icon-btn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+  }
+  .modal-close-icon-btn:hover {
+    color: var(--text-heading);
+  }
+
+  .modal-scroll-surface {
+    padding: 18px 24px;
+    overflow-y: auto;
+    flex: 1;
+    background: var(--bg-page);
+  }
+
+  /* MODAL GRID (EXACT 5 SECTIONS)
+     Row 1: Box 1 + Box 2 (50% / 50%)
+     Row 2: Box 3 Full Width (100%)
+     Row 3: Box 4 + Box 5 (50% / 50%)
+  */
+  .psif-modal-grid,
+  .iogp-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    align-items: stretch;
+  }
+  @media (max-width: 860px) {
+    .psif-modal-grid,
+    .iogp-modal-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .full-width-span {
+    grid-column: 1 / -1;
+  }
+
+  /* Modal Investigation Finding Cards (White surfaces, clean subtle borders) */
+  .finding-card {
+    background: var(--surface-white);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  }
+
+  .finding-card h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-heading);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  /* Investigation Findings Typography */
+  .finding-subheading {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+  .finding-subheading:first-child {
+    margin-top: 0;
+  }
+  .finding-lead {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-heading);
+    line-height: 1.45;
+  }
+  .finding-body {
+    font-size: 13px;
+    color: var(--text-body);
+    line-height: 1.5;
+  }
+  .finding-body-secondary {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .finding-notice {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .finding-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 600px) {
+    .finding-two-col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .finding-bullet-stack {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 4px;
+  }
+  .finding-bullet-row {
+    font-size: 12.5px;
+    color: var(--text-body);
+    line-height: 1.45;
+    padding-left: 12px;
+    position: relative;
+  }
+  .finding-bullet-row::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+  }
+
+  .status-pill {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .status-pill.psif {
+    background: #FEF2F2;
+    color: #DC2626;
+  }
+  .status-pill.nonpsif {
+    background: #F0FDF4;
+    color: #16A34A;
+  }
+
+  .modal-bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--surface-white);
+  }
+  .key-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .btn-dismiss {
+    background: var(--text-heading);
+    color: #FFFFFF;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn-dismiss:hover {
+    background: var(--text-body);
+  }
+
+  /* --- RESPONSIVE MOBILE BEHAVIOR --- */
+  @media (max-width: 900px) {
+    .classification-grid {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "psif"
+        "reasoning"
+        "nonpsif"
+        "iogp";
+    }
+    .cell-psif, .cell-nonpsif {
+      border-right: none;
+    }
+    .cell-nonpsif {
+      border-bottom: 1px solid var(--border-subtle);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .app-layout {
+      padding: 16px 12px 60px;
+    }
+    .utility-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .incident-picker {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+      width: 100%;
+    }
+    .incident-select-control {
+      width: 100%;
+      max-width: 100%;
+      font-size: 12.5px;
+      padding: 6px 10px;
+    }
+    .incident-header-surface {
+      padding: 20px 18px;
+      margin-bottom: 16px;
+    }
+    .header-title {
+      font-size: 19px;
+      line-height: 1.35;
+    }
+    .panel-cell {
+      padding: 20px 18px;
+    }
+    .investigation-row-bar {
+      padding: 14px 18px;
+    }
+    .modal-frame {
+      max-width: 96vw;
+      max-height: 94vh;
+      border-radius: 8px;
+    }
+    .modal-topbar {
+      padding: 14px 16px;
+    }
+    .modal-scroll-surface {
+      padding: 14px 14px;
+    }
+    .finding-card {
+      padding: 14px 14px;
+    }
+  }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- MINIMAL UTILITY BAR -->
+  <div class="utility-bar">
+    <a href="live-psif-processing-dashboard.html" class="nav-back-link" id="backToLiveBtn">← Live Stream</a>
+    <div class="incident-picker">
+      <label for="incidentSelect" class="incident-picker-label">Incident Record:</label>
+      <select id="incidentSelect" class="incident-select-control" aria-label="Select incident record">
+        <option value="INC-2026-0842">INC-2026-0842 · High-Pressure Line Rupture</option>
+        <option value="INC-2026-0843">INC-2026-0843 · Rigging Failure Crane Lift</option>
+        <option value="INC-2026-0844">INC-2026-0844 · Routine Occupational Maintenance</option>
+        <option value="INC-2026-0845">INC-2026-0845 · Pending Gas Telemetry Investigation</option>
+        <option value="INC-2026-0846">INC-2026-0846 · Confined Space Hydrocarbon Vapor</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 1. INCIDENT HEADER (CLEAN HIERARCHY, NO NESTED GREY BOXES) -->
+  <header class="incident-header-surface" id="incidentHeader">
+    <div class="header-topline">
+      <span class="header-incident-id" id="incidentIdLabel">INC-2026-0842</span>
+      <span class="status-badge verified" id="incidentStatusTag">Verified</span>
+      <!-- Hidden compatibility hooks -->
+      <span id="headerHeroClassification" style="display:none;">PSIF</span>
+      <span id="headerHeroSub" style="display:none;">Potential Serious Injury / Fatality</span>
+      <span id="headerPsifBadge" style="display:none;"></span>
+    </div>
+
+    <h1 class="header-title" id="incidentTitle">High-Pressure Condensate Line Rupture During Valve Maintenance</h1>
+
+    <div class="header-metadata-row">
+      <div class="metadata-item">
+        <span>Location:</span>
+        <strong id="metaFacility">Platform Alpha-7 · Wellhead Module W-04</strong>
+      </div>
+      <span class="metadata-dot">•</span>
+      <div class="metadata-item">
+        <span>Activity:</span>
+        <strong id="metaActivity">Mechanical Isolation & Piping Intervention</strong>
+      </div>
+      <span class="metadata-dot">•</span>
+      <div class="metadata-item">
+        <span>Occurred:</span>
+        <strong id="incidentDateLabel">11 Sept 2026, 14:32 UTC</strong>
+      </div>
+      <span class="metadata-dot">•</span>
+      <div class="metadata-item">
+        <span id="metaUnit">Upstream Production</span> · <span id="metaEngine">FORESIGHT PSIF Rules Engine v2.4</span>
+      </div>
+    </div>
+
+    <div class="narrative-container">
+      <div class="narrative-title">Incident Narrative</div>
+      <p class="narrative-text" id="incidentNarrative">
+        During planned mechanical maintenance on isolation valve XV-4022, an unisolated high-pressure condensate bypass was struck by a torque wrench assembly, causing an immediate catastrophic flange gasket rupture. High-pressure hydrocarbon liquid released (estimated 18 bar) directly into the personnel walkway. Critical barrier failure identified: energy isolation (LOTO) verification was incomplete.
+      </p>
+    </div>
+  </header>
+
+  <!-- 2. ONE UNIFIED 2x2 INVESTIGATION PANEL -->
+  <main class="investigation-panel" id="classificationContainer">
+    <div class="classification-grid" id="classificationGrid">
+
+      <!-- TOP-LEFT: PSIF MODULE -->
+      <div class="panel-cell cell-psif active-state" id="psifBox" role="button" tabindex="0" title="PSIF Classification">
+        <div class="module-label psif-label">Classification Outcome</div>
+        <div class="classification-name psif" id="psifHeroText">PSIF</div>
+        <div class="classification-subtitle" id="psifSubtitleText">Potential Serious Injury / Fatality</div>
+        <p class="summary-statement" id="psifBoxDesc">
+          High-energy precursor condition confirmed: Pressurized hydrocarbon release exceeding Tier 1 threshold (>15 bar liquid spray) with direct personnel exposure in walkway.
+        </p>
+        <div class="evidence-indicator-line">
+          <span class="evidence-dot"></span>
+          <span id="psifIndicatorsCount">3 evaluated precursor indicators triggered</span>
+        </div>
+
+        <!-- Script compatibility hooks -->
+        <span id="psifBoxActiveStatus" style="display:none;">ACTIVE</span>
+        <span id="psifBoxBadge" style="display:none;">High-Potential Precursor</span>
+        <span id="psifCalloutBadge" style="display:none;">HIGH-POTENTIAL PRECURSOR</span>
+      </div>
+
+      <!-- TOP-RIGHT: REASONING MODULE (01, 02 STEPPED SEQUENCE) -->
+      <div class="panel-cell cell-reasoning" id="reasoningBox">
+        <div class="reasoning-topline">
+          <div class="module-label">Classification Reasoning</div>
+          <span class="reasoning-count" id="reasoningCountBadge">3 Rule Factors</span>
+        </div>
+        <ul class="reasoning-sequence-list" id="reasonsList">
+          <!-- Populated dynamically: 01 ↓ 02 sequence -->
+        </ul>
+      </div>
+
+      <!-- BOTTOM-LEFT: NON-PSIF MODULE (NEUTRAL SUBDUED ALTERNATIVE) -->
+      <div class="panel-cell cell-nonpsif" id="nonPsifBox" role="button" tabindex="0" title="NON-PSIF Classification">
+        <div class="module-label">Alternative Assessment</div>
+        <div class="classification-name nonpsif" id="nonPsifHeroText">NON-PSIF</div>
+        <div class="classification-subtitle muted" id="nonPsifSubtitleText">Routine Operational Baseline</div>
+        <p class="summary-statement muted" id="nonPsifBoxDesc">
+          Not selected: Baseline routine operational criteria superseded by verified high-energy precursor conditions.
+        </p>
+
+        <!-- Script compatibility hooks -->
+        <span id="nonPsifBoxActiveStatus" style="display:none;">INACTIVE</span>
+        <span id="nonPsifBoxBadge" style="display:none;">Inactive</span>
+        <span id="nonPsifCalloutBadge" style="display:none;">SUPERSEDED BY PSIF</span>
+        <span id="nonPsifIndicatorsCount" style="display:none;">Precursor criteria triggered</span>
+      </div>
+
+      <!-- BOTTOM-RIGHT: IOGP SUMMARY MODULE -->
+      <div class="panel-cell cell-iogp" id="iogpBox">
+        <div class="module-label iogp-label">IOGP Category Mapping</div>
+        <div class="iogp-overview-stack">
+          <div class="iogp-overview-block">
+            <span class="iogp-sublabel">Primary Category</span>
+            <div class="iogp-value-lead">
+              <span id="iogpPrimaryName">Process Safety & Energy Isolation</span>
+              <span style="font-weight:500; font-size:13.5px; color:var(--text-muted);" id="iogpPrimaryCode">(IOGP Cat-02)</span>
+            </div>
+            <p class="iogp-desc-sub" id="iogpPrimaryDesc">Positive mechanical isolation, lockout/tagout (LOTO), and process fluid containment before breaking system boundaries.</p>
+          </div>
+          <div class="iogp-overview-block">
+            <span class="iogp-sublabel">Secondary Category</span>
+            <div class="iogp-value-lead" style="font-weight:500; font-size:14px;" id="iogpSecondarySummary">Work Authorization & Permitting</div>
+          </div>
+        </div>
+
+        <!-- Script compatibility hooks -->
+        <span id="iogpBoxCodeBadge" style="display:none;">Mapped LSR-02</span>
+        <span id="iogpBarrierName" style="display:none;">Process Containment & Positive Mechanical Isolation</span>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 3. TWO FULL-WIDTH DOUBLE-CLICK ROWS -->
+  <div class="investigation-rows-container">
+    <!-- ROW 1: PSIF DETAILS -->
+    <div class="investigation-row-bar psif-row" id="psifDblClickRow" role="button" tabindex="0" aria-label="Double-click to view PSIF details" ondblclick="window.openPsifDetails(event)">
+      <div>
+        <div class="row-bar-title">PSIF DETAILS</div>
+        <div class="row-bar-desc" id="psifRowSub">View classification, precursor, hazard mechanism, controls and potential consequence</div>
+      </div>
+      <div class="row-bar-affordance">
+        Double-click to open →
+      </div>
+    </div>
+
+    <!-- ROW 2: IOGP DETAILS -->
+    <div class="investigation-row-bar iogp-row" id="iogpDblClickRow" role="button" tabindex="0" aria-label="Double-click to view IOGP details" ondblclick="window.openIogpDetails(event)">
+      <div>
+        <div class="row-bar-title">IOGP DETAILS</div>
+        <div class="row-bar-desc" id="iogpRowSub">View category mapping, barrier alignment, Life-Saving Rule and Report 459 reference</div>
+      </div>
+      <div class="row-bar-affordance">
+        Double-click to open →
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST HINT FOR SINGLE CLICK -->
+<div class="click-hint-toast" id="clickHintToast">
+  <span>Double-click anywhere on this row to open detailed investigation</span>
+</div>
+
+<!-- MODAL: PSIF DETAILS (EXACTLY 5 SECTIONS IN REQUIRED HIERARCHY)
+     Row 1: Box 1 (PSIF Classification) + Box 2 (Precursor Identification)
+     Row 2: Box 3 (Energy / Hazard Mechanism) Full Width
+     Row 3: Box 4 (Control / Barrier Failure) + Box 5 (Potential Consequence / SIF Assessment)
+-->
+<div class="modal-overlay" id="psifModal" role="dialog" aria-modal="true" aria-labelledby="psifModalTitle">
+  <div class="modal-frame">
+    <div class="modal-topbar">
+      <div class="modal-header-meta">
+        <h2 id="psifModalTitle">PSIF Investigation Details</h2>
+        <p id="psifModalIncidentSub">INC-2026-0842 · Comprehensive Precursor Evaluation</p>
+      </div>
+      <button class="modal-close-icon-btn" id="psifModalCloseBtn" onclick="window.closeAllModals()" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-scroll-surface">
+      <div class="psif-modal-grid">
+
+        <!-- ROW 1 LEFT: BOX 1 — PSIF CLASSIFICATION -->
+        <div class="finding-card" id="psifBox1">
+          <h3>PSIF CLASSIFICATION</h3>
+          <div id="psifModalClassificationText"></div>
+          <div id="psifModalStatusText" style="display:none;"></div>
+          <div id="psifModalAssessmentBasis" style="display:none;"></div>
+        </div>
+
+        <!-- ROW 1 RIGHT: BOX 2 — PRECURSOR IDENTIFICATION -->
+        <div class="finding-card" id="psifBox2">
+          <h3>PRECURSOR IDENTIFICATION</h3>
+          <div id="psifModalPrecursorText"></div>
+        </div>
+
+        <!-- ROW 2 FULL WIDTH: BOX 3 — ENERGY / HAZARD MECHANISM -->
+        <div class="finding-card full-width-span" id="psifBox3">
+          <h3>ENERGY / HAZARD MECHANISM</h3>
+          <div id="psifModalEnergyText"></div>
+        </div>
+
+        <!-- ROW 3 LEFT: BOX 4 — CONTROL / BARRIER FAILURE -->
+        <div class="finding-card" id="psifBox4">
+          <h3>CONTROL / BARRIER FAILURE</h3>
+          <div id="psifBox4FindingContent"></div>
+          <ul id="psifModalTriggersList" class="finding-bullet-stack"></ul>
+        </div>
+
+        <!-- ROW 3 RIGHT: BOX 5 — POTENTIAL CONSEQUENCE / SIF ASSESSMENT -->
+        <div class="finding-card" id="psifBox5">
+          <h3>POTENTIAL CONSEQUENCE / SIF ASSESSMENT</h3>
+          <div id="psifModalDekraText"></div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-bottom-bar">
+      <span class="key-hint">Press Esc to exit</span>
+      <button class="btn-dismiss" id="psifModalOkBtn" onclick="window.closeAllModals()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: IOGP DETAILS (EXACTLY 5 SECTIONS IN REQUIRED HIERARCHY)
+     Row 1: Box 1 (Primary Category) + Box 2 (Secondary Category)
+     Row 2: Box 3 (Barrier Alignment) Full Width
+     Row 3: Box 4 (Life-Saving Rule Alignment) + Box 5 (Report 459 Reference)
+-->
+<div class="modal-overlay" id="iogpModal" role="dialog" aria-modal="true" aria-labelledby="iogpModalTitle">
+  <div class="modal-frame">
+    <div class="modal-topbar">
+      <div class="modal-header-meta">
+        <h2 id="iogpModalTitle">IOGP Investigation Details</h2>
+        <p id="iogpModalIncidentSub">INC-2026-0842 · IOGP Category & Barrier Intelligence</p>
+      </div>
+      <button class="modal-close-icon-btn" id="iogpModalCloseBtn" onclick="window.closeAllModals()" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-scroll-surface">
+      <div class="iogp-modal-grid">
+
+        <!-- ROW 1 LEFT: BOX 1 — PRIMARY IOGP CATEGORY -->
+        <div class="finding-card" id="iogpBox1">
+          <h3>PRIMARY IOGP CATEGORY</h3>
+          <div id="iogpModalPrimaryText"></div>
+        </div>
+
+        <!-- ROW 1 RIGHT: BOX 2 — SECONDARY IOGP CATEGORY -->
+        <div class="finding-card" id="iogpBox2">
+          <h3>SECONDARY IOGP CATEGORY</h3>
+          <div id="iogpModalSecondaryText"></div>
+        </div>
+
+        <!-- ROW 2 FULL WIDTH: BOX 3 — BARRIER ALIGNMENT -->
+        <div class="finding-card full-width-span" id="iogpBox3">
+          <h3>BARRIER ALIGNMENT</h3>
+          <div id="iogpModalBarrierText"></div>
+        </div>
+
+        <!-- ROW 3 LEFT: BOX 4 — LIFE-SAVING RULE ALIGNMENT -->
+        <div class="finding-card" id="iogpBox4">
+          <h3>LIFE-SAVING RULE ALIGNMENT</h3>
+          <div id="iogpModalLsrText"></div>
+        </div>
+
+        <!-- ROW 3 RIGHT: BOX 5 — IOGP REPORT 459 REFERENCE -->
+        <div class="finding-card" id="iogpBox5">
+          <h3>IOGP REPORT 459 REFERENCE</h3>
+          <div id="iogpModalComplianceText"></div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-bottom-bar">
+      <span class="key-hint">Press Esc to exit</span>
+      <button class="btn-dismiss" id="iogpModalOkBtn" onclick="window.closeAllModals()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   INCIDENT DATA & RULES ENGINE
+   ========================================================================= */
+const $ = (id) => document.getElementById(id);
+
+const INCIDENT_DATABASE = [
+  {
+    id: "INC-2026-0842",
+    title: "High-Pressure Condensate Line Rupture During Valve Maintenance",
+    date: "11 Sept 2026 · 14:32 UTC",
+    facility: "Platform Alpha-7 · Wellhead Module W-04",
+    unit: "Upstream Production Operations",
+    activity: "Mechanical Isolation & Piping Intervention",
+    engineVersion: "FORESIGHT PSIF Rules Engine v2.4",
+    status: "Verified",
+    narrative: "During planned mechanical maintenance on isolation valve XV-4022, an unisolated high-pressure condensate bypass was struck by a torque wrench assembly, causing an immediate catastrophic flange gasket rupture. High-pressure hydrocarbon liquid released (estimated 18 bar) directly into the personnel walkway. Critical barrier failure identified: energy isolation (LOTO) verification was incomplete.",
+    attributes: {
+      lossOfContainment: true,
+      containmentDetails: "Pressurized hydrocarbon release exceeding Tier 1 threshold (>15 bar liquid spray).",
+      uncontrolledEnergyRelease: true,
+      energyDetails: "High-pressure fluid ejection capable of causing fatal blunt impact or asphyxiation.",
+      barrierFailure: true,
+      barrierDetails: "Positive physical barrier (double block & bleed) was missing or unverified.",
+      potentialSeverity: "FATALITY_POTENTIAL"
+    },
+    iogpMapping: {
+      primary: {
+        name: "Energy Isolation",
+        code: "IOGP LSR-02",
+        description: "Verify isolation and zero energy state before work begins. Ensure positive physical barriers (LOTO) are verified prior to breaking containment."
+      },
+      secondary: {
+        name: "Work Authorization",
+        code: "IOGP LSR-01",
+        description: "Confirm permit to work and cross-boundary control verification before starting intrusive tasks."
+      }
+    },
+    linkCorrelation: {
+      precursorStatus: "Precursor condition present — pressurized condensate release (18 bar).",
+      severity: "High Potential for Serious Injury or Fatality (SIF Precursor).",
+      barrierAlignment: "Process containment & positive mechanical isolation barriers.",
+      safeguardRef: "IOGP Life-Saving Rule #2 (Energy Isolation)."
+    }
+  },
+  {
+    id: "INC-2026-0843",
+    title: "Rigging Failure During Crane Tandem Lift of Separator Vessel Skid",
+    date: "10 Sept 2026 · 09:15 UTC",
+    facility: "Onshore Gas Terminal · Train B Compressor House",
+    unit: "Major Projects & Construction",
+    activity: "Heavy Rigging & Equipment Positioning",
+    engineVersion: "FORESIGHT PSIF Rules Engine v2.4",
+    status: "Verified",
+    narrative: "A 12-tonne separator compressor skid was being positioned using a 50-tonne mobile crane. The secondary synthetic sling snapped at a sharp corner due to missing corner protectors, causing the load to swing violently across an active pipe rack. Two riggers were forced to dive clear of the drop perimeter.",
+    attributes: {
+      lossOfContainment: false,
+      uncontrolledEnergyRelease: false,
+      barrierFailure: false,
+      suspendedLoadFailure: true,
+      suspendedLoadDetails: "Suspended load failure and drop zone breach with high fatality potential.",
+      potentialSeverity: "FATALITY_POTENTIAL"
+    },
+    iogpMapping: {
+      primary: {
+        name: "Safe Mechanical Lifting",
+        code: "IOGP LSR-06",
+        description: "Plan lifting operations and control drop zones. Rigging integrity failed on unpadded edge during crane lift."
+      },
+      secondary: null
+    },
+    linkCorrelation: {
+      precursorStatus: "Precursor condition present — dynamic rigging failure over personnel.",
+      severity: "High Potential for Serious Injury or Fatality (SIF Precursor).",
+      barrierAlignment: "Rigging hardware certified limits & exclusion zone barriers.",
+      safeguardRef: "IOGP Life-Saving Rule #6 (Safe Mechanical Lifting)."
+    }
+  },
+  {
+    id: "INC-2026-0844",
+    title: "Hand Abrasion During Manual Instrument Cleaning",
+    date: "09 Sept 2026 · 11:20 UTC",
+    facility: "Logistics Base Warehouse · Workshop Bay 3",
+    unit: "Supply Chain & Asset Services",
+    activity: "Routine Bench Cleaning & Hand Tool Inspection",
+    engineVersion: "FORESIGHT PSIF Rules Engine v2.4",
+    status: "Routine",
+    narrative: "An instrument technician sustained a minor superficial skin abrasion on the left knuckle when a screwdriver slipped while tightening an unenergized junction box cover. First aid was administered on site, and the worker returned to full duty immediately.",
+    attributes: {
+      lossOfContainment: false,
+      uncontrolledEnergyRelease: false,
+      barrierFailure: false,
+      routineOccupational: true,
+      routineDetails: "Routine occupational event without high-energy precursor or life-threatening mechanism.",
+      potentialSeverity: "NON_PSIF"
+    },
+    iogpMapping: {
+      primary: {
+        name: "Routine Workshop Maintenance",
+        code: "IOGP Report 459 - M-01",
+        description: "General asset maintenance guidelines. Standard hand tool safety and cut-resistant PPE protocol."
+      },
+      secondary: null
+    },
+    linkCorrelation: {
+      precursorStatus: "No precursor condition — localized superficial skin abrasion.",
+      severity: "Routine / Minor Event (Non-SIF).",
+      barrierAlignment: "Routine occupational PPE & hand tool safety handling.",
+      safeguardRef: "Standard Operating Procedure / General Workshop Safety."
+    }
+  },
+  {
+    id: "INC-2026-0845",
+    title: "Preliminary Odor Investigation at Subsea Manifold Tie-In",
+    date: "11 Sept 2026 · 16:45 UTC",
+    facility: "Processing Plant South · Tie-In Corridor 2B",
+    unit: "Midstream Pipelines",
+    activity: "Perimeter Atmospheric Monitoring",
+    engineVersion: "FORESIGHT PSIF Rules Engine v2.4",
+    status: "Under Review",
+    narrative: "Shift operator reported transient sulfurous odor near perimeter fence. Handheld PID detector showed trace readings below threshold. Gas test chromatography and line isolation audits are currently in progress. Narrative is insufficient to assess containment integrity.",
+    attributes: {
+      insufficientData: true,
+      insufficientDetails: "Insufficient narrative data and pending atmospheric test results; barrier status undetermined.",
+      potentialSeverity: "UNCLASSIFIED"
+    },
+    iogpMapping: {
+      primary: {
+        name: "Pending Technical Assessment",
+        code: "IOGP EVAL-TBD",
+        description: "Awaiting final root-cause barrier audit and chromatography logs to determine whether containment was breached."
+      },
+      secondary: null
+    },
+    linkCorrelation: {
+      precursorStatus: "Telemetry incomplete — odor report under investigation.",
+      severity: "Undetermined (Pending Technical Evidence).",
+      barrierAlignment: "Under technical evaluation by process safety team.",
+      safeguardRef: "IOGP Process Safety Fundamentals (Pending Audit)."
+    }
+  },
+  {
+    id: "INC-2026-0846",
+    title: "Atmospheric Hydrocarbon Vapor Alarm During Vessel Internal Inspection",
+    date: "08 Sept 2026 · 08:10 UTC",
+    facility: "Refining Complex Unit 4 · Fractionator Tower C-101",
+    unit: "Downstream Refining Operations",
+    activity: "Internal Vessel Visual Inspection & Gas Testing",
+    engineVersion: "FORESIGHT PSIF Rules Engine v2.4",
+    status: "Verified",
+    narrative: "Two contractor inspectors entered fractionator column C-101 for ultrasonic wall thickness inspection under a signed confined space permit. Five minutes after entry, personal 4-gas monitors alarmed for VOCs reaching 24% LEL due to a leaking nitrogen bleed line. Forced ventilation fan had been switched off at the breaker to reduce ambient noise without permit variance authorization.",
+    attributes: {
+      lossOfContainment: false,
+      confinedSpaceHazard: true,
+      confinedSpaceDetails: "Confined space atmosphere degradation hazard with immediate asphyxiation and flash fire fatality risk.",
+      safetyControlBypass: true,
+      bypassDetails: "Safety-critical control bypass (unauthorized de-energization of forced purge ventilation fan).",
+      toxicAtmosphere: true,
+      toxicDetails: "Combustible gas atmosphere exceeding safety threshold inside enclosed structure.",
+      potentialSeverity: "FATALITY_POTENTIAL"
+    },
+    iogpMapping: {
+      primary: {
+        name: "Confined Space",
+        code: "IOGP LSR-05",
+        description: "Authorize entry and continuously monitor atmosphere inside enclosed fractionator vessel."
+      },
+      secondary: {
+        name: "Bypassing Safety Controls",
+        code: "IOGP LSR-03",
+        description: "Obtain authorization before overriding or disabling critical forced ventilation purge controls."
+      }
+    },
+    linkCorrelation: {
+      precursorStatus: "Precursor condition present — flammable vapor concentration (24% LEL) in enclosed vessel.",
+      severity: "High Potential for Serious Injury or Fatality (SIF Precursor).",
+      barrierAlignment: "Continuous atmospheric monitoring & mechanical ventilation barriers.",
+      safeguardRef: "IOGP Life-Saving Rules #5 (Confined Space) & #3 (Bypass Controls)."
+    }
+  }
+];
+
+function evaluateIncident(incident) {
+  let classification = 'UNCLASSIFIED';
+  if (incident.attributes && incident.attributes.potentialSeverity === 'FATALITY_POTENTIAL') {
+    classification = 'PSIF';
+  } else if (incident.attributes && incident.attributes.potentialSeverity === 'NON_PSIF') {
+    classification = 'NON-PSIF';
+  } else if (incident.classification) {
+    classification = incident.classification;
+  }
+
+  const reasons = [];
+  if (classification === 'PSIF') {
+    if (incident.id === 'INC-2026-0842') {
+      reasons.push({ rule: 'R-PSI-01', text: 'Loss of Hydrocarbon Containment', detail: 'Pressure threshold exceeded: 18 bar condensate release in walkway.' });
+      reasons.push({ rule: 'R-ENG-03', text: 'Direct Line-of-Fire Exposure', detail: 'Personnel situated in active trajectory path of pressurized fluid.' });
+      reasons.push({ rule: 'R-BAR-02', text: 'Positive Isolation Barrier Defeat', detail: 'LOTO verification incomplete prior to mechanical valve intervention.' });
+    } else if (incident.id === 'INC-2026-0843') {
+      reasons.push({ rule: 'R-LIFT-01', text: 'Critical Rigging Hardware Failure', detail: 'Synthetic sling severed on unpadded sharp 90-degree steel edge under 24t dynamic load.' });
+      reasons.push({ rule: 'R-ENG-05', text: 'Suspended Gravitational Potential Energy', detail: '24-tonne separator vessel elevated 4.2m above active operational deck.' });
+      reasons.push({ rule: 'R-BAR-04', text: 'Exclusion Zone Barrier Breach', detail: 'Rigger stationed within swing and drop radius during tandem crane lift.' });
+    } else if (incident.id === 'INC-2026-0846') {
+      reasons.push({ rule: 'R-CONF-01', text: 'Hazardous Atmospheric Degradation', detail: 'LEL elevated to 42% inside confined separator vessel during hot work inspection.' });
+      reasons.push({ rule: 'R-ENG-02', text: 'Asphyxiation & Fire Potential', detail: 'Hydrocarbon vapor release in enclosed space with two workers present.' });
+      reasons.push({ rule: 'R-BAR-01', text: 'Forced Mechanical Ventilation Defeat', detail: 'Continuous ventilation ducting disconnected during shift transition.' });
+    } else {
+      reasons.push({ rule: 'R-PSI-01', text: 'High-Energy Precursor Condition', detail: 'Hazardous energy threshold exceeded with fatal potential mechanism.' });
+    }
+  } else if (classification === 'NON-PSIF') {
+    reasons.push({ rule: 'R-ROUTINE-01', text: 'Routine Operational Baseline', detail: 'Minor hand laceration from wrench slip during non-intrusive bolt torquing.' });
+    reasons.push({ rule: 'R-SAFE-01', text: 'Primary Process Safeguards Intact', detail: 'No containment loss, pressurized fluid release, or hazardous energy breach.' });
+  } else {
+    reasons.push({ rule: 'R-PEND-01', text: 'Telemetry Audit Incomplete', detail: 'Transient gas detector alarm pending telemetry upload and instrument calibration.' });
+    reasons.push({ rule: 'R-REV-02', text: 'Awaiting Industrial Hygiene Audit', detail: 'Field sample results required to determine if precursor threshold was crossed.' });
+  }
+
+  return {
+    classification: classification,
+    reasons: reasons
+  };
+}
+
+let activeIncident = INCIDENT_DATABASE[0];
+let activeEval = evaluateIncident(activeIncident);
+
+function renderIncident(incidentId) {
+  const incident = INCIDENT_DATABASE.find(inc => inc.id === incidentId) || INCIDENT_DATABASE[0];
+  activeIncident = incident;
+  activeEval = evaluateIncident(incident);
+
+  const selectEl = $('incidentSelect');
+  if (selectEl && selectEl.value !== incident.id) {
+    selectEl.value = incident.id;
+  }
+
+  const isPsif = activeEval.classification === 'PSIF';
+  const isNonPsif = activeEval.classification === 'NON-PSIF';
+
+  // 1. INCIDENT HEADER
+  $('incidentIdLabel').textContent = incident.id;
+  $('incidentStatusTag').textContent = incident.status;
+  $('incidentStatusTag').className = 'status-badge ' + (
+    incident.status === 'Verified' ? 'verified' : (incident.status === 'Routine' ? 'routine' : 'review')
+  );
+
+  $('incidentTitle').textContent = incident.title;
+  $('incidentNarrative').textContent = incident.narrative;
+  $('incidentDateLabel').textContent = incident.date;
+  $('metaFacility').textContent = incident.facility;
+  $('metaUnit').textContent = incident.unit;
+  $('metaActivity').textContent = incident.activity;
+  $('metaEngine').textContent = incident.engineVersion;
+
+  // 2. TOP-LEFT: PSIF BOX
+  $('psifHeroText').textContent = 'PSIF';
+  $('psifSubtitleText').textContent = 'Potential Serious Injury / Fatality';
+
+  if (isPsif) {
+    $('psifBox').classList.add('active-state');
+    $('psifBoxActiveStatus').textContent = 'ACTIVE';
+    $('psifIndicatorsCount').textContent = `${activeEval.reasons.length} evaluated precursor indicators triggered`;
+    $('psifBoxDesc').textContent = 'High-energy precursor condition confirmed: Pressurized hydrocarbon release exceeding Tier 1 threshold (>15 bar liquid spray) with direct personnel exposure in walkway.';
+  } else if (isNonPsif) {
+    $('psifBox').classList.remove('active-state');
+    $('psifBoxActiveStatus').textContent = 'INACTIVE';
+    $('psifIndicatorsCount').textContent = '0 precursor indicators triggered';
+    $('psifBoxDesc').textContent = 'Baseline routine event. No high-energy precursor or fatal barrier breach detected.';
+  } else {
+    $('psifBox').classList.remove('active-state');
+    $('psifBoxActiveStatus').textContent = 'EVALUATING';
+    $('psifIndicatorsCount').textContent = 'Field telemetry in review';
+    $('psifBoxDesc').textContent = 'Telemetry incomplete. Precursor determination deferred pending laboratory test results.';
+  }
+
+  // 3. BOTTOM-LEFT: NON-PSIF BOX
+  $('nonPsifHeroText').textContent = 'NON-PSIF';
+  $('nonPsifSubtitleText').textContent = 'Routine Operational Baseline';
+
+  if (isNonPsif) {
+    $('nonPsifBox').classList.add('active-state');
+    $('nonPsifBoxActiveStatus').textContent = 'ACTIVE';
+    $('nonPsifBoxDesc').textContent = 'Routine occupational incident. All primary safeguards & barriers intact. No high-energy precursor mechanism detected.';
+  } else if (isPsif) {
+    $('nonPsifBox').classList.remove('active-state');
+    $('nonPsifBoxActiveStatus').textContent = 'INACTIVE';
+    $('nonPsifBoxDesc').textContent = 'Not selected: Baseline routine operational criteria superseded by verified high-energy precursor conditions.';
+  } else {
+    $('nonPsifBox').classList.remove('active-state');
+    $('nonPsifBoxActiveStatus').textContent = 'INACTIVE';
+    $('nonPsifBoxDesc').textContent = 'Baseline safety state undetermined until technical telemetry is received.';
+  }
+
+  // 4. TOP-RIGHT: REASONING BOX (01 ↓ 02 SEQUENCE)
+  const reasonsList = $('reasonsList');
+  reasonsList.innerHTML = '';
+  $('reasoningCountBadge').textContent = `${activeEval.reasons.length} ${activeEval.reasons.length === 1 ? 'Rule Factor' : 'Rule Factors'}`;
+
+  activeEval.reasons.forEach((reason, index) => {
+    const li = document.createElement('li');
+    li.className = 'reasoning-sequence-item';
+    const num = (index + 1).toString().padStart(2, '0');
+    li.innerHTML = `
+      <span class="seq-index">${num}</span>
+      <div class="seq-body">
+        <div class="seq-title">${reason.text}</div>
+        <div class="seq-desc">${reason.detail}</div>
+      </div>
+    `;
+    reasonsList.appendChild(li);
+
+    if (index < activeEval.reasons.length - 1) {
+      const arrowLi = document.createElement('li');
+      arrowLi.className = 'seq-arrow';
+      arrowLi.textContent = '↓';
+      reasonsList.appendChild(arrowLi);
+    }
+  });
+
+  // 5. BOTTOM-RIGHT: IOGP BOX (SUMMARY LEVEL ONLY)
+  const primaryCat = incident.iogpMapping.primary;
+  const secondaryCat = incident.iogpMapping.secondary;
+
+  if (primaryCat) {
+    $('iogpPrimaryName').textContent = primaryCat.name;
+    $('iogpPrimaryCode').textContent = `(${primaryCat.code || 'IOGP Standard'})`;
+    $('iogpPrimaryDesc').textContent = primaryCat.description;
+  } else {
+    $('iogpPrimaryName').textContent = 'Unassigned';
+    $('iogpPrimaryCode').textContent = '—';
+    $('iogpPrimaryDesc').textContent = 'No primary category assigned.';
+  }
+
+  $('iogpSecondarySummary').textContent = secondaryCat && secondaryCat.name ? secondaryCat.name : 'Not assigned';
+
+  // Double click row subtitles
+  $('psifRowSub').textContent = 'View classification, precursor, hazard mechanism, controls and potential consequence';
+  $('iogpRowSub').textContent = 'View category mapping, barrier alignment, Life-Saving Rule and Report 459 reference';
+}
+
+window.renderIncident = renderIncident;
+
+const INCIDENT_DETAIL_MAP = {
+  "INC-2026-0842": {
+    psif: {
+      classificationStatus: "Verified by Deterministic Rules Engine",
+      assessmentBasis: "Determined deterministically via FORESIGHT PSIF Rules Engine v2.4 based on physical containment loss exceeding 15 bar, direct line-of-fire personnel exposure, and unverified LOTO isolation. Zero statistical interpolation applied.",
+      identifiedPrecursor: "Pressurized Hydrocarbon Loss of Containment & Flange Gasket Rupture",
+      hazardousCondition: "Pressurized condensate liquid spray (18 bar operating pressure) discharging into active personnel walkway",
+      operationalCircumstance: "Planned mechanical maintenance on isolation valve XV-4022 during live wellhead piping intervention on Platform Alpha-7",
+      supportingEvidence: "Blown spiral-wound gasket fragments recovered at scene, torque wrench impact indentation on unisolated bypass line, and unverified LOTO isolation log",
+      energyTypeMagnitude: "High-Pressure Hydrocarbon Liquid / 18 bar operating pressure (exceeds Tier 1 threshold)",
+      releasePathway: "Radial gasket displacement discharging horizontally across main module walkway corridor",
+      lineOfFire: "Maintenance technicians were within 1.5m line-of-fire without localized blast deflection shielding",
+      containmentSeverity: "Tier 1 Process Safety Event (API RP 754 / IOGP Report 456 threshold exceeded)",
+      potentialSeverity: "FATALITY_POTENTIAL (High Potential SIF Precursor)",
+      dekraEvaluation: "Exceeded DEKRA SIF Potential Fatal Threshold. High-energy hydrocarbon release occurred directly in occupied transit path with compromised barriers. Fatality was prevented solely by worker positioning rather than engineered barrier reliability.",
+      barrierState: "Positive physical isolation barrier (double block & bleed) was missing or unverified at moment of mechanical intervention.",
+      safeguardRestoration: "Immediate suspension of intrusive piping intervention on Module W-04. Require positive mechanical spade installation, physical lock-out verification, and dual-signature sign-off prior to permit re-authorization."
+    },
+    iogp: {
+      primaryCategory: {
+        category: "Process Safety & Energy Isolation",
+        code: "IOGP Cat-02",
+        description: "Standard industrial category governing positive mechanical isolation, lockout/tagout (LOTO), and process fluid containment before breaking system boundaries.",
+        role: "Primary Evaluated Domain"
+      },
+      secondaryCategory: {
+        category: "Work Authorization & Permitting",
+        code: "IOGP Cat-01",
+        description: "Secondary category governing permit-to-work issuance, task risk assessment, and cross-boundary control verification before intrusive line intervention."
+      },
+      barrierAlignment: {
+        relevantBarrier: "Process containment & positive mechanical isolation barriers",
+        barrierCategory: "Engineered Physical & Isolation Boundaries",
+        relationship: "High-pressure condensate liquid released (18 bar) directly into active personnel walkway due to unverified isolation during valve intervention on Platform Alpha-7.",
+        relevantSafeguard: "Double block and bleed or physical spade/blind isolation to achieve zero energy state prior to breaking containment."
+      },
+      lsrAlignment: {
+        applicableLsr: "IOGP LSR-02 — Energy Isolation",
+        ruleCode: "IOGP LSR-02",
+        whyRelevant: "Intrusive piping maintenance commenced without verifying positive physical isolation and pressure bleed-down, leading to catastrophic gasket failure when bypass was struck.",
+        relationship: "Direct precursor trigger; lack of proven zero-energy boundary directly caused pressurized hydrocarbon release in an occupied transit path."
+      },
+      report459: {
+        referenceStandard: "IOGP Report 459 (Life-Saving Rules) — Section 2: Energy Isolation",
+        applicableReference: "Mapped to IOGP Report 459 Category: Energy Isolation Standard",
+        mappingExplanation: "Mapped to IOGP Report 459 core life-saving rule benchmark for intrusive process plant interventions. Reference mapping for barrier analysis; does not constitute compliance certification."
+      },
+      engineeredBarrier: "Positive Physical Separation & Lockout/Tagout (LOTO) Station",
+      failureMechanism: "Incomplete physical isolation verification; reliance on single unverified valve prior to breaking containment",
+      defensePrinciple: "Double block and bleed or physical spade isolation to achieve zero energy state",
+      secondaryInteraction: "Work Authorization (IOGP LSR-01) — Permit was issued without independent on-site verification of positive physical boundary isolation.",
+      complianceStatus: "Mapped to IOGP Report 459 Category: Energy Isolation Standard (Reference mapping only)",
+      gapFinding: "Break of containment occurred before physical zero-energy verification was executed and documented",
+      barrierHealth: "Critical barrier degradation detected in isolation verification workflow",
+      engineeringControls: "Install certified slip blinds/spades and lockable blind flanges on bypass line",
+      proceduralRestoration: "Implement mandatory dual-custody LOTO lockbox and pressure-gauge bleeding verification checklist",
+      reauthMandate: "Area authority and process safety lead physical sign-off required prior to reissue of work permit"
+    }
+  },
+  "INC-2026-0843": {
+    psif: {
+      classificationStatus: "Verified by Deterministic Rules Engine",
+      assessmentBasis: "Determined deterministically via FORESIGHT PSIF Rules Engine v2.4 based on suspended load structural failure and breach of occupied drop perimeter. Evaluated without probabilistic assumptions.",
+      identifiedPrecursor: "Suspended Heavy Load Rigging Failure & Drop Perimeter Breach",
+      hazardousCondition: "12-tonne compressor skid suspended at 4.2m elevation swinging violently toward active pipe rack",
+      operationalCircumstance: "Tandem mobile crane lift positioning heavy vessel skid inside Train B compressor house",
+      supportingEvidence: "Severed synthetic sling strands, unpadded sharp vessel edge contact, and riggers taking emergency evasive action",
+      energyTypeMagnitude: "Gravitational Potential & Kinetic Energy / 12-tonne load at 4.2m elevation (~494 kJ)",
+      releasePathway: "Dynamic pendulum swing across pipe rack following synthetic sling corner tear",
+      lineOfFire: "Riggers and banksman within active drop perimeter; forced to dive clear to avoid crushing impact",
+      containmentSeverity: "Severe Heavy Equipment Rigging Failure (Life-Threatening Drop Incident)",
+      potentialSeverity: "FATALITY_POTENTIAL (High Potential SIF Precursor)",
+      dekraEvaluation: "Exceeded DEKRA SIF Potential Fatal Threshold. Suspended mass and height exceeded lethal blunt-impact threshold. Immediate fatality prevented solely by emergency evasive dive by personnel.",
+      barrierState: "Rigging edge protection barrier absent; load drop perimeter barrier breached.",
+      safeguardRestoration: "Immediate lifting stand-down across terminal. Mandatory sling edge protector certification and engineered exclusion zone enforcement before next lift."
+    },
+    iogp: {
+      primaryCategory: {
+        category: "Mechanical Lifting Operations",
+        code: "IOGP Cat-06",
+        description: "Standard industrial category governing crane operations, rigging hardware integrity, lift planning, and exclusion zone boundary enforcement.",
+        role: "Primary Evaluated Domain"
+      },
+      secondaryCategory: null,
+      barrierAlignment: {
+        relevantBarrier: "Rigging hardware certified limits & exclusion zone boundaries",
+        barrierCategory: "Operational & Engineered Rigging Defenses",
+        relationship: "12-tonne compressor skid dropped and swung violently across active pipe rack when secondary synthetic sling sheared against unpadded fabricated steel corner.",
+        relevantSafeguard: "Mandatory magnetic polyurethane corner edge protectors and physical exclusion zone barrier enforcement around crane drop radius."
+      },
+      lsrAlignment: {
+        applicableLsr: "IOGP LSR-06 — Safe Mechanical Lifting",
+        ruleCode: "IOGP LSR-06",
+        whyRelevant: "Tandem crane lift proceeded without edge protection on synthetic slings, and rigging crew entered active drop perimeter during tensioning.",
+        relationship: "Direct precursor trigger; rigging failure caused dynamic load swing directly over occupied transit route, forcing riggers to dive clear."
+      },
+      report459: {
+        referenceStandard: "IOGP Report 459 — Section 6: Safe Mechanical Lifting",
+        applicableReference: "Mapped to IOGP Report 459 Category: Lifting & Hoisting Safety",
+        mappingExplanation: "Mapped to IOGP Report 459 mechanical lifting standard for crane and rigging safety. Reference mapping for barrier assessment; does not imply compliance certification."
+      },
+      engineeredBarrier: "Certified Rigging Hardware & Engineered Corner Edge Protectors",
+      failureMechanism: "Synthetic webbing sling loaded over 90-degree unpadded steel edge under dynamic crane load",
+      defensePrinciple: "Use purpose-built sling protectors and verified lift plan rigging geometry",
+      secondaryInteraction: "None — Routine mechanical lift governed solely by the primary lifting standard.",
+      complianceStatus: "Mapped to IOGP Report 459 Category: Safe Mechanical Lifting (Reference mapping only)",
+      gapFinding: "Lift plan lacked mandatory corner protector specification for fabricated skid flanges",
+      barrierHealth: "Critical rigging hardware barrier defeated due to improper sling protection",
+      engineeringControls: "Mandate magnetic polyurethane corner saddles for all synthetic sling contact points",
+      proceduralRestoration: "Pre-lift rigging geometry audit signed off by Level 3 Lifting Specialist",
+      reauthMandate: "Terminal manager approval required prior to resuming tandem lift operations"
+    }
+  },
+  "INC-2026-0844": {
+    psif: {
+      classificationStatus: "Routine Baseline Confirmed",
+      assessmentBasis: "Evaluated against FORESIGHT PSIF Rules Engine v2.4 baseline criteria. Zero high-energy precursor conditions identified; containment and primary barriers remained intact. Deterministic Non-PSIF outcome.",
+      identifiedPrecursor: "None (Routine non-precursor hand tool slippage)",
+      hazardousCondition: "Superficial knuckle skin abrasion from screwdriver slip on unenergized junction box",
+      operationalCircumstance: "Routine bench cleaning and manual hand tool inspection in Logistics Base Warehouse Bay 3",
+      supportingEvidence: "Minor superficial skin mark treated with single adhesive bandage; zero loss of containment; worker returned to full duty immediately",
+      energyTypeMagnitude: "Low Manual Mechanical Energy / Hand tool slip (<0.05 kJ energy transfer)",
+      releasePathway: "Localized point contact of tool tip against outer skin surface",
+      lineOfFire: "No line-of-fire exposure to process, pressurized, electrical, or gravitational hazards",
+      containmentSeverity: "Minor Occupational First Aid Case (Non-recordable baseline)",
+      potentialSeverity: "NON_PSIF (Routine Occupational Event)",
+      dekraEvaluation: "Below DEKRA SIF Potential Threshold. Hazard completely lacked the energy density or mechanism required to produce a life-altering or fatal injury. All physical safety barriers intact.",
+      barrierState: "All primary process and physical safety barriers fully intact and functional.",
+      safeguardRestoration: "Standard toolbox review of ergonomic tool grip selection and cut-resistant glove compliance during safety briefing."
+    },
+    iogp: {
+      primaryCategory: {
+        category: "General Asset Maintenance & Workshop Operations",
+        code: "IOGP Report 459 - M-01",
+        description: "General asset maintenance guidelines governing low-energy bench work, hand tool inspection, and routine occupational safety standards.",
+        role: "Primary Evaluated Domain"
+      },
+      secondaryCategory: null,
+      barrierAlignment: {
+        relevantBarrier: "Routine occupational PPE & hand tool safety handling",
+        barrierCategory: "Personal Protective Equipment & Administrative Safeguards",
+        relationship: "Screwdriver slipped while tightening unenergized junction box cover, causing superficial knuckle abrasion; cut-resistant glove was briefly removed for alignment.",
+        relevantSafeguard: "Cut-resistant gloves (Level 5) and magnetic screw-holding tool fixtures."
+      },
+      lsrAlignment: {
+        applicableLsr: "No Life-Saving Rule identified",
+        ruleCode: "None",
+        whyRelevant: "Routine bench maintenance event with low manual energy (<0.05 kJ). No high-energy precursor, fatal hazard, or critical safety barrier breach identified.",
+        relationship: "Incident falls below IOGP Life-Saving Rules threshold; governed strictly by standard workshop operating procedures."
+      },
+      report459: {
+        referenceStandard: "IOGP Report 459 — Appendix B: General Occupational Baseline Guidelines",
+        applicableReference: "Mapped to IOGP Report 459 Baseline Workshop Maintenance",
+        mappingExplanation: "Mapped to general workshop occupational baseline. Not classified under high-risk Life-Saving Rules. Reference mapping only."
+      },
+      engineeredBarrier: "Cut-Resistant Occupational Hand Protection (Level 5 Cut Gloves)",
+      failureMechanism: "Glove removed momentarily during fine screw positioning; tool tip slipped off screw head",
+      defensePrinciple: "Maintain appropriate personal protective equipment during manual hand tool tasks",
+      secondaryInteraction: "None — Routine workshop maintenance activity governed solely by general shop safety standards.",
+      complianceStatus: "Mapped to IOGP Report 459 Baseline Maintenance (Reference mapping only)",
+      gapFinding: "Hand tool grip selection could be optimized with magnetic guide sleeve",
+      barrierHealth: "General occupational protective controls effective; injury severity minimized",
+      engineeringControls: "Provide magnetic screw retaining drivers and ergonomic work station fixtures",
+      proceduralRestoration: "Toolbox talk reminder regarding mandatory glove wear during bench operations",
+      reauthMandate: "Task cleared for normal continuation under standard shop supervisor oversight"
+    }
+  },
+  "INC-2026-0845": {
+    psif: {
+      classificationStatus: "Under Technical Review (Telemetry Pending)",
+      assessmentBasis: "Evaluated against FORESIGHT PSIF Rules Engine v2.4 threshold matrix. Narrative and field telemetry are currently insufficient to evaluate containment integrity. Deterministic sign-off deferred.",
+      identifiedPrecursor: "Under Investigation (Transient odor report pending gas test confirmation)",
+      hazardousCondition: "Trace VOC readings detected near plant perimeter fence; barrier status undetermined",
+      operationalCircumstance: "Perimeter atmospheric monitoring along Tie-In corridor 2B following shift operator report",
+      supportingEvidence: "Shift log entry, handheld PID detector survey (<5 ppm), pending laboratory gas chromatography analysis",
+      energyTypeMagnitude: "Energy State Undetermined / Pressure and containment boundaries intact to date",
+      releasePathway: "Diffuse ambient atmospheric dispersion near ground perimeter fence line",
+      lineOfFire: "Perimeter monitoring personnel situated outside restricted process boundary",
+      containmentSeverity: "Process Safety Tier Assessment Deferred (Pending Telemetry)",
+      potentialSeverity: "UNCLASSIFIED (Pending Quantitative Verification)",
+      dekraEvaluation: "DEKRA SIF Potential Evaluation Suspended. Telemetry insufficient to confirm whether released chemical volume or toxic concentration breached threshold.",
+      barrierState: "Barrier integrity status under technical investigation by process safety engineering.",
+      safeguardRestoration: "Maintain perimeter access controls; complete laboratory chromatography and line pressure telemetry verification before clearance."
+    },
+    iogp: {
+      primaryCategory: {
+        category: "Process Containment & Atmospheric Monitoring",
+        code: "IOGP EVAL-TBD",
+        description: "Technical category governing perimeter fixed gas detection arrays, boundary containment surveys, and transient fugitive emission telemetry.",
+        role: "Primary Evaluated Domain"
+      },
+      secondaryCategory: null,
+      barrierAlignment: {
+        relevantBarrier: "Perimeter fixed gas detection array & boundary isolation enclosure",
+        barrierCategory: "Atmospheric Detection & Process Containment Boundaries",
+        relationship: "Transient sulfurous odor observed near perimeter fence; PID detector showed readings below actionable threshold (<5 ppm). Narrative insufficient to confirm containment loss.",
+        relevantSafeguard: "Continuous optical/catalytic atmospheric sensors, perimeter boundary security, and acoustic leak surveys."
+      },
+      lsrAlignment: {
+        applicableLsr: "No Life-Saving Rule identified (Pending Technical Audit)",
+        ruleCode: "Pending Audit",
+        whyRelevant: "Field telemetry and gas chromatography logs are currently inconclusive to determine whether an engineered barrier was compromised or if a Life-Saving Rule boundary was crossed.",
+        relationship: "Event remains under active investigation; Life-Saving Rule determination deferred pending laboratory chromatography."
+      },
+      report459: {
+        referenceStandard: "IOGP Report 459 — Technical Guidance: Atmospheric Detection & Process Safety Fundamentals",
+        applicableReference: "Mapped to IOGP Report 459 Category: Evaluation Pending",
+        mappingExplanation: "Tentatively mapped to IOGP Report 459 process safety monitoring guidelines pending laboratory analysis. Reference mapping only; does not represent compliance."
+      },
+      engineeredBarrier: "Perimeter Fixed Gas Detection Array & Boundary Isolation Enclosure",
+      failureMechanism: "Under investigation; assessing whether transient reading represents fugitive emission or external ambient source",
+      defensePrinciple: "Continuous optical/catalytic atmospheric monitoring with automated ESD trip logic",
+      secondaryInteraction: "Under Evaluation — Awaiting technical root-cause barrier audit to identify secondary interactions.",
+      complianceStatus: "Mapped to IOGP Report 459 Monitoring Framework (Pending Technical Telemetry)",
+      gapFinding: "Field telemetry audit in progress; no definitive barrier breach confirmed",
+      barrierHealth: "Perimeter monitoring barrier active and functional; early detection protocol operational",
+      engineeringControls: "Deploy additional mobile photoionization monitors around tie-in corridor 2B",
+      proceduralRestoration: "Execute line integrity acoustic survey and manifold valve packing inspection",
+      reauthMandate: "Process safety authority clearance required upon receipt of laboratory analytical report"
+    }
+  },
+  "INC-2026-0846": {
+    psif: {
+      classificationStatus: "Verified by Deterministic Rules Engine",
+      assessmentBasis: "Determined deterministically via FORESIGHT PSIF Rules Engine v2.4 based on toxic/flammable atmosphere degradation inside enclosed confined space and safety-critical control bypass. Evaluated without statistical interpolation.",
+      identifiedPrecursor: "Atmospheric Degradation & Forced Ventilation Safeguard Defeat",
+      hazardousCondition: "Combustible hydrocarbon vapor concentration reaching 24% LEL with unventilated nitrogen bleed",
+      operationalCircumstance: "Internal vessel ultrasonic wall thickness inspection inside enclosed fractionator column C-101",
+      supportingEvidence: "Personal 4-gas detector audio/visual alarms at 24% LEL, open ventilation breaker switch, unauthorized control defeat",
+      energyTypeMagnitude: "Chemical Flammable Potential / Combustible vapor in enclosed vessel (24% LEL)",
+      releasePathway: "Internal vessel atmospheric accumulation due to de-energized exhaust ventilation fan",
+      lineOfFire: "Two inspectors trapped inside enclosed vessel column with single bottom manway egress route",
+      containmentSeverity: "Critical Confined Space Atmosphere Breach (Immediate Flash Fire / Asphyxiation Risk)",
+      potentialSeverity: "FATALITY_POTENTIAL (High Potential SIF Precursor)",
+      dekraEvaluation: "Exceeded DEKRA SIF Potential Fatal Threshold. Toxic/flammable atmosphere accumulated inside confined structure with defeated ventilation safeguard. Multi-fatality outcome averted only by rapid instrument alarm and prompt evacuation.",
+      barrierState: "Critical forced ventilation barrier defeated by unauthorized breaker trip; atmospheric safety envelope lost.",
+      safeguardRestoration: "Lock and tag purge fan breaker in energized position; continuous atmospheric re-test; contractor safety stand-down prior to re-entering fractionator."
+    },
+    iogp: {
+      primaryCategory: {
+        category: "Confined Space Entry & Atmospheric Safety",
+        code: "IOGP Cat-05",
+        description: "Standard industrial category governing confined space authorization, continuous atmospheric monitoring, and life-support forced purge ventilation.",
+        role: "Primary Evaluated Domain"
+      },
+      secondaryCategory: {
+        category: "Safety-Critical Control Management",
+        code: "IOGP Cat-03",
+        description: "Secondary category governing authorization protocols, variance management, and lockout protection before overriding engineered safety safeguards."
+      },
+      barrierAlignment: {
+        relevantBarrier: "Continuous atmospheric monitoring & forced mechanical purge ventilation",
+        barrierCategory: "Engineered Life Support & Hazardous Atmosphere Controls",
+        relationship: "Combustible VOC vapors reached 24% LEL inside column C-101 because forced purge ventilation fan was de-energized at breaker without variance.",
+        relevantSafeguard: "Lockout cages for ventilation breakers, continuous 4-gas telemetry, and permit variance authorization."
+      },
+      lsrAlignment: {
+        applicableLsr: "IOGP LSR-05 — Confined Space & IOGP LSR-03 — Bypassing Safety Controls",
+        ruleCode: "IOGP LSR-05 & LSR-03",
+        whyRelevant: "Engineered ventilation safeguard was unauthorizedly defeated inside an enclosed vessel, allowing flammable gas accumulation in the work envelope.",
+        relationship: "Direct precursor trigger; dual Life-Saving Rule violation caused immediate flash fire and asphyxiation hazard, requiring emergency evacuation."
+      },
+      report459: {
+        referenceStandard: "IOGP Report 459 — Section 5: Confined Space Entry & Section 3: Bypassing Safety Controls",
+        applicableReference: "Mapped to IOGP Report 459 Multi-Rule Standard",
+        mappingExplanation: "Mapped to IOGP Report 459 dual-rule standard for enclosed vessel operations and safety control defeat. Reference mapping only; does not constitute compliance certification."
+      },
+      engineeredBarrier: "Forced Air Purge Ventilation System & Continuous Atmospheric 4-Gas Monitor",
+      failureMechanism: "Unauthorized de-energization of ventilation fan at breaker to reduce ambient noise without permit variance",
+      defensePrinciple: "Continuous mechanical positive pressure ventilation and atmospheric monitoring throughout confined space occupancy",
+      secondaryInteraction: "Bypassing Safety Controls (IOGP LSR-03) — Forced ventilation fan was switched off at breaker without Management of Change (MOC) or variance authorization.",
+      complianceStatus: "Mapped to IOGP Report 459 Multi-Rule Standard (Reference mapping only)",
+      gapFinding: "Critical safety purge equipment was defeated without lock-out protection or variance sign-off",
+      barrierHealth: "Critical barrier intentionally bypassed in violation of Life-Saving Rule #3",
+      engineeringControls: "Install mechanical lockout cage on ventilation fan breaker switch",
+      proceduralRestoration: "Mandatory confined space entry re-briefing and dual-custody gas testing sign-off",
+      reauthMandate: "Plant operations manager and safety lead physical inspection required before re-entry"
+    }
+  }
+};
+
+/* =========================================================================
+   MODAL CONTROLLER: EXACT 5 SECTIONS WITH CLEAN INVESTIGATION FINDINGS
+   ========================================================================= */
+
+window.openPsifDetails = function(event) {
+  if (event && event.preventDefault) event.preventDefault();
+  if (event && event.stopPropagation) event.stopPropagation();
+
+  if (!activeIncident) {
+    const selectEl = $('incidentSelect');
+    renderIncident(selectEl ? selectEl.value : INCIDENT_DATABASE[0].id);
+  }
+
+  const inc = activeIncident;
+  const ev = activeEval;
+  const detail = INCIDENT_DETAIL_MAP[inc.id] ? INCIDENT_DETAIL_MAP[inc.id].psif : null;
+
+  $('psifModalIncidentSub').textContent = `${inc.id} · ${inc.title}`;
+
+  // BOX 1 — PSIF CLASSIFICATION
+  const isPsif = ev.classification === 'PSIF';
+  const isNonPsif = ev.classification === 'NON-PSIF';
+  const classStatus = detail ? detail.classificationStatus : (inc.status + ' · Verified');
+  const assessBasis = detail ? detail.assessmentBasis : 'Deterministic evaluation against FORESIGHT PSIF Rules Engine criteria.';
+
+  $('psifModalClassificationText').innerHTML = `
+    <div style="margin-bottom: 12px;">
+      <span class="status-pill ${isPsif ? 'psif' : (isNonPsif ? 'nonpsif' : '')}">${ev.classification}</span>
+      <span style="font-size: 14.5px; font-weight: 700; color: var(--text-heading);">
+        ${isPsif ? 'SIF Precursor Confirmed' : (isNonPsif ? 'Routine Operational Event' : 'Telemetry Pending Verification')}
+      </span>
+    </div>
+    <div class="finding-subheading">Classification Result</div>
+    <p class="finding-body">${isPsif ? 'High potential precursor condition confirmed under FORESIGHT safety criteria.' : (isNonPsif ? 'Standard baseline operational event with no life-altering potential.' : 'Pending field telemetry audit.')}</p>
+    <div class="finding-subheading" style="margin-top: 10px;">Rules-Based Assessment Basis</div>
+    <p class="finding-body-secondary">${assessBasis}</p>
+    <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${classStatus} · Rules Engine: ${inc.engineVersion}</div>
+  `;
+  $('psifModalStatusText').innerHTML = `<div>${classStatus}</div>`;
+  $('psifModalAssessmentBasis').innerHTML = `<div>${assessBasis}</div>`;
+
+  // BOX 2 — PRECURSOR IDENTIFICATION
+  if (detail) {
+    $('psifModalPrecursorText').innerHTML = `
+      <div class="finding-subheading">Identified Precursor</div>
+      <p class="finding-lead">${detail.identifiedPrecursor}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">Specific Hazardous Condition</div>
+      <p class="finding-body">${detail.hazardousCondition}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">Relevant Operational Circumstance</div>
+      <p class="finding-body">${detail.operationalCircumstance}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">Evidence Supporting Precursor</div>
+      <p class="finding-body-secondary">${detail.supportingEvidence}</p>
+    `;
+  } else {
+    $('psifModalPrecursorText').innerHTML = `
+      <div class="finding-subheading">Identified Precursor</div>
+      <p class="finding-lead">${isPsif ? 'Pressurized Hydrocarbon Release' : 'No precursor identified'}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">Precursor Evaluation State</div>
+      <p class="finding-body">${isPsif ? 'Energy threshold exceeded during mechanical intervention.' : 'Operational conditions remained within standard safety envelope.'}</p>
+    `;
+  }
+
+  // BOX 3 — ENERGY / HAZARD MECHANISM (FULL WIDTH)
+  if (detail) {
+    $('psifModalEnergyText').innerHTML = `
+      <div class="finding-two-col">
+        <div>
+          <div class="finding-subheading">Energy Type & Operating Magnitude</div>
+          <p class="finding-lead">${detail.energyTypeMagnitude}</p>
+          <div class="finding-subheading" style="margin-top: 10px;">Release Pathway & Dynamics</div>
+          <p class="finding-body">${detail.releasePathway}</p>
+        </div>
+        <div>
+          <div class="finding-subheading">Line-of-Fire Proximity</div>
+          <p class="finding-body">${detail.lineOfFire}</p>
+          <div class="finding-subheading" style="margin-top: 10px;">Process Containment Severity</div>
+          <p class="finding-lead">${detail.containmentSeverity}</p>
+        </div>
+      </div>
+    `;
+  } else {
+    $('psifModalEnergyText').innerHTML = `
+      <div class="finding-subheading">Energy Assessment</div>
+      <p class="finding-lead">${isPsif ? 'Hydrocarbon under pressure (>15 bar)' : 'Low kinetic / thermal energy'}</p>
+      <p class="finding-body-secondary">${inc.narrative}</p>
+    `;
+  }
+
+  // BOX 4 — CONTROL / BARRIER FAILURE
+  const box4Finding = $('psifBox4FindingContent');
+  if (box4Finding) {
+    box4Finding.innerHTML = `
+      <div class="finding-subheading">Primary Control Failure</div>
+      <p class="finding-lead">${detail ? detail.barrierState : 'Primary barrier defense integrity compromised during maintenance intervention.'}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">Evaluated Safeguard Controls</div>
+    `;
+  }
+  const triggersList = $('psifModalTriggersList');
+  triggersList.innerHTML = '';
+  ev.reasons.forEach((r) => {
+    const li = document.createElement('li');
+    li.className = 'finding-bullet-row';
+    li.innerHTML = `<strong>${r.text}:</strong> ${r.detail}`;
+    triggersList.appendChild(li);
+  });
+
+  // BOX 5 — POTENTIAL CONSEQUENCE / SIF ASSESSMENT
+  if (detail) {
+    $('psifModalDekraText').innerHTML = `
+      <div class="finding-subheading">Potential Severity Rating</div>
+      <p class="finding-lead" style="color: ${isPsif ? 'var(--accent-psif)' : 'var(--text-heading)'};">${detail.potentialSeverity}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">SIF Potential Decision Criteria</div>
+      <p class="finding-body">${detail.dekraEvaluation}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">Critical Barrier State at Failure</div>
+      <p class="finding-body">${detail.barrierState}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">Mandatory Safeguard Restoration Protocol</div>
+      <p class="finding-body-secondary" style="color: var(--text-heading); font-weight: 500;">${detail.safeguardRestoration}</p>
+    `;
+  } else {
+    $('psifModalDekraText').innerHTML = `
+      <div class="finding-subheading">Potential Severity Rating</div>
+      <p class="finding-lead">${isPsif ? 'Catastrophic / Fatal Potential (SIF)' : 'Minor Occupational Event'}</p>
+      <div class="finding-subheading" style="margin-top: 10px;">SIF Assessment Criteria</div>
+      <p class="finding-body">${isPsif ? 'Worker presence in line-of-fire without positive barrier defense creates fatal consequence potential.' : 'Routine event with intact baseline controls.'}</p>
+    `;
+  }
+
+  $('psifModal').classList.add('open');
+};
+
+window.openIogpDetails = function(event) {
+  if (event && event.preventDefault) event.preventDefault();
+  if (event && event.stopPropagation) event.stopPropagation();
+
+  if (!activeIncident) {
+    const selectEl = $('incidentSelect');
+    renderIncident(selectEl ? selectEl.value : INCIDENT_DATABASE[0].id);
+  }
+
+  const inc = activeIncident;
+  const detail = INCIDENT_DETAIL_MAP[inc.id] ? INCIDENT_DETAIL_MAP[inc.id].iogp : null;
+
+  $('iogpModalIncidentSub').textContent = `${inc.id} · ${inc.title}`;
+
+  // BOX 1 — PRIMARY IOGP CATEGORY
+  if (detail && detail.primaryCategory) {
+    const prim = detail.primaryCategory;
+    $('iogpModalPrimaryText').innerHTML = `
+      <div style="font-size: 15.5px; font-weight: 700; color: var(--text-heading); margin-bottom: 2px;">
+        ${prim.category} <span style="font-weight: 500; font-size: 13px; color: var(--accent-iogp);">(${prim.code})</span>
+      </div>
+      <p class="finding-body" style="margin-bottom: 12px;">${prim.description}</p>
+      <div class="finding-subheading">Classification Basis</div>
+      <p class="finding-body-secondary">${detail.failureMechanism || prim.description}</p>
+    `;
+  } else {
+    $('iogpModalPrimaryText').innerHTML = `<p class="finding-body">No primary category assigned.</p>`;
+  }
+
+  // BOX 2 — SECONDARY IOGP CATEGORY
+  if (detail && detail.secondaryCategory) {
+    const sec = detail.secondaryCategory;
+    $('iogpModalSecondaryText').innerHTML = `
+      <div style="font-size: 15.5px; font-weight: 700; color: var(--text-heading); margin-bottom: 2px;">
+        ${sec.category} <span style="font-weight: 500; font-size: 13px; color: var(--text-muted);">(${sec.code})</span>
+      </div>
+      <p class="finding-body" style="margin-bottom: 12px;">${sec.description}</p>
+      <div class="finding-subheading">Cross-Domain Interaction</div>
+      <p class="finding-body-secondary">${detail.secondaryInteraction || sec.description}</p>
+    `;
+  } else {
+    $('iogpModalSecondaryText').innerHTML = `
+      <div class="finding-lead" style="color: var(--text-muted); margin-bottom: 4px;">No secondary category assigned.</div>
+      <p class="finding-body-secondary">This incident is governed solely by the primary operational domain. No cross-boundary permitting variances or secondary systems were involved.</p>
+    `;
+  }
+
+  // BOX 3 — BARRIER ALIGNMENT (FULL WIDTH)
+  if (detail && detail.barrierAlignment) {
+    const ba = detail.barrierAlignment;
+    $('iogpModalBarrierText').innerHTML = `
+      <div class="finding-two-col">
+        <div>
+          <div class="finding-subheading">Relevant IOGP Barrier</div>
+          <p class="finding-lead">${ba.relevantBarrier}</p>
+          <div class="finding-subheading" style="margin-top: 10px;">Barrier Category / Type</div>
+          <p class="finding-body">${ba.barrierCategory}</p>
+        </div>
+        <div>
+          <div class="finding-subheading">Relationship to Incident</div>
+          <p class="finding-body">${ba.relationship}</p>
+          <div class="finding-subheading" style="margin-top: 10px;">Relevant Control / Safeguard</div>
+          <p class="finding-body-secondary" style="color: var(--text-heading); font-weight: 500;">${ba.relevantSafeguard}</p>
+        </div>
+      </div>
+    `;
+  } else {
+    $('iogpModalBarrierText').innerHTML = `<p class="finding-body">No barrier alignment data available.</p>`;
+  }
+
+  // BOX 4 — LIFE-SAVING RULE ALIGNMENT
+  if (detail && detail.lsrAlignment && detail.lsrAlignment.applicableLsr && detail.lsrAlignment.applicableLsr !== 'None' && !detail.lsrAlignment.applicableLsr.includes('None')) {
+    const lsr = detail.lsrAlignment;
+    $('iogpModalLsrText').innerHTML = `
+      <div class="finding-subheading">Applicable Life-Saving Rule</div>
+      <div class="finding-lead" style="color: var(--text-heading); margin-bottom: 8px;">
+        ${lsr.applicableLsr} <span style="font-weight: 500; font-size: 13px; color: var(--accent-iogp);">(${lsr.ruleCode})</span>
+      </div>
+      <div class="finding-subheading">Why Rule is Relevant</div>
+      <p class="finding-body" style="margin-bottom: 8px;">${lsr.whyRelevant}</p>
+      <div class="finding-subheading">Relationship to Incident</div>
+      <p class="finding-body-secondary">${lsr.relationship}</p>
+    `;
+  } else {
+    $('iogpModalLsrText').innerHTML = `
+      <div class="finding-lead" style="color: var(--text-muted); margin-bottom: 4px;">No Life-Saving Rule identified.</div>
+      <p class="finding-body-secondary">${detail && detail.lsrAlignment && detail.lsrAlignment.whyRelevant ? detail.lsrAlignment.whyRelevant : 'Incident falls below the high-risk fatal hazard threshold; no specific IOGP Life-Saving Rule was breached or applicable.'}</p>
+    `;
+  }
+
+  // BOX 5 — IOGP REPORT 459 REFERENCE
+  if (detail && detail.report459) {
+    const r459 = detail.report459;
+    $('iogpModalComplianceText').innerHTML = `
+      <div class="finding-subheading">Relevant Report 459 Reference</div>
+      <p class="finding-lead" style="margin-bottom: 8px;">${r459.referenceStandard}</p>
+      <div class="finding-subheading">Applicable Category / Reference</div>
+      <p class="finding-body" style="margin-bottom: 8px;">${r459.applicableReference}</p>
+      <div class="finding-subheading">Reference Mapping Explanation</div>
+      <p class="finding-body-secondary">${r459.mappingExplanation}</p>
+      <p class="finding-notice">Notice: Reference mapping only — not a compliance certification.</p>
+    `;
+  } else {
+    $('iogpModalComplianceText').innerHTML = `
+      <div class="finding-subheading">Relevant Report 459 Reference</div>
+      <p class="finding-lead">IOGP Report 459 Standard Framework</p>
+      <p class="finding-body-secondary">Routine maintenance incident categorized under baseline occupational safety guidelines.</p>
+      <p class="finding-notice">Notice: Reference mapping only — not a compliance certification.</p>
+    `;
+  }
+
+  $('iogpModal').classList.add('open');
+};
+
+window.closeAllModals = function() {
+  $('psifModal').classList.remove('open');
+  $('iogpModal').classList.remove('open');
+};
+
+/* =========================================================================
+   DOUBLE-CLICK EVENT ATTACHMENT & SINGLE-CLICK HINT
+   ========================================================================= */
+let clickHintTimer = null;
+function showSingleClickHint() {
+  const toast = $('clickHintToast');
+  if (!toast) return;
+  toast.classList.add('show');
+  if (clickHintTimer) clearTimeout(clickHintTimer);
+  clickHintTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2500);
+}
+
+const psifRow = $('psifDblClickRow');
+let lastPsifClickTime = 0;
+let psifClickTimeout = null;
+
+if (psifRow) {
+  psifRow.addEventListener('dblclick', function(e) {
+    lastPsifClickTime = 0;
+    if (psifClickTimeout) clearTimeout(psifClickTimeout);
+    window.openPsifDetails(e);
+  });
+
+  psifRow.addEventListener('click', function(e) {
+    const now = Date.now();
+    const timeDiff = now - lastPsifClickTime;
+    if (timeDiff > 30 && timeDiff < 450) {
+      lastPsifClickTime = 0;
+      if (psifClickTimeout) clearTimeout(psifClickTimeout);
+      window.openPsifDetails(e);
+    } else {
+      lastPsifClickTime = now;
+      if (psifClickTimeout) clearTimeout(psifClickTimeout);
+      psifClickTimeout = setTimeout(function() {
+        showSingleClickHint();
+        lastPsifClickTime = 0;
+      }, 450);
+    }
+  });
+
+  psifRow.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      window.openPsifDetails(e);
+    }
+  });
+}
+
+const iogpRow = $('iogpDblClickRow');
+let lastIogpClickTime = 0;
+let iogpClickTimeout = null;
+
+if (iogpRow) {
+  iogpRow.addEventListener('dblclick', function(e) {
+    lastIogpClickTime = 0;
+    if (iogpClickTimeout) clearTimeout(iogpClickTimeout);
+    window.openIogpDetails(e);
+  });
+
+  iogpRow.addEventListener('click', function(e) {
+    const now = Date.now();
+    const timeDiff = now - lastIogpClickTime;
+    if (timeDiff > 30 && timeDiff < 450) {
+      lastIogpClickTime = 0;
+      if (iogpClickTimeout) clearTimeout(iogpClickTimeout);
+      window.openIogpDetails(e);
+    } else {
+      lastIogpClickTime = now;
+      if (iogpClickTimeout) clearTimeout(iogpClickTimeout);
+      psifClickTimeout = setTimeout(function() {
+        showSingleClickHint();
+        lastIogpClickTime = 0;
+      }, 450);
+    }
+  });
+
+  iogpRow.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      window.openIogpDetails(e);
+    }
+  });
+}
+
+// Modal dismiss listeners
+$('psifModalCloseBtn').addEventListener('click', window.closeAllModals);
+$('psifModalOkBtn').addEventListener('click', window.closeAllModals);
+$('iogpModalCloseBtn').addEventListener('click', window.closeAllModals);
+$('iogpModalOkBtn').addEventListener('click', window.closeAllModals);
+
+$('psifModal').addEventListener('click', function(e) {
+  if (e.target === this) window.closeAllModals();
+});
+$('iogpModal').addEventListener('click', function(e) {
+  if (e.target === this) window.closeAllModals();
+});
+
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') window.closeAllModals();
+});
+
+$('incidentSelect').addEventListener('change', (e) => {
+  renderIncident(e.target.value);
+});
+
+// Comprehensive Automated Verification Suite
+window.runLayoutTests = function() {
+  const results = [];
+  window.closeAllModals();
+
+  // Test 1: Single click on PSIF row does NOT open modal
+  $('psifDblClickRow').click();
+  results.push({ test: 1, name: "Single click on PSIF row does NOT open modal", passed: !$('psifModal').classList.contains('open') });
+  window.closeAllModals();
+
+  // Test 2: Single click on IOGP row does NOT open modal
+  $('iogpDblClickRow').click();
+  results.push({ test: 2, name: "Single click on IOGP row does NOT open modal", passed: !$('iogpModal').classList.contains('open') });
+  window.closeAllModals();
+
+  // Test 3: Native dblclick event on PSIF row opens PSIF modal
+  $('psifDblClickRow').dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+  results.push({ test: 3, name: "Native dblclick event on PSIF row opens PSIF details", passed: $('psifModal').classList.contains('open') });
+  window.closeAllModals();
+
+  // Test 4: Double click on left/right edges of PSIF row
+  const rect = $('psifDblClickRow').getBoundingClientRect();
+  $('psifDblClickRow').dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: rect.left + 8, clientY: rect.top + 8 }));
+  results.push({ test: 4, name: "Double click on left boundary of PSIF row opens modal", passed: $('psifModal').classList.contains('open') });
+  window.closeAllModals();
+
+  // Test 5: Native dblclick event on IOGP row opens IOGP modal
+  $('iogpDblClickRow').dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+  results.push({ test: 5, name: "Native dblclick event on IOGP row opens IOGP details", passed: $('iogpModal').classList.contains('open') });
+  window.closeAllModals();
+
+  // Test 6: 2x2 Grid Template Structure Preserved
+  const grid = $('classificationGrid');
+  const comp = window.getComputedStyle(grid);
+  const areas = comp.gridTemplateAreas || '';
+  const passedAreas = areas.includes('psif') && areas.includes('reasoning') && areas.includes('nonpsif') && areas.includes('iogp');
+  results.push({ test: 6, name: "Exact 2x2 top grid structure preserved", passed: passedAreas });
+
+  // Test 7: Modal closes on Esc key
+  $('psifDblClickRow').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  results.push({ test: 7, name: "Modal closes on Escape key", passed: !$('psifModal').classList.contains('open') });
+
+  return results;
+};
+
+// Initialization
+const urlParams = new URLSearchParams(window.location.search);
+const initialId = urlParams.get('id') || 'INC-2026-0842';
+if ($('incidentSelect').querySelector(`option[value="${initialId}"]`)) {
+  $('incidentSelect').value = initialId;
+}
+renderIncident(initialId);
+
+if (urlParams.get('runTests') === 'true') {
+  console.log('Running layout tests...', window.runLayoutTests());
+}
+if (urlParams.get('openPsif') === 'true' || urlParams.get('modal') === 'psif') {
+  window.openPsifDetails();
+}
+if (urlParams.get('openIogp') === 'true' || urlParams.get('modal') === 'iogp') {
+  window.openIogpDetails();
+}
+</script>
+</body>
+</html>

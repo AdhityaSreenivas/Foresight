@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Upload Dataset — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Upload incident datasets for batch precursor intelligence processing.{% endblock %}
+
+{% block admin_nav_upload %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 4rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--surface);
+    position: relative;
+    margin-bottom: 2rem;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--brand);
+    background: var(--bg);
+}
+.drop-zone-icon { 
+    margin-bottom: 1.5rem; 
+    color: var(--brand);
+    display: inline-flex;
+    background: var(--bg);
+    padding: 1.5rem;
+    border-radius: 50%;
+}
+.drop-zone-text { font-size: 1.15rem; color: var(--text-primary); font-weight: 500; font-family: var(--font-heading); margin-bottom: 0.5rem; }
+.drop-zone-text strong { color: var(--brand); cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.drop-zone-hint { font-size: 0.9rem; color: var(--text-secondary); }
+#dataset-file-input { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 960px;">
+    <div class="page-header" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <span class="badge" style="background: var(--brand); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; text-transform: uppercase;">Admin Flow</span>
+        </div>
+        <h1 class="page-title">Upload Dataset</h1>
+        <p class="page-subtitle">Upload CSV, JSON, or JSONL incident batches for automated data quality evaluation and precursor inference.</p>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="card" style="margin-bottom: 2.5rem;">
+        <form method="post" action="{% url 'admin_flow:upload' %}" enctype="multipart/form-data" id="admin-upload-form">
+            {% csrf_token %}
+            <div class="drop-zone" id="drop-zone">
+                <div class="drop-zone-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <div class="drop-zone-text">
+                    Drag and drop your dataset file here, or <strong id="browse-btn">browse files</strong>
+                </div>
+                <div class="drop-zone-hint">Supports CSV, JSON, JSONL incident records up to 50 MB</div>
+                <input type="file" name="dataset_file" id="dataset-file-input" accept=".csv,.json,.jsonl">
+            </div>
+
+            <div id="file-chosen-panel" style="display: none; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span id="selected-filename" style="font-weight: 600; color: var(--text-primary); font-family: var(--font-mono); font-size: 0.9rem;"></span>
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-submit-upload">Upload Dataset</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Uploaded Datasets -->
+    <div>
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">
+            Uploaded Datasets
+        </h2>
+
+        {% if datasets %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Dataset Name</th>
+                        <th>Uploaded By</th>
+                        <th>Records</th>
+                        <th>Created</th>
+                        <th>Scope</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ds in datasets %}
+                    <tr>
+                        <td>
+                            <strong>{{ ds.name }}</strong>
+                        </td>
+                        <td>{{ ds.uploaded_by.email|default:"Evaluator" }}</td>
+                        <td class="tabular-nums">{{ ds.record_count|default:"0" }}</td>
+                        <td class="tabular-nums">{{ ds.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <span class="badge" style="background: var(--brand); color: #fff; font-size: 0.7rem;">Admin Flow</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_flow:live_processing_dataset' dataset_id=ds.id %}" class="btn btn-sm btn-secondary" style="font-size: 0.78rem; padding: 0.25rem 0.65rem;">
+                                Live Processing &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: 3rem 2rem; background: var(--surface);">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.5rem;">No Datasets Uploaded</h3>
+            <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto; font-size: 0.9rem;">
+                Upload a CSV, JSON, or JSONL incident dataset above to view and process records.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("dataset-file-input");
+    const browseBtn = document.getElementById("browse-btn");
+    const fileChosenPanel = document.getElementById("file-chosen-panel");
+    const selectedFilename = document.getElementById("selected-filename");
+
+    if (dropZone && fileInput) {
+        browseBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        ["dragenter", "dragover"].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add("drag-over");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove("drag-over");
+            });
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                fileInput.files = files;
+                handleFileChosen(files[0]);
+            }
+        });
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files && fileInput.files.length > 0) {
+                handleFileChosen(fileInput.files[0]);
+            }
+        });
+    }
+
+    function handleFileChosen(file) {
+        if (selectedFilename && fileChosenPanel) {
+            selectedFilename.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            fileChosenPanel.style.display = "flex";
+        }
+    }
+});
+</script>
+{% endblock %}

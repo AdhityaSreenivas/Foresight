@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Incident Investigation #{{ incident.id|stringformat:"s"|slice:":8" }} — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Single incident classification, causal reasoning trace, and precursor evidence investigation.{% endblock %}
+
+{% block admin_nav_incidents %}active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_flow_reference.css' %}?v=20260920v1">
+<style>
+/* Scoped investigation layout adapted from incident-classification.html */
+.inv-layout {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 1rem 0 3rem;
+}
+.inv-header-surface {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-lg);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--ref-shadow-sm);
+}
+.inv-metadata-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+    color: var(--ref-text-muted);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--ref-border);
+}
+.inv-metadata-item strong {
+    color: var(--ref-text-heading);
+}
+.inv-2x2-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-lg);
+    box-shadow: var(--ref-shadow-sm);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+@media (max-width: 860px) {
+    .inv-2x2-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.inv-cell {
+    padding: 1.75rem 2rem;
+    display: flex;
+    flex-direction: column;
+}
+.inv-cell-psif {
+    border-right: 1px solid var(--ref-border);
+    border-bottom: 1px solid var(--ref-border);
+}
+.inv-cell-reasoning {
+    border-bottom: 1px solid var(--ref-border);
+}
+.inv-cell-nonpsif {
+    border-right: 1px solid var(--ref-border);
+    background: #FAFAFA;
+}
+@media (max-width: 860px) {
+    .inv-cell-psif, .inv-cell-nonpsif {
+        border-right: none;
+    }
+    .inv-cell-nonpsif {
+        border-bottom: 1px solid var(--ref-border);
+    }
+}
+.inv-click-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.15rem 1.75rem;
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-md);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 0.85rem;
+    box-shadow: var(--ref-shadow-sm);
+}
+.inv-click-row:hover {
+    background: var(--ref-surface-sunk);
+    border-color: var(--ref-border-strong);
+    transform: translateY(-1px);
+}
+.inv-click-row.psif-row { border-left: 4px solid var(--ref-psif-red); }
+.inv-click-row.iogp-row { border-left: 4px solid var(--ref-iogp-blue); }
+
+.inv-evidence-box {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-lg);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--ref-shadow-sm);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-ref-shell">
+    <div class="admin-ref-container inv-layout">
+
+        <!-- Top Utility Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <a href="{% url 'admin_flow:incidents' %}" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--ref-text-muted); text-decoration: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Back to Incidents List
+            </a>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <a href="{% url 'admin_flow:incidents_detail' pk=incident.pk %}" class="ref-btn" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                    Standard Record View
+                </a>
+                <a href="{% url 'admin_flow:submit' %}" class="ref-btn ref-btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                    + Submit Another Incident
+                </a>
+            </div>
+        </div>
+
+        <!-- 1. INCIDENT HEADER SURFACE (from incident-classification.html) -->
+        <div class="inv-header-surface">
+            <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.65rem; flex-wrap: wrap;">
+                <span class="badge" style="background: #0F172A; color: #FFFFFF; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 4px;">
+                    Admin Flow Investigation
+                </span>
+                <span style="font-family: monospace; font-size: 0.95rem; font-weight: 800; color: var(--ref-text-heading);">
+                    #{{ incident.id|stringformat:"s"|slice:":8" }}
+                </span>
+                {% if incident.prediction and incident.prediction.is_sparse_input %}
+                    <span class="ref-portfolio-pill" style="background: var(--ref-amber-bg); color: var(--ref-amber); border-color: var(--ref-amber-border);">
+                        INSUFFICIENT INFORMATION
+                    </span>
+                {% elif incident.prediction and incident.prediction.psif_predicted %}
+                    <span class="ref-portfolio-pill" style="background: var(--ref-psif-red-bg); color: var(--ref-psif-red); border-color: var(--ref-psif-red-border);">
+                        VERIFIED PRECURSOR CANDIDATE
+                    </span>
+                {% elif incident.prediction %}
+                    <span class="ref-portfolio-pill" style="background: var(--ref-nonpsif-green-bg); color: var(--ref-nonpsif-green); border-color: var(--ref-nonpsif-green-border);">
+                        ROUTINE / NON-PSIF OBSERVATION
+                    </span>
+                {% else %}
+                    <span class="ref-portfolio-pill" style="background: var(--ref-surface-sunk); color: var(--ref-text-muted);">
+                        PENDING INFERENCE
+                    </span>
+                {% endif %}
+            </div>
+
+            <h1 style="font-size: clamp(1.4rem, 2.2vw, 1.85rem); font-weight: 800; color: var(--ref-text-heading); margin: 0 0 1rem 0; line-height: 1.25;">
+                {{ incident.job_task|default:incident.department|default:"Operational HSSE Observation" }}
+            </h1>
+
+            <!-- Metadata Row -->
+            <div class="inv-metadata-row">
+                <div class="inv-metadata-item">
+                    <span>Date Occurred:</span>
+                    <strong>{{ incident.incident_date|date:"Y-m-d"|default:"Not specified" }}</strong>
+                </div>
+                <span style="color: var(--ref-text-dim);">&bull;</span>
+                <div class="inv-metadata-item">
+                    <span>Location:</span>
+                    <strong>{{ incident.location|default:"Facility Area" }}</strong>
+                </div>
+                <span style="color: var(--ref-text-dim);">&bull;</span>
+                <div class="inv-metadata-item">
+                    <span>Activity:</span>
+                    <strong>{{ incident.job_task|default:"General Maintenance" }}</strong>
+                </div>
+                <span style="color: var(--ref-text-dim);">&bull;</span>
+                <div class="inv-metadata-item">
+                    <span>Department:</span>
+                    <strong>{{ incident.department|default:"Unassigned" }}</strong>
+                </div>
+                <span style="color: var(--ref-text-dim);">&bull;</span>
+                <div class="inv-metadata-item">
+                    <span>Report Type:</span>
+                    <strong>{{ incident.report_type|default:"Observation"|title }}</strong>
+                </div>
+            </div>
+
+            <!-- Full Narrative Container -->
+            <div>
+                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ref-text-muted); margin-bottom: 0.4rem;">
+                    Original Incident Narrative
+                </div>
+                <div style="font-size: 0.95rem; color: var(--ref-text-body); line-height: 1.6; background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: var(--ref-radius-md); padding: 1rem 1.25rem;">
+                    {{ incident.description }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. UNIFIED 2x2 INVESTIGATION PANEL (from incident-classification.html) -->
+        <div class="inv-2x2-grid">
+            
+            <!-- Module 1: PSIF CLASSIFICATION -->
+            <div class="inv-cell inv-cell-psif">
+                <div class="ref-cell-tag" style="color: var(--ref-psif-red);">
+                    PSIF Classification Module
+                </div>
+                
+                {% if incident.prediction and incident.prediction.is_sparse_input %}
+                    <div class="ref-cell-title" style="color: var(--ref-amber);">INSUFFICIENT INFORMATION</div>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--ref-text-heading); margin-bottom: 0.5rem;">
+                        Sparse narrative (&lt; 10 words)
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--ref-text-muted); line-height: 1.5; margin: 0;">
+                        The submitted report does not provide sufficient narrative substance to verify high-energy exposure or control state. Quarantined from binary evaluation.
+                    </p>
+                {% elif incident.prediction and incident.prediction.psif_predicted %}
+                    <div class="ref-cell-title psif-color">PSIF CANDIDATE</div>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--ref-text-heading); margin-bottom: 0.5rem;">
+                        Credible Fatality / Severe Harm Precursor
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--ref-text-body); line-height: 1.5; margin: 0 0 0.75rem 0;">
+                        High-energy source present with direct personnel exposure. Primary barriers were compromised, absent, or failed.
+                    </p>
+                {% elif incident.prediction %}
+                    <div class="ref-cell-title nonpsif-color">NOT PSIF</div>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--ref-text-heading); margin-bottom: 0.5rem;">
+                        Routine / Pathway Contained
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--ref-text-body); line-height: 1.5; margin: 0 0 0.75rem 0;">
+                        Low severity act or condition. Energy was contained, absorbed by verified safeguards, or personnel were segregated.
+                    </p>
+                {% else %}
+                    <div class="ref-cell-title">AWAITING INFERENCE</div>
+                {% endif %}
+
+                <!-- Model Score (Strict Terminology: 'PSIF Model Score') -->
+                {% if incident.prediction and not incident.prediction.is_sparse_input %}
+                <div style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--ref-border); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.78rem; font-weight: 600; color: var(--ref-text-muted);">PSIF Model Score</span>
+                    <span style="font-size: 1.05rem; font-weight: 800; font-family: monospace; color: {% if incident.prediction.psif_predicted %}var(--ref-psif-red){% else %}var(--ref-nonpsif-green){% endif %};">
+                        {{ incident.prediction.psif_probability|floatformat:3 }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Module 2: REASONING MODULE -->
+            <div class="inv-cell inv-cell-reasoning">
+                <div class="ref-cell-tag" style="color: var(--ref-iogp-blue);">
+                    Causal Pathway &amp; Reasoning Trace
+                </div>
+                <div style="font-size: 0.88rem; font-weight: 700; color: var(--ref-text-heading); margin-bottom: 0.5rem;">
+                    Decision Trace Sequence
+                </div>
+
+                <div class="ref-reasoning-step-list">
+                    <!-- 1. Hazard / Energy -->
+                    <div class="ref-reasoning-step-item">
+                        <span class="ref-reasoning-badge">1</span>
+                        <div class="ref-reasoning-step-body">
+                            <div class="ref-reasoning-step-title">Hazard &amp; Stored Energy</div>
+                            <div class="ref-reasoning-step-desc">
+                                {{ reasoning_hazard }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Exposure -->
+                    <div class="ref-reasoning-step-item">
+                        <span class="ref-reasoning-badge">2</span>
+                        <div class="ref-reasoning-step-body">
+                            <div class="ref-reasoning-step-title">Personnel Exposure</div>
+                            <div class="ref-reasoning-step-desc">
+                                {{ reasoning_exposure }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Control & State -->
+                    <div class="ref-reasoning-step-item">
+                        <span class="ref-reasoning-badge">3</span>
+                        <div class="ref-reasoning-step-body">
+                            <div class="ref-reasoning-step-title">Protective Safeguards</div>
+                            <div class="ref-reasoning-step-desc">
+                                {{ reasoning_control }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Decision -->
+                    <div class="ref-reasoning-step-item">
+                        <span class="ref-reasoning-badge" style="background: #FEF2F2; color: #B91C1C; border-color: #FCA5A5;">4</span>
+                        <div class="ref-reasoning-step-body">
+                            <div class="ref-reasoning-step-title">Synthesis &amp; Determination</div>
+                            <div class="ref-reasoning-step-desc">
+                                {{ reasoning_rationale }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module 3: NOT PSIF / PATHWAY INTERRUPTION -->
+            <div class="inv-cell inv-cell-nonpsif">
+                <div class="ref-cell-tag" style="color: var(--ref-nonpsif-green);">
+                    Pathway Interruption &amp; Containment
+                </div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading); margin-bottom: 0.4rem;">
+                    {% if incident.prediction and incident.prediction.psif_predicted %}
+                        Pathway Remained Uncontained
+                    {% else %}
+                        Fatal Sequence Interrupted
+                    {% endif %}
+                </div>
+                <p style="font-size: 0.82rem; color: var(--ref-text-body); line-height: 1.5; margin: 0 0 0.5rem 0;">
+                    {% if incident.prediction and incident.prediction.psif_predicted %}
+                        No effective physical or operational safeguard prevented personnel from contacting the hazard. The credible fatality pathway was open.
+                    {% else %}
+                        {{ evidence_break.why_not_psif|default:"Safeguards absorbed the energy release or secondary barriers arrested progression, preventing escalation into life-altering consequence." }}
+                    {% endif %}
+                </p>
+                {% if evidence_break.break_reason %}
+                <div style="font-size: 0.78rem; font-weight: 600; color: var(--ref-text-muted); margin-top: auto; padding-top: 0.5rem;">
+                    Key Safeguard Mechanism: <strong>{{ evidence_break.break_reason }}</strong>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Module 4: IOGP CLASSIFICATION MODULE -->
+            <div class="inv-cell">
+                <div class="ref-cell-tag" style="color: var(--ref-iogp-blue);">
+                    IOGP Life-Saving Rules Module
+                </div>
+                
+                {% if incident.iogp_rules.all %}
+                    {% for tag in incident.iogp_rules.all %}
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #0284C7; margin-bottom: 0.25rem;">
+                        {{ tag.rule }}
+                    </div>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: var(--ref-text-muted); margin-bottom: 0.5rem;">
+                        Confidence: <strong style="color: var(--ref-text-heading);">{{ tag.confidence|floatformat:2 }}</strong> &bull; IOGP Report 459 Standard
+                    </div>
+                    {% if tag.matched_keywords %}
+                    <div style="font-size: 0.78rem; color: var(--ref-text-muted); margin-bottom: 0.5rem;">
+                        Matched Signals: 
+                        {% for kw in tag.matched_keywords %}
+                        <span style="background: #EFF6FF; color: #0284C7; padding: 1px 5px; border-radius: 3px; font-weight: 600; font-family: monospace;">{{ kw }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div style="font-size: 1.15rem; font-weight: 700; color: var(--ref-text-dim); margin-bottom: 0.25rem;">
+                        No Direct Rule Match
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--ref-text-muted); margin: 0;">
+                        Observation falls outside the 9 canonical IOGP Life-Saving Rules.
+                    </p>
+                {% endif %}
+                
+                <div style="margin-top: auto; padding-top: 0.5rem; font-size: 0.75rem; color: var(--ref-text-dim); border-top: 1px solid var(--ref-border);">
+                    IOGP rules represent operational safeguards, independent of PSIF outcome probability.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. INTERACTIVE INVESTIGATION DEEP-DIVE ROWS -->
+        <div style="margin-bottom: 1.5rem;">
+            <!-- Row 1: PSIF Finding Deep Dive -->
+            <div class="inv-click-row psif-row" onclick="openPsifModal()">
+                <div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading);">
+                        PSIF Investigation Findings &amp; Causal Mechanisms
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--ref-text-muted); margin-top: 2px;">
+                        Inspect hazard severity, exposure duration, physical barriers, and consequence escalation rubric.
+                    </div>
+                </div>
+                <span class="ref-btn" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                    View Findings &rarr;
+                </span>
+            </div>
+
+            <!-- Row 2: IOGP Rule Criteria Deep Dive -->
+            {% if incident.iogp_rules.all %}
+            <div class="inv-click-row iogp-row" onclick="openIogpModal()">
+                <div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading);">
+                        IOGP Rule Requirements &amp; Start-Work Checks
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--ref-text-muted); margin-top: 2px;">
+                        Examine canonical mandatory safeguards and verification checks under IOGP Report 459.
+                    </div>
+                </div>
+                <span class="ref-btn" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                    View Checklist &rarr;
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 4. SOURCE EVIDENCE MODULE -->
+        <section class="inv-evidence-box" aria-label="Evidence Verification">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--ref-text-heading); margin: 0 0 0.85rem 0;">
+                Grounded Incident Evidence
+            </h3>
+            
+            {% if formatted_evidence %}
+            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                {% for ev in formatted_evidence %}
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem; background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: 6px; padding: 0.75rem 1rem;">
+                    <span style="font-size: 0.7rem; font-weight: 700; background: #0F172A; color: #FFFFFF; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-top: 1px;">
+                        {{ ev.type }}
+                    </span>
+                    <div style="font-size: 0.85rem; color: var(--ref-text-body); line-height: 1.45;">
+                        {{ ev.text }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="font-size: 0.85rem; color: var(--ref-text-muted); line-height: 1.5;">
+                Narrative text analyzed directly by the canonical DistilBERT embedding and dual-threshold classifier. All inferences are grounded in the documented observation facts.
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- 5. MODEL & PROVENANCE MODULE -->
+        <section class="inv-evidence-box" aria-label="Model Information">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--ref-text-heading); margin: 0 0 0.85rem 0;">
+                Model Provenance &amp; Calibration
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                <div style="background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: 6px; padding: 0.75rem 1rem;">
+                    <div style="font-size: 0.68rem; font-weight: 700; color: var(--ref-text-muted); text-transform: uppercase;">ACTIVE MODEL VERSION</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading); font-family: monospace; margin-top: 2px;">
+                        {{ model_version_label }}
+                    </div>
+                </div>
+                <div style="background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: 6px; padding: 0.75rem 1rem;">
+                    <div style="font-size: 0.68rem; font-weight: 700; color: var(--ref-text-muted); text-transform: uppercase;">PREDICTION PROVENANCE</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading); margin-top: 2px;">
+                        Canonical Pipeline Inference
+                    </div>
+                </div>
+                <div style="background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: 6px; padding: 0.75rem 1rem;">
+                    <div style="font-size: 0.68rem; font-weight: 700; color: var(--ref-text-muted); text-transform: uppercase;">EVALUATOR WORKSPACE</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #0284C7; margin-top: 2px;">
+                        Admin Flow Scope
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. CORRECTIVE ACTIONS MODULE (if available) -->
+        {% if incident.recommendations or reasoning_actions %}
+        <section class="inv-evidence-box" aria-label="Corrective Actions">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--ref-text-heading); margin: 0 0 0.85rem 0;">
+                Evidence-Grounded Corrective Recommendations
+            </h3>
+            <div style="background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: 6px; padding: 1rem 1.25rem; font-size: 0.9rem; color: var(--ref-text-body); line-height: 1.55;">
+                {% if incident.recommendations %}
+                    {{ incident.recommendations }}
+                {% elif reasoning_actions %}
+                    <ul style="margin: 0; padding-left: 1.25rem;">
+                        {% for act in reasoning_actions %}
+                        <li style="margin-bottom: 0.4rem;"><strong>{{ act.title }}</strong>: {{ act.description }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Modal 1: PSIF Findings Modal -->
+<div id="psif-findings-modal" class="ref-modal-backdrop" onclick="closeModals(event)">
+    <div class="ref-modal-frame" onclick="event.stopPropagation()">
+        <div class="ref-modal-topbar">
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: var(--ref-psif-red); text-transform: uppercase; letter-spacing: 0.05em;">
+                    PSIF Investigation Findings
+                </span>
+                <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--ref-text-heading); margin: 0.2rem 0 0 0;">
+                    Incident #{{ incident.id|stringformat:"s"|slice:":8" }} Precursor Trace
+                </h2>
+            </div>
+            <button type="button" onclick="closeModals()" style="background: none; border: none; font-size: 1.75rem; color: var(--ref-text-dim); cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        <div class="ref-modal-scroll">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="background: #FFFFFF; border: 1px solid var(--ref-border); border-radius: 6px; padding: 1rem;">
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--ref-text-muted); text-transform: uppercase;">HAZARD ENERGY SOURCE</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading); margin-top: 2px;">
+                        {{ reasoning_hazard }}
+                    </div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid var(--ref-border); border-radius: 6px; padding: 1rem;">
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--ref-text-muted); text-transform: uppercase;">EXPOSURE &amp; LINE OF FIRE</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading); margin-top: 2px;">
+                        {{ reasoning_exposure }}
+                    </div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid var(--ref-border); border-radius: 6px; padding: 1rem;">
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--ref-text-muted); text-transform: uppercase;">BARRIER CONDITION</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading); margin-top: 2px;">
+                        {{ reasoning_control }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="ref-modal-footer">
+            <button type="button" class="ref-btn" onclick="closeModals()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: IOGP Rule Details Modal -->
+<div id="iogp-rule-modal" class="ref-modal-backdrop" onclick="closeModals(event)">
+    <div class="ref-modal-frame" onclick="event.stopPropagation()">
+        <div class="ref-modal-topbar">
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #0284C7; text-transform: uppercase; letter-spacing: 0.05em;">
+                    IOGP Rule Standard
+                </span>
+                <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--ref-text-heading); margin: 0.2rem 0 0 0;">
+                    {{ incident.iogp_rules.first.rule|default:"Life-Saving Rule Requirements" }}
+                </h2>
+            </div>
+            <button type="button" onclick="closeModals()" style="background: none; border: none; font-size: 1.75rem; color: var(--ref-text-dim); cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        <div class="ref-modal-scroll">
+            <div style="background: #FFFFFF; border: 1px solid var(--ref-border); border-radius: 6px; padding: 1rem; line-height: 1.55; font-size: 0.9rem; color: var(--ref-text-body);">
+                Mandatory operational controls and Start-Work Checks under IOGP Report 459 must be verified before performing activities in this domain. Ensure isolation, permit authorization, and atmospheric testing where relevant.
+            </div>
+        </div>
+        <div class="ref-modal-footer">
+            <button type="button" class="ref-btn" onclick="closeModals()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openPsifModal() {
+    document.getElementById("psif-findings-modal").classList.add("open");
+}
+function openIogpModal() {
+    document.getElementById("iogp-rule-modal").classList.add("open");
+}
+function closeModals(event) {
+    if (event && event.target && event.target.classList.contains("ref-modal-frame")) {
+        return;
+    }
+    document.querySelectorAll(".ref-modal-backdrop").forEach(el => el.classList.remove("open"));
+}
+</script>
+{% endblock %}

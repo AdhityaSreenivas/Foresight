@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Datasets — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}View all uploaded incident datasets.{% endblock %}
+
+{% block nav_datasets %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+        <div>
+            <h1 class="page-title">Datasets</h1>
+            <p class="page-subtitle" style="margin-top: 0.5rem;">Manage and track uploaded datasets</p>
+        </div>
+        <a href="{% url 'datasets:upload' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Upload Dataset
+        </a>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+        {% if datasets %}
+        <div class="table-wrapper">
+            <table class="table" aria-label="List of datasets">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 2rem;">Dataset Name</th>
+                        <th>Format</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Duration / ETA</th>
+                        <th>Uploaded By</th>
+                        <th>Date</th>
+                        <th style="padding-right: 2rem; text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ds in datasets %}
+                    <tr {% if ds.status == 'processing' %}data-processing="true"{% endif %}>
+                        <td style="padding-left: 2rem; font-weight: 600; color: var(--text-primary);">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                {{ ds.name }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background: var(--bg-alt); color: var(--text-secondary); border: 1px solid var(--border-color); font-weight: 600;">
+                                {{ ds.file_type|upper }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if ds.status == 'completed' %}
+                                <span class="badge" style="background: rgba(107, 122, 79, 0.12); color: var(--risk-low); border: 1px solid rgba(107, 122, 79, 0.3); font-weight: 700;">Completed</span>
+                            {% elif ds.status == 'processing' %}
+                                <span class="badge" style="background: rgba(176, 138, 46, 0.12); color: var(--risk-medium); border: 1px solid rgba(176, 138, 46, 0.3); font-weight: 700;">Processing</span>
+                            {% elif ds.status == 'failed' %}
+                                <span class="badge" style="background: rgba(156, 59, 50, 0.12); color: var(--risk-critical); border: 1px solid rgba(156, 59, 50, 0.3); font-weight: 700;">Failed</span>
+                            {% elif ds.status == 'mapping_pending' or ds.status == 'uploaded' %}
+                                <span class="badge" style="background: rgba(92, 124, 138, 0.12); color: var(--cat-blue); border: 1px solid rgba(92, 124, 138, 0.3); font-weight: 700;">Mapping Pending</span>
+                            {% elif ds.status == 'retrying' %}
+                                <span class="badge" style="background: rgba(217, 119, 6, 0.12); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.3); font-weight: 700;">Retrying</span>
+                            {% elif ds.status == 'cancel_requested' %}
+                                <span class="badge" style="background: rgba(217, 119, 6, 0.12); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.3); font-weight: 700;">Canceling…</span>
+                            {% elif ds.status == 'canceled' %}
+                                <span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.3); font-weight: 700;">Canceled</span>
+                            {% else %}
+                                <span class="badge" style="background: var(--bg-alt); color: var(--text-secondary); border: 1px solid var(--border-color);">{{ ds.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="tabular-nums" style="color: var(--text-secondary);">
+                            <div style="display: flex; align-items: baseline; gap: 0.35rem;">
+                                <span style="color: var(--text-primary); font-weight: 600;">{{ ds.progress }}%</span>
+                                <span style="font-size: 0.78rem; color: var(--text-muted);">({{ ds.processed_rows }}/{{ ds.total_rows|default:"?" }})</span>
+                            </div>
+                            {% if ds.status == 'processing' or ds.status == 'cancel_requested' %}
+                            <div style="width: 80px; height: 3px; background: var(--bg-alt); border-radius: 2px; margin-top: 4px; overflow: hidden;">
+                                <div style="width: {{ ds.progress }}%; height: 100%; background: var(--cat-blue, #5c7c8a); border-radius: 2px;"></div>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="tabular-nums" style="color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">
+                            {% with timing=ds.get_timing_info %}
+                                {% if ds.status == 'completed' %}
+                                    {% if timing.formatted_duration %}
+                                        <span style="color: var(--text-primary); font-weight: 600;">{{ timing.formatted_duration }}</span>
+                                    {% else %}
+                                        <span style="color: var(--text-muted); font-size: 0.8rem;">Duration unavailable</span>
+                                    {% endif %}
+                                {% elif ds.status == 'processing' %}
+                                    {% if timing.is_stalled %}
+                                        <span style="color: var(--risk-medium); font-size: 0.82rem; display: inline-flex; align-items: center; gap: 4px;">
+                                            <span style="width:6px; height:6px; border-radius:50%; background:var(--risk-medium); display:inline-block;"></span>
+                                            Paused / Retrying
+                                        </span>
+                                    {% elif timing.is_reliable and timing.formatted_estimated_remaining %}
+                                        <span style="color: var(--risk-medium); font-weight: 600;">~{{ timing.formatted_estimated_remaining }} remaining</span>
+                                        {% if timing.formatted_elapsed %}
+                                            <span style="display: block; font-size: 0.75rem; color: var(--text-muted);">{{ timing.formatted_elapsed }} elapsed</span>
+                                        {% endif %}
+                                    {% elif timing.formatted_elapsed %}
+                                        <span style="color: var(--text-secondary); font-size: 0.82rem;">{{ timing.formatted_elapsed }} elapsed</span>
+                                    {% else %}
+                                        <span style="color: var(--text-muted); font-size: 0.8rem;">Calculating…</span>
+                                    {% endif %}
+                                {% elif ds.status == 'cancel_requested' %}
+                                    <span style="color: var(--risk-medium); font-size: 0.82rem;">Stopping at checkpoint…</span>
+                                {% elif ds.status == 'canceled' %}
+                                    {% if timing.formatted_duration %}
+                                        <span style="color: var(--text-muted); font-size: 0.82rem;">Canceled after {{ timing.formatted_duration }}</span>
+                                    {% else %}
+                                        <span style="color: var(--text-muted); font-size: 0.8rem;">Canceled</span>
+                                    {% endif %}
+                                {% elif ds.status == 'failed' %}
+                                    {% if timing.formatted_duration %}
+                                        <span style="color: var(--risk-critical); font-size: 0.82rem;">Failed after {{ timing.formatted_duration }}</span>
+                                    {% else %}
+                                        <span style="color: var(--text-muted); font-size: 0.8rem;">Duration unavailable</span>
+                                    {% endif %}
+                                {% elif ds.status == 'retrying' %}
+                                    <span style="color: var(--risk-medium); font-size: 0.82rem;">Retrying…</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted);">—</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td style="color: var(--text-secondary); font-weight: 500;">{{ ds.uploaded_by.username|default:"System" }}</td>
+                        <td class="tabular-nums" style="color: var(--text-secondary); white-space: nowrap;">{{ ds.created_at|date:"M j, Y, H:i" }}</td>
+                        <td style="padding-right: 2rem; text-align: right; white-space: nowrap;">
+                            <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.5rem;">
+                                {% if ds.status == 'mapping_pending' or ds.status == 'uploaded' %}
+                                <a href="{% url 'datasets:upload' %}?resume={{ ds.id }}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600;">
+                                    Resume Mapping
+                                </a>
+                                {% elif ds.status == 'completed' or ds.status == 'canceled' %}
+                                <a href="{% url 'datasets:status' ds.id %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600;">
+                                    View Status
+                                </a>
+                                {% else %}
+                                <a href="{% url 'datasets:status' ds.id %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 600;">
+                                    View Progress
+                                </a>
+                                {% endif %}
+                                {% if ds.status == 'mapping_pending' or ds.status == 'uploaded' or ds.status == 'failed' or ds.status == 'completed' or ds.status == 'canceled' %}
+                                <button type="button" class="btn btn-outline btn-discard-dataset" data-id="{{ ds.id }}" data-name="{{ ds.name }}" data-status="{{ ds.status }}" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.3); display: inline-flex; align-items: center; gap: 0.35rem;" title="Delete this dataset">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    Delete
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="state-panel" style="padding: 5rem 2rem; background: var(--surface);">
+            <div class="state-icon" style="background: var(--bg-alt); padding: 1.5rem; border-radius: 50%; margin-bottom: 1.5rem; display: inline-flex;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);">
+                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+            </div>
+            <h3 class="state-title" style="font-family: var(--font-heading); color: var(--text-primary); font-size: 1.4rem; margin-bottom: 0.75rem;">No datasets uploaded yet</h3>
+            <p class="state-text" style="color: var(--text-secondary); font-size: 0.95rem; max-width: 420px; margin: 0 auto 2rem auto;">Upload a CSV, JSON, or JSONL incident dataset to begin processing and generating predictions.</p>
+            <div>
+                <a href="{% url 'datasets:upload' %}" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 600;">Upload First Dataset</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrfToken = getCookie('csrftoken') || '';
+
+    document.querySelectorAll('.btn-discard-dataset').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const datasetId = btn.dataset.id;
+            const datasetName = btn.dataset.name;
+            const datasetStatus = btn.dataset.status;
+            if (!datasetId) return;
+
+            const isCompleted = datasetStatus === 'completed';
+            const confirmMsg = isCompleted
+                ? `Delete "${datasetName}"?\n\nThis will permanently delete the dataset, its uploaded file, and ALL associated incident records.\n\nThis action cannot be undone.`
+                : `Discard "${datasetName}"?\n\nThis will permanently delete the dataset, its uploaded file, and any partially-ingested incident records.\n\nThis action cannot be undone.`;
+
+            if (!window.confirm(confirmMsg)) return;
+
+            btn.disabled = true;
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 0.7s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Deleting…';
+
+            try {
+                const res = await fetch(`/api/datasets/${datasetId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    const row = btn.closest('tr');
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s ease';
+                        row.style.opacity = '0';
+                        setTimeout(() => {
+                            row.remove();
+                            const tbody = document.querySelector('tbody');
+                            if (tbody && !tbody.querySelector('tr')) {
+                                window.location.reload();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    throw new Error(data.detail || 'Unable to delete this dataset. It may currently be processing or have protected incident records.');
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                alert(err.message || 'Unable to delete this dataset.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

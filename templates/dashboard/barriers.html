@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Barrier & Critical-Control Intelligence — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Operational barrier observation frequency and precursor risk correlation across IOGP Life-Saving Rules.{% endblock %}
+
+{% block nav_barriers %}active{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .barrier-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 1199px) and (min-width: 641px) {
+        .barrier-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .barrier-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+
+    .barrier-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .barrier-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--brand);
+    }
+
+    .barrier-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .barrier-title {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--black);
+        line-height: 1.3;
+        margin: 0;
+    }
+
+    .barrier-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 9999px;
+        white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .badge-high {
+        background: rgba(156, 59, 50, 0.1);
+        color: var(--risk-critical);
+        border: 1px solid rgba(156, 59, 50, 0.2);
+    }
+
+    .badge-medium {
+        background: rgba(176, 138, 46, 0.1);
+        color: var(--risk-medium);
+        border: 1px solid rgba(176, 138, 46, 0.2);
+    }
+
+    .badge-standard {
+        background: rgba(92, 124, 138, 0.1);
+        color: var(--cat-blue);
+        border: 1px solid rgba(92, 124, 138, 0.2);
+    }
+
+    .barrier-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        padding: 0.875rem 0;
+        border-top: 1px solid var(--border-light, #f0f0eb);
+        border-bottom: 1px solid var(--border-light, #f0f0eb);
+        margin-bottom: 1rem;
+    }
+
+    .barrier-metric-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .barrier-metric-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+
+    .barrier-metric-val {
+        font-family: var(--font-heading);
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--black);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+    }
+
+    .barrier-progress-container {
+        margin-bottom: 1rem;
+    }
+
+    .barrier-progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.35rem;
+    }
+
+    .barrier-progress-bar {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        display: flex;
+    }
+
+    .barrier-progress-fill {
+        height: 100%;
+        background: var(--risk-critical);
+        border-radius: 3px;
+    }
+
+    .barrier-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-barrier-drilldown {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--brand);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-barrier-drilldown:hover {
+        background: var(--bg-hover, #f8f8f5);
+        border-color: var(--brand);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="page-header" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 class="page-title">Barrier &amp; Critical-Control Intelligence</h1>
+                <p class="page-subtitle">Operational observation frequency and precursor risk correlation across IOGP Life-Saving Rules.</p>
+            </div>
+            <div>
+                <a href="/dashboard/reports/" class="btn btn-outline" style="font-size: 0.85rem;">
+                    &larr; Back to Reports &amp; Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mandatory Methodology Notice -->
+    <div style="background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--cat-blue); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); margin-bottom: 2rem;">
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+            <div style="color: var(--cat-blue); flex-shrink: 0; margin-top: 0.15rem;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </div>
+            <div>
+                <div style="font-weight: 700; font-size: 0.95rem; color: var(--black); margin-bottom: 0.25rem;">
+                    Preflight Audited Methodology Notice
+                </div>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.55;">
+                    Barrier associations are derived from deterministic IOGP Life-Saving Rules keyword and phrase matching across incident narratives. PSIF linkages reflect authoritative model predictions on non-sparse reports. These metrics indicate operational observation frequency and risk correlation, <strong>not calibrated physical barrier integrity</strong>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Summary KPI Grid (Authoritative Case B Totals) -->
+    <div class="metrics-grid kpi-grid" id="barrier-summary-grid">
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Monitored Barriers</div>
+                <div style="color: var(--cat-blue); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-barriers-count">{{ barrier_data.total_monitored_barriers|default:"9" }}</div>
+            <div class="metric-subtext" title="Canonical IOGP Life-Saving Rules">Canonical IOGP Life-Saving Rules</div>
+        </div>
+
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Matched Observations</div>
+                <div style="color: var(--muted); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-matched-obs">{{ barrier_data.formatted_total_matched|default:"415,343" }}</div>
+            <div class="metric-subtext" title="Unique incidents with barrier tags">Unique incidents with barrier tags</div>
+        </div>
+
+        <div class="metric kpi-card" style="border-top: 3px solid var(--risk-critical);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">PSIF-Linked Reports</div>
+                <div style="color: var(--risk-critical); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-psif-linked" style="color: var(--risk-critical);">{{ barrier_data.formatted_total_psif_linked|default:"266,129" }}</div>
+            <div class="metric-subtext" title="Authoritative model candidate linkages">{{ barrier_data.overall_linkage_rate|default:"64.1" }}% of tagged reports</div>
+        </div>
+
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Reporting Sites</div>
+                <div style="color: var(--cat-teal, #4B7F76); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-sites-count">{{ barrier_data.formatted_total_affected_sites|default:"199" }}</div>
+            <div class="metric-subtext" title="Distinct operational locations">Distinct operational locations</div>
+        </div>
+    </div>
+
+    <!-- Comparative Analysis Chart -->
+    <div class="card" style="margin-bottom: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h3 style="font-size: 1.25rem; margin: 0 0 0.25rem 0;">IOGP Barrier Risk Distribution Comparison</h3>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                    Deterministic Matched Observations vs. Model-Predicted PSIF Linkages
+                </div>
+            </div>
+        </div>
+        <div class="chart-container" style="height: 380px; position: relative;">
+            <canvas id="barrierComparisonChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 9-Rule Authoritative Summary Table (Task 11 Mandatory Specification) -->
+    <div class="card" style="margin-bottom: 2.5rem; padding: 1.5rem;" id="barrier-intelligence-table-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <h2 style="font-size: 1.25rem; margin: 0 0 0.35rem 0; font-weight: 700; color: var(--black);">
+                    Canonical Barrier Intelligence Table (9 Life-Saving Rules)
+                </h2>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45;">
+                    Barrier intelligence links observations to canonical safety-rule domains and evidence-supported control states. Rule matching alone does not establish a control failure or barrier effectiveness.
+                </div>
+            </div>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.75rem; font-size: 0.76rem; color: var(--text-secondary); font-family: var(--font-mono, monospace);">
+                PSIF-linkage rate = PSIF-linked matched observations / matched observations
+            </div>
+        </div>
+
+        <div class="table-container" style="overflow-x: auto;">
+            <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.88rem;" id="table-barrier-intelligence">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border); text-align: left; background: var(--bg);">
+                        <th style="padding: 0.85rem 0.75rem; font-weight: 700; color: var(--black);">Rule</th>
+                        <th style="padding: 0.85rem 0.75rem; font-weight: 700; color: var(--black); text-align: right;">Matched Observations</th>
+                        <th style="padding: 0.85rem 0.75rem; font-weight: 700; color: var(--risk-critical); text-align: right;">PSIF-Linked Observations</th>
+                        <th style="padding: 0.85rem 0.75rem; font-weight: 700; color: var(--black); text-align: right;">Affected Sites</th>
+                        <th style="padding: 0.85rem 0.75rem; font-weight: 700; color: var(--black); text-align: right;">PSIF-Linkage Rate</th>
+                        <th style="padding: 0.85rem 0.75rem; font-weight: 700; color: var(--black); text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in barrier_data.barriers %}
+                    <tr style="border-bottom: 1px solid var(--border); transition: background 0.1s ease;">
+                        <td style="padding: 0.85rem 0.75rem;">
+                            <a href="/dashboard/barriers/{{ b.slug }}/" style="font-weight: 700; color: var(--black); text-decoration: none;" class="barrier-row-link" title="Open {{ b.rule }} barrier intelligence detail">
+                                {{ b.rule }}
+                            </a>
+                        </td>
+                        <td style="padding: 0.85rem 0.75rem; text-align: right; font-family: var(--font-mono); font-weight: 600;" class="tabular-nums">
+                            {{ b.formatted_matched }}
+                        </td>
+                        <td style="padding: 0.85rem 0.75rem; text-align: right; font-family: var(--font-mono); font-weight: 700; color: var(--risk-critical);" class="tabular-nums">
+                            {{ b.formatted_psif_linked }}
+                        </td>
+                        <td style="padding: 0.85rem 0.75rem; text-align: right; font-family: var(--font-mono); font-weight: 600;" class="tabular-nums">
+                            {{ b.formatted_affected_sites }}
+                        </td>
+                        <td style="padding: 0.85rem 0.75rem; text-align: right;">
+                            <div style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
+                                <div style="width: 60px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; display: inline-block;">
+                                    <div style="width: {{ b.psif_linkage_rate }}%; height: 100%; background: var(--risk-critical);"></div>
+                                </div>
+                                <span style="font-family: var(--font-mono); font-weight: 700; font-size: 0.85rem;">{{ b.psif_linkage_rate }}%</span>
+                            </div>
+                        </td>
+                        <td style="padding: 0.85rem 0.75rem; text-align: right; white-space: nowrap;">
+                            <a href="/dashboard/barriers/{{ b.slug }}/" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; margin-right: 0.35rem;" title="View barrier detail and representative incidents">
+                                Detail
+                            </a>
+                            <a href="/incidents/?rule={{ b.rule|urlencode }}" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" title="Filter incident table by this rule">
+                                Reports &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                            No barrier observation records currently available.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="font-size: 0.76rem; color: var(--text-secondary); margin-top: 0.85rem; line-height: 1.45;">
+            <em>Methodology Rule:</em> Observation rates reflect classification associations in historical reports. They do NOT calculate probability of barrier failure or calibrated control health percentages.
+        </div>
+    </div>
+
+    <!-- 9 Barrier Cards Grid -->
+    <div class="section">
+        <h2 class="section-title" style="margin-bottom: 1.25rem;">Barrier Intelligence Portfolio (Interactive Cards)</h2>
+        <div class="barrier-grid">
+            {% for b in barrier_data.barriers %}
+            <div class="barrier-card">
+                <div>
+                    <div class="barrier-header">
+                        <h3 class="barrier-title">{{ b.rule }}</h3>
+                        {% if b.psif_linkage_rate >= 75 %}
+                        <span class="barrier-badge badge-high">{{ b.psif_linkage_rate }}% PSIF</span>
+                        {% elif b.psif_linkage_rate >= 65 %}
+                        <span class="barrier-badge badge-medium">{{ b.psif_linkage_rate }}% PSIF</span>
+                        {% else %}
+                        <span class="barrier-badge badge-standard">{{ b.psif_linkage_rate }}% PSIF</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="barrier-metrics">
+                        <div class="barrier-metric-item">
+                            <span class="barrier-metric-label">Matched</span>
+                            <span class="barrier-metric-val">{{ b.formatted_matched }}</span>
+                        </div>
+                        <div class="barrier-metric-item">
+                            <span class="barrier-metric-label">PSIF-Linked</span>
+                            <span class="barrier-metric-val" style="color: var(--risk-critical);">{{ b.formatted_psif_linked }}</span>
+                        </div>
+                        <div class="barrier-metric-item">
+                            <span class="barrier-metric-label">Sites</span>
+                            <span class="barrier-metric-val">{{ b.formatted_affected_sites }}</span>
+                        </div>
+                    </div>
+
+                    <div class="barrier-progress-container">
+                        <div class="barrier-progress-label">
+                            <span>PSIF Risk Linkage</span>
+                            <span style="font-weight: 600; font-family: var(--font-mono);">{{ b.psif_linkage_rate }}%</span>
+                        </div>
+                        <div class="barrier-progress-bar">
+                            <div class="barrier-progress-fill" style="width: {{ b.psif_linkage_rate }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="barrier-actions" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <a href="/dashboard/barriers/{{ b.slug }}/" class="btn-barrier-drilldown" style="font-size: 0.75rem;" title="View detail for {{ b.rule }}">
+                        <span>Detail</span>
+                    </a>
+                    <a href="/incidents/?rule={{ b.rule|urlencode }}" class="btn-barrier-drilldown" title="View incidents matching {{ b.rule }}">
+                        <span>{{ b.formatted_matched }} Reports &rarr;</span>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <p style="color: var(--text-secondary);">No barrier data currently available.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <!-- Data Integrity & Omitted Metrics Disclosure -->
+    <div class="card" style="margin-top: 1rem; margin-bottom: 3rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">
+            Preflight Audit &amp; Data Integrity Disclosure
+        </h4>
+        <p style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.55;">
+            <strong>Concern-pattern matches: NOT CURRENTLY COMPUTABLE (Omitted)</strong>. A rigorous repository and database audit of all 561,351 incident records established that structured control condition fields (<code style="font-family: var(--font-mono); font-size: 0.8rem; background: var(--bg); padding: 0.1rem 0.3rem; border-radius: 3px;">control_condition</code>, <code style="font-family: var(--font-mono); font-size: 0.8rem; background: var(--bg); padding: 0.1rem 0.3rem; border-radius: 3px;">control_failed_bypassed</code>) are unpopulated (100% unknown/null). Deterministic keyword matching for terms such as <em>"isolation"</em> or <em>"bypassed"</em> cannot reliably separate verified controls or effective isolations from actual barrier failures without contextually calibrated negation and failure parsing.
+        </p>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.55;">
+            To maintain complete analytical truthfulness, only directly computable metrics (<strong>Matched observations</strong>, <strong>PSIF-linked observations</strong>, and <strong>Affected sites</strong>) are presented in V1.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+    Chart.defaults.font.family = "'Public Sans', system-ui, sans-serif";
+    Chart.defaults.color = getCssVar('--text-secondary') || '#6B6B66';
+
+    const colorCritical = getCssVar('--risk-critical') || '#9C3B32';
+    const colorBarriers = getCssVar('--cat-blue') || '#5C7C8A';
+    const colorBorder = getCssVar('--border') || '#E3E3DB';
+
+    const barrierLabels = [
+        {% for b in barrier_data.barriers %}
+        "{{ b.rule }}",
+        {% endfor %}
+    ];
+
+    const matchedData = [
+        {% for b in barrier_data.barriers %}
+        {{ b.matched_observations }},
+        {% endfor %}
+    ];
+
+    const psifData = [
+        {% for b in barrier_data.barriers %}
+        {{ b.psif_linked_observations }},
+        {% endfor %}
+    ];
+
+    if (barrierLabels.length > 0) {
+        const ctx = document.getElementById('barrierComparisonChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: barrierLabels,
+                datasets: [
+                    {
+                        label: 'Matched Observations',
+                        data: matchedData,
+                        backgroundColor: colorBarriers,
+                        borderRadius: 4,
+                        barPercentage: 0.75,
+                        categoryPercentage: 0.8
+                    },
+                    {
+                        label: 'PSIF-Linked Candidates',
+                        data: psifData,
+                        backgroundColor: colorCritical,
+                        borderRadius: 4,
+                        barPercentage: 0.75,
+                        categoryPercentage: 0.8
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: colorBorder },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            font: { family: 'Public Sans', size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 17, 17, 0.92)',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.parsed.x || 0;
+                                return ` ${context.dataset.label}: ${val.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

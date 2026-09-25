@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Data Quality Assurance & Ingestion Governance — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Authoritative platform fleet and dataset-specific Data Quality audit, defect breakdown, evidence states, and ingestion pathway assurance.{% endblock %}
+
+{% block nav_dq %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dq-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+        border-radius: var(--radius-lg, 12px);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .dq-hero::before {
+        content: '';
+        position: absolute;
+        top: -40%; right: -10%;
+        width: 320px; height: 320px;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .dq-hero-title {
+        font-family: var(--font-heading);
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.02em;
+    }
+    .dq-hero-subtitle {
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.75);
+        margin: 0 0 1.25rem 0;
+        max-width: 650px;
+        line-height: 1.5;
+    }
+    .dq-hero-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .dq-badge-version {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        padding: 0.25rem 0.65rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .dq-filter-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: var(--radius-md, 6px);
+        font-size: 0.85rem;
+        outline: none;
+        cursor: pointer;
+    }
+    .dq-filter-select option {
+        background: #1e293b;
+        color: #ffffff;
+    }
+
+    /* Primary KPI Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        padding: 1.25rem;
+        text-align: left;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        position: relative;
+    }
+    .kpi-card.valid-border { border-top: 4px solid #16a34a; }
+    .kpi-card.warn-border { border-top: 4px solid #d97706; }
+    .kpi-card.crit-border { border-top: 4px solid #dc2626; }
+    .kpi-card.pend-border { border-top: 4px solid #64748b; }
+    .kpi-card.total-border { border-top: 4px solid #1e3a5f; }
+
+    .kpi-value {
+        font-family: var(--font-heading);
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: var(--text-primary, #0f172a);
+        line-height: 1.1;
+        margin-bottom: 0.35rem;
+    }
+    .kpi-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary, #64748b);
+        margin-bottom: 0.25rem;
+    }
+    .kpi-rate {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary, #64748b);
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border, #e2e8f0);
+    }
+    .section-heading {
+        font-family: var(--font-heading);
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-primary, #0f172a);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Evidence States Grid */
+    .evidence-states-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 1100px) { .evidence-states-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .evidence-states-grid { grid-template-columns: 1fr; } }
+
+    .evidence-state-box {
+        background: var(--surface-alt, #f8fafc);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .evidence-state-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    .evidence-state-title {
+        font-family: var(--font-heading);
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text-primary, #0f172a);
+    }
+    .evidence-state-def {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #475569);
+        line-height: 1.45;
+        margin-bottom: 0.75rem;
+    }
+    .evidence-state-action {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(0,0,0,0.04);
+        color: var(--text-primary, #0f172a);
+    }
+
+    /* Table Styles */
+    .assurance-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+    .assurance-table th {
+        text-align: left;
+        padding: 0.75rem 1rem;
+        background: var(--surface-alt, #f8fafc);
+        font-family: var(--font-heading);
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-secondary, #64748b);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border, #e2e8f0);
+    }
+    .assurance-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        color: var(--text-primary, #1e293b);
+        vertical-align: middle;
+    }
+    .assurance-table tr:last-child td { border-bottom: none; }
+
+    .badge-sev-crit {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(220, 38, 38, 0.25);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.7rem;
+    }
+    .badge-sev-warn {
+        background: rgba(217, 119, 6, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(217, 119, 6, 0.25);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.7rem;
+    }
+    .badge-sev-info {
+        background: rgba(30, 58, 95, 0.1);
+        color: #1e3a5f;
+        border: 1px solid rgba(30, 58, 95, 0.25);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.7rem;
+    }
+    .badge-check-ok {
+        background: rgba(22, 163, 74, 0.1);
+        color: #16a34a;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.7rem;
+    }
+
+    .alert-callout {
+        background: rgba(30, 58, 95, 0.04);
+        border: 1px solid rgba(30, 58, 95, 0.15);
+        border-left: 4px solid #1e3a5f;
+        border-radius: var(--radius-md, 6px);
+        padding: 1rem 1.25rem;
+        font-size: 0.85rem;
+        color: var(--text-primary, #1e293b);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    code.code-mono {
+        font-family: var(--font-mono, monospace);
+        font-size: 0.8rem;
+        background: rgba(0,0,0,0.06);
+        padding: 0.15rem 0.35rem;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- DQ Hero Banner -->
+<div class="dq-hero">
+    <div style="position: relative; z-index: 1;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span class="dq-badge-version">Data Quality Engine {{ dq_summary.quality_version }}</span>
+        </div>
+        <h1 class="dq-hero-title">Data Quality Assurance & Ingestion Governance</h1>
+        <p class="dq-hero-subtitle">
+            Authoritative, reproducible, and defensible audit of incident data quality. Every figure specifies explicit scope, timestamps, and independent denominators.
+        </p>
+
+        <div class="dq-hero-toolbar">
+            <div style="font-size: 0.82rem; color: rgba(255,255,255,0.7);">
+                <strong>Audit Scope:</strong> {{ dq_summary.scope }} &nbsp;|&nbsp; 
+                <strong>Timestamp:</strong> {{ dq_summary.timestamp|slice:":19" }}Z
+            </div>
+            <form method="get" action="/dashboard/data-quality/" style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <label for="datasetSelect" style="font-size: 0.8rem; color: rgba(255,255,255,0.8);">Filter Dataset:</label>
+                <select id="datasetSelect" name="dataset_id" class="dq-filter-select" onchange="this.form.submit()">
+                    <option value="">Platform Fleet (All Incidents)</option>
+                    {% for ds in datasets %}
+                    <option value="{{ ds.id }}" {% if selected_dataset_id == ds.id|stringformat:"s" %}selected{% endif %}>
+                        {{ ds.name }} (v{{ ds.dataset_version }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Methodology Callout -->
+<div class="alert-callout">
+    <strong>Ingestion Gating Contract:</strong> All ingestion pathways enforce <code class="code-mono">validate_incident_for_analysis</code> prior to analytical entry. 
+    Records with <strong>CRITICAL</strong> findings are rejected at the ingestion boundary. 
+    Records with <strong>WARNING</strong> findings are admitted with structured findings and flagged as sparse or incomplete. 
+    Sparse inputs are excluded from high-confidence PSIF statistics to prevent analytical contamination.
+</div>
+
+<!-- Summary KPI Grid -->
+<div class="kpi-grid">
+    <div class="kpi-card total-border">
+        <div class="kpi-label">Total Ingested Records</div>
+        <div class="kpi-value">{{ dq_summary.summary_metrics.formatted_total_records }}</div>
+        <div class="kpi-rate">100.0% fleet portfolio</div>
+    </div>
+    <div class="kpi-card valid-border">
+        <div class="kpi-label">Formally Valid</div>
+        <div class="kpi-value" style="color: #16a34a;">{{ dq_summary.summary_metrics.formatted_valid }}</div>
+        <div class="kpi-rate">{{ dq_summary.summary_metrics.valid_rate }}% of total records</div>
+    </div>
+    <div class="kpi-card warn-border">
+        <div class="kpi-label">Accepted with Warning</div>
+        <div class="kpi-value" style="color: #d97706;">{{ dq_summary.summary_metrics.formatted_warning }}</div>
+        <div class="kpi-rate">{{ dq_summary.summary_metrics.warning_rate }}% of total records</div>
+    </div>
+    <div class="kpi-card crit-border">
+        <div class="kpi-label">Critical / Rejected</div>
+        <div class="kpi-value" style="color: #dc2626;">{{ dq_summary.summary_metrics.formatted_critical }}</div>
+        <div class="kpi-rate">{{ dq_summary.summary_metrics.critical_rate }}% rejected at gate</div>
+    </div>
+    <div class="kpi-card pend-border">
+        <div class="kpi-label">Pending DQ Batch</div>
+        <div class="kpi-value" style="color: #64748b;">{{ dq_summary.summary_metrics.formatted_pending_dq }}</div>
+        <div class="kpi-rate">{{ dq_summary.summary_metrics.pending_rate }}% queued for assessment</div>
+    </div>
+</div>
+
+<!-- 4 Distinct Evidence States Section -->
+<div class="section-card">
+    <div class="section-header">
+        <h2 class="section-heading">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Evidence Sufficiency & Data Quality States (Sparse vs Invalid)
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">4 Distinct Conceptual States</span>
+    </div>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Under Foresight governance, <strong>INVALID DATA</strong>, <strong>SPARSE DATA</strong>, <strong>VALID BUT LOW-EVIDENCE</strong>, and <strong>INSUFFICIENT INFORMATION</strong> are rigorously separated. The platform never collapses sparse records into ground-truth "NOT PSIF".
+    </p>
+
+    <div class="evidence-states-grid">
+        {% for st in dq_summary.evidence_states %}
+        <div class="evidence-state-box">
+            <div>
+                <div class="evidence-state-header">
+                    <span class="evidence-state-title">{{ st.label }}</span>
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary);">{{ st.count|default:0 }}</span>
+                </div>
+                <div class="evidence-state-def">{{ st.definition }}</div>
+            </div>
+            <div class="evidence-state-action">
+                <strong>Platform Action:</strong> {{ st.action }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Defect Category Breakdown -->
+<div class="section-card">
+    <div class="section-header">
+        <h2 class="section-heading">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Category-Level Defect Breakdown
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Audited Quality Checks</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="assurance-table">
+            <thead>
+                <tr>
+                    <th>Defect Category</th>
+                    <th>Check Identifier</th>
+                    <th>Severity Gate</th>
+                    <th>Detected Count</th>
+                    <th>Fleet Defect Rate</th>
+                    <th>Analytical Impact</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in dq_summary.dq_categories %}
+                <tr>
+                    <td style="font-weight: 600;">{{ cat.category }}</td>
+                    <td><code class="code-mono">{{ cat.check_id }}</code></td>
+                    <td>
+                        {% if cat.severity == 'CRITICAL' %}
+                        <span class="badge-sev-crit">CRITICAL</span>
+                        {% elif cat.severity == 'WARNING' %}
+                        <span class="badge-sev-warn">WARNING</span>
+                        {% else %}
+                        <span class="badge-sev-info">INFO</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-family: var(--font-mono); font-weight: 600;">{{ cat.detected_count|default:0 }}</td>
+                    <td style="font-family: var(--font-mono);">{{ cat.rate }}%</td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ cat.impact }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Ingestion Pathway Assurance -->
+<div class="section-card">
+    <div class="section-header">
+        <h2 class="section-heading">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            Ingestion Pathway Assurance (6 Endpoints Audited)
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Canonical Gating Enforced</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="assurance-table">
+            <thead>
+                <tr>
+                    <th>Ingestion Pathway</th>
+                    <th>Code Entry Point</th>
+                    <th>Gating Enforced</th>
+                    <th>Critical Action</th>
+                    <th>Warning Action</th>
+                    <th>Provenance Recorded</th>
+                    <th>Assurance Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in dq_summary.ingestion_pathways %}
+                <tr>
+                    <td style="font-weight: 600;">{{ p.pathway_name }}</td>
+                    <td><code class="code-mono">{{ p.entry_point }}</code></td>
+                    <td><span class="badge-check-ok">✓ validate_incident_for_analysis</span></td>
+                    <td><span class="badge-sev-crit">{{ p.critical_action }}</span></td>
+                    <td><span class="badge-sev-warn">{{ p.warning_action }}</span></td>
+                    <td><span class="badge-check-ok">✓ Recorded</span></td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ p.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Dataset Provenance Governance -->
+<div class="section-card" style="margin-bottom: 0;">
+    <div class="section-header">
+        <h2 class="section-heading">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+            Dataset Provenance Governance & Label Integrity
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);">Provenance Classification</span>
+    </div>
+    <table class="assurance-table">
+        <tr>
+            <td style="width: 240px; font-weight: 600;">SYNTHETIC</td>
+            <td>Algorithmically generated benchmark incidents for development and pipeline stress-testing. <strong>Never</strong> described as real OIL operational incidents.</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">HUMAN_APPROVED_SYNTHETIC</td>
+            <td>Synthetic incidents audited and validated by qualified safety professionals. Carries an audit trail but remains distinct from field data.</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">REAL_EXTERNAL</td>
+            <td>Public or partner safety datasets (e.g. OSHA, BSEE, safe work registries). External severe-injury labels are <strong>NOT</strong> automatically mapped to PSIF unless verified by domain crosswalk.</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">REAL_HUMAN</td>
+            <td>Genuine OIL operational field reports with human verification by authorized HSE professionals. Currently: <strong>0 records</strong> in platform training registry.</td>
+        </tr>
+    </table>
+</div>
+
+{% endblock %}

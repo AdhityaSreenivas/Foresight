@@ -1,0 +1,23 @@
+{
+  "baseline_state_counts": {
+    "PSIF_PATHWAY_OPEN": 10,
+    "HIGH_ENERGY_CONTROLLED": 17,
+    "INSUFFICIENT_INFORMATION": 28,
+    "LOW_ENERGY": 17
+  },
+  "post_state_counts": {
+    "PSIF_PATHWAY_OPEN": 10,
+    "HIGH_ENERGY_CONTROLLED": 17,
+    "INSUFFICIENT_INFORMATION": 28,
+    "LOW_ENERGY": 17
+  },
+  "semantic_extraction_stats": {
+    "provenance_steps_total": 378,
+    "anti_inferences_evaluated_total": 432,
+    "temporal_expressions_total": 1,
+    "terminology_matches_total": 59,
+    "multi_hazard_cases": 0
+  },
+  "transitions_count": 0,
+  "transitions": []
+}

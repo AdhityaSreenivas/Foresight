@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Incidents — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Incident reports and precursor classifications in the Admin Flow workspace.{% endblock %}
+
+{% block admin_nav_incidents %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.narrative-cell { max-width: 320px; }
+.narrative-text {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary);
+    line-height: 1.4; font-size: 0.85rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="badge" style="background: var(--brand); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; text-transform: uppercase;">Admin Flow</span>
+            </div>
+            <h1 class="page-title">Incidents</h1>
+            <p class="page-subtitle">Recorded safety observations and incident precursor assessments (Total: <span class="tabular-nums" style="font-weight: 700;">{{ total_count }}</span>).</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'admin_flow:submit' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                + Submit Report
+            </a>
+            <a href="{% url 'admin_flow:upload' %}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Upload Dataset
+            </a>
+        </div>
+    </div>
+
+    <!-- Search / Filter Bar -->
+    <div class="card" style="padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+        <form method="get" action="{% url 'admin_flow:incidents' %}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 260px; position: relative;">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search narrative, department, activity..." class="form-control" style="width: 100%; height: 38px; padding-left: 2rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 0.65rem; top: 11px;">
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
+            <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 1rem;">Filter</button>
+            {% if search_query or rule_filter or psif_filter %}
+            <a href="{% url 'admin_flow:incidents' %}" class="btn btn-secondary" style="height: 38px; padding: 0 1rem;">Clear</a>
+            {% endif %}
+        </form>
+        {% if search_query or rule_filter or psif_filter %}
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; flex-wrap: wrap;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Active Filters:</span>
+            {% if rule_filter %}
+                <span class="badge" style="background: rgba(92, 124, 138, 0.15); color: var(--cat-blue, #5c7c8a); border: 1px solid rgba(92, 124, 138, 0.3);">
+                    IOGP: {% if rule_filter == 'none' %}No Rule Matched{% else %}{{ rule_filter }}{% endif %}
+                </span>
+            {% endif %}
+            {% if psif_filter %}
+                <span class="badge" style="background: rgba(156, 59, 50, 0.15); color: var(--risk-critical); border: 1px solid rgba(156, 59, 50, 0.3);">
+                    PSIF: {{ psif_filter|upper }}
+                </span>
+            {% endif %}
+            {% if search_query %}
+                <span class="badge" style="background: var(--surface); color: var(--text-primary); border: 1px solid var(--border);">
+                    Query: "{{ search_query }}"
+                </span>
+            {% endif %}
+            <a href="{% url 'admin_flow:incidents' %}" style="font-size: 0.78rem; color: var(--brand); margin-left: 0.25rem;">Reset all</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if incidents %}
+    <div class="table-container">
+        <table class="table" id="admin-flow-incidents-table">
+            <thead>
+                <tr>
+                    <th>Incident ID</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Activity</th>
+                    <th>PSIF</th>
+                    <th>Model Score</th>
+                    <th>IOGP</th>
+                    <th>Evidence State</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for incident in incidents %}
+                <tr>
+                    <td class="tabular-nums" style="font-family: var(--font-mono); font-weight: 600;">
+                        <a href="{% url 'admin_flow:incidents_detail' pk=incident.pk %}" style="color: var(--brand); text-decoration: underline;">
+                            #{{ incident.id|stringformat:"s"|slice:":8" }}
+                        </a>
+                    </td>
+                    <td class="tabular-nums" style="white-space: nowrap;">{{ incident.incident_date|date:"Y-m-d"|default:"—" }}</td>
+                    <td>{{ incident.location|default:incident.department|default:"—" }}</td>
+                    <td>{{ incident.job_task|default:"General Operations" }}</td>
+                    <td>
+                        {% if incident.prediction %}
+                            {% if incident.prediction.psif_predicted %}
+                            <span class="badge" style="background: var(--risk-critical); color: #fff; font-weight: 700;">
+                                PSIF
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background: var(--risk-low); color: #fff;">
+                                NOT PSIF
+                            </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge" style="background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border);">
+                                Pending
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="tabular-nums">
+                        {% if incident.prediction %}
+                            {{ incident.prediction.psif_probability|floatformat:3 }}
+                        {% else %}
+                            <span style="color: var(--muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                            {% for tag in incident.iogp_rules.all %}
+                            <span class="badge" style="background: rgba(92, 124, 138, 0.15); color: var(--text-primary); font-size: 0.72rem; white-space: nowrap;">
+                                {{ tag.rule }}
+                            </span>
+                            {% empty %}
+                            <span class="badge" style="background: rgba(107, 114, 128, 0.08); color: var(--text-secondary); font-size: 0.72rem;">No rule matched</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if incident.prediction %}
+                            {% if incident.prediction.is_sparse_input %}
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-size: 0.75rem;">
+                                Sparse (&lt; 10 words)
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-size: 0.75rem;">
+                                {{ incident.prediction.evidence_strength|default:"Moderate" }}
+                            </span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: var(--muted); font-size: 0.8rem;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_flow:incidents_detail' pk=incident.pk %}" class="btn btn-sm btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <div style="display: flex; gap: 0.5rem;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm btn-secondary">Previous</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-sm btn-secondary">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="card" style="text-align: center; padding: 4rem 2rem; background: var(--surface); border-radius: var(--radius-md);">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: rgba(168, 184, 120, 0.15); margin-bottom: 1.25rem;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--olive-dark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+        </div>
+        <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">No Incidents Recorded Yet</h3>
+        <p style="color: var(--text-secondary); max-width: 520px; margin: 0 auto 1.75rem auto; font-size: 0.95rem; line-height: 1.5;">
+            Submit an incident report or upload a dataset to begin precursor intelligence analysis.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="{% url 'admin_flow:submit' %}" class="btn btn-primary" id="btn-empty-submit" style="padding: 0.6rem 1.25rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Submit Report
+            </a>
+            <a href="{% url 'admin_flow:upload' %}" class="btn btn-secondary" id="btn-empty-upload" style="padding: 0.6rem 1.25rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Upload Dataset
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

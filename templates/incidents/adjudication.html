@@ -1,0 +1,1147 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Human Review & Adjudication Workbench — Incident #{{ incident.id }} — Foresight{% endblock %}
+{% block meta_description %}Authoritative Human-in-the-Loop HSE Review and Adjudication Workbench. Independently evaluate incidents and reconcile human decisions with statistical models and rule-grounded safety assessments.{% endblock %}
+
+{% block nav_review %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Human Review Workbench Design System ───────────────────────────────────── */
+:root {
+    --adj-bg: #0b1120;
+    --adj-surface: #131d31;
+    --adj-surface-elevated: #1a2744;
+    --adj-border: #24324f;
+    --adj-border-accent: #3b82f6;
+    --adj-text-bright: #f8fafc;
+    --adj-text-muted: #94a3b8;
+    --adj-danger: #ef4444;
+    --adj-danger-bg: rgba(239, 68, 68, 0.12);
+    --adj-danger-border: rgba(239, 68, 68, 0.35);
+    --adj-success: #22c55e;
+    --adj-success-bg: rgba(34, 197, 94, 0.12);
+    --adj-success-border: rgba(34, 197, 94, 0.35);
+    --adj-warning: #f59e0b;
+    --adj-warning-bg: rgba(245, 158, 11, 0.12);
+    --adj-warning-border: rgba(245, 158, 11, 0.35);
+    --adj-info: #3b82f6;
+    --adj-info-bg: rgba(59, 130, 246, 0.12);
+    --adj-info-border: rgba(59, 130, 246, 0.35);
+    --adj-purple: #a855f7;
+    --adj-purple-bg: rgba(168, 85, 247, 0.12);
+    --adj-purple-border: rgba(168, 85, 247, 0.35);
+}
+
+.adj-container {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 0 1rem 4rem;
+}
+
+/* ── Breadcrumb & Top Bar ───────────────────────────────────────────────────── */
+.adj-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.adj-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--adj-text-muted);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+.adj-breadcrumb:hover {
+    color: var(--adj-text-bright);
+}
+
+/* ── Section Card Base ──────────────────────────────────────────────────────── */
+.adj-card {
+    background: var(--adj-surface);
+    border: 1px solid var(--adj-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.adj-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--adj-border);
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.adj-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--adj-text-bright);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+}
+.adj-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-family: var(--font-mono, monospace);
+}
+.adj-badge-psif {
+    background: var(--adj-danger-bg);
+    color: #fca5a5;
+    border: 1px solid var(--adj-danger-border);
+}
+.adj-badge-not-psif {
+    background: var(--adj-success-bg);
+    color: #86efac;
+    border: 1px solid var(--adj-success-border);
+}
+.adj-badge-insufficient {
+    background: var(--adj-warning-bg);
+    color: #fde047;
+    border: 1px solid var(--adj-warning-border);
+}
+.adj-badge-neutral {
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* ── Separation Grid: Model / Rule / Human ──────────────────────────────────── */
+.adj-triad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+@media (max-width: 992px) {
+    .adj-triad-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.adj-pillar {
+    background: var(--adj-surface-elevated);
+    border: 1px solid var(--adj-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+.adj-pillar-model {
+    border-top: 3px solid #38bdf8;
+}
+.adj-pillar-rule {
+    border-top: 3px solid #a855f7;
+}
+.adj-pillar-human {
+    border-top: 3px solid #eab308;
+}
+
+/* ── Blind Mode Overlay ─────────────────────────────────────────────────────── */
+.blind-masked-box {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px dashed rgba(148, 163, 184, 0.35);
+    border-radius: 6px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    backdrop-filter: blur(4px);
+    transition: all 0.25s ease;
+}
+
+/* ── Radio Decision Selector ────────────────────────────────────────────────── */
+.decision-selector-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+@media (max-width: 640px) {
+    .decision-selector-group {
+        grid-template-columns: 1fr;
+    }
+}
+.decision-option-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.75rem;
+    background: var(--adj-surface-elevated);
+    border: 2px solid var(--adj-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+.decision-option-label:hover {
+    border-color: #64748b;
+}
+.decision-option-label input[type="radio"] {
+    margin-bottom: 0.5rem;
+    transform: scale(1.25);
+    accent-color: var(--adj-border-accent);
+}
+.decision-option-label.selected-psif {
+    border-color: var(--adj-danger);
+    background: var(--adj-danger-bg);
+}
+.decision-option-label.selected-not-psif {
+    border-color: var(--adj-success);
+    background: var(--adj-success-bg);
+}
+.decision-option-label.selected-insufficient {
+    border-color: var(--adj-warning);
+    background: var(--adj-warning-bg);
+}
+
+/* ── Form Inputs ────────────────────────────────────────────────────────────── */
+.adj-form-group {
+    margin-bottom: 1.25rem;
+}
+.adj-form-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.adj-textarea {
+    width: 100%;
+    min-height: 90px;
+    background: #0f172a;
+    border: 1px solid var(--adj-border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    color: var(--adj-text-bright);
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    box-sizing: border-box;
+}
+.adj-textarea:focus {
+    outline: none;
+    border-color: var(--adj-border-accent);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.adj-select, .adj-input {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid var(--adj-border);
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    color: var(--adj-text-bright);
+    font-family: inherit;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+}
+.adj-select:focus, .adj-input:focus {
+    outline: none;
+    border-color: var(--adj-border-accent);
+}
+
+/* ── Evidence Matrix Table ──────────────────────────────────────────────────── */
+.adj-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+}
+.adj-matrix-table th {
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--adj-text-muted);
+    font-weight: 600;
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--adj-border);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+.adj-matrix-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(36, 50, 79, 0.6);
+    color: #e2e8f0;
+    vertical-align: top;
+}
+
+/* ── Reasoning Trace Node Timeline ──────────────────────────────────────────── */
+.trace-timeline {
+    position: relative;
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+}
+.trace-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.45rem;
+    width: 2px;
+    background: var(--adj-border);
+}
+.trace-node {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+.trace-dot {
+    position: absolute;
+    left: -1.5rem;
+    top: 0.2rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #475569;
+    border: 2px solid var(--adj-surface);
+}
+.trace-dot-pass {
+    background: var(--adj-success);
+}
+.trace-dot-warn {
+    background: var(--adj-warning);
+}
+.trace-dot-fail {
+    background: var(--adj-danger);
+}
+
+/* ── Audit Trail Table ──────────────────────────────────────────────────────── */
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.audit-table th {
+    background: rgba(15, 23, 42, 0.75);
+    color: var(--adj-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--adj-border);
+}
+.audit-table td {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--adj-border);
+    color: #cbd5e1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="adj-container">
+
+    <!-- ── Breadcrumb & Top Bar ─────────────────────────────────────────────── -->
+    <div class="adj-nav-bar">
+        <div>
+            <a href="{% url 'predictions:review_queue' %}" class="adj-breadcrumb">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Back to Review Queue
+            </a>
+            <span style="color: var(--adj-border); margin: 0 0.5rem;">/</span>
+            <a href="{% url 'incidents:detail' incident.id %}" class="adj-breadcrumb">
+                Incident #{{ incident.id }}
+            </a>
+            <span style="color: var(--adj-border); margin: 0 0.5rem;">/</span>
+            <span style="color: var(--adj-text-bright); font-weight: 600; font-size: 0.88rem;">
+                Adjudication Workbench
+            </span>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <a href="{% url 'incidents:workspace' incident.id %}" class="btn btn-primary" id="btn-open-workspace" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; background: #3b82f6; color: #fff;">
+                Unified Workspace
+            </a>
+            <a href="{% url 'incidents:evidence_break' incident.id %}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                🔍 Evidence-Break Analysis
+            </a>
+            <span class="adj-badge {% if incident.is_synthetic %}adj-badge-neutral{% else %}adj-badge-psif{% endif %}">
+                Provenance: {{ incident.provenance_category }}
+            </span>
+        </div>
+
+    </div>
+
+    <!-- ── 1. CASE HEADER ──────────────────────────────────────────────────── -->
+    <div class="adj-card">
+        <div class="adj-card-header">
+            <div>
+                <h1 class="adj-card-title" style="font-size: 1.35rem;">
+                    Incident Case #{{ incident.id }}
+                    {% if incident.external_id %}
+                    <span style="font-size: 0.9rem; color: var(--adj-text-muted); font-family: var(--font-mono, monospace);">
+                        ({{ incident.external_id }})
+                    </span>
+                    {% endif %}
+                </h1>
+                <div style="font-size: 0.85rem; color: var(--adj-text-muted); margin-top: 0.25rem;">
+                    Reported: <strong>{{ incident.incident_date|date:"Y-m-d"|default:"Unknown Date" }}</strong> &bull;
+                    Department: <strong>{{ incident.department|default:"Not Specified" }}</strong> &bull;
+                    Site / Location: <strong>{{ incident.location|default:"Not Specified" }}</strong>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span style="font-size: 0.8rem; color: var(--adj-text-muted);">Current Status:</span>
+                    <span class="adj-badge adj-badge-neutral">{{ incident.get_status_display }}</span>
+                </div>
+                {% if incident.data_quality and incident.data_quality.status != 'VALID' %}
+                <span class="adj-badge adj-badge-insufficient">
+                    ⚠️ DQ {{ incident.data_quality.status }}: {{ incident.data_quality.summary }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--adj-border); border-radius: 6px; padding: 1rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--adj-text-muted); margin-bottom: 0.35rem;">
+                Official Incident Narrative
+            </div>
+            <p style="margin: 0; color: #f1f5f9; font-size: 0.95rem; line-height: 1.6;">
+                {{ incident.composite_narrative|default:incident.description|default:"(No narrative provided)" }}
+            </p>
+        </div>
+    </div>
+
+    <!-- ── 2. MODEL / HUMAN SEPARATION & CURRENT RECONCILIATION ────────────── -->
+    <div style="margin-bottom: 1.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h2 style="font-size: 1rem; font-weight: 700; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">
+                Tripartite Assessment Separation
+            </h2>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <label style="font-size: 0.8rem; color: var(--adj-text-muted); cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <input type="checkbox" id="blindReviewToggle" {% if not has_review %}checked{% endif %} onchange="toggleBlindReviewMode(this.checked)">
+                    <strong>Blind Review Mode</strong> (Mask model to prevent bias)
+                </label>
+            </div>
+        </div>
+
+        <div class="adj-triad-grid">
+            <!-- PILLAR 1: STATISTICAL MODEL ASSESSMENT -->
+            <div class="adj-pillar adj-pillar-model" id="modelPillar">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">
+                            1. Statistical Model Assessment
+                        </span>
+                        <span style="font-size: 0.72rem; color: var(--adj-text-muted); font-family: var(--font-mono, monospace);">
+                            {{ active_model_version }}
+                        </span>
+                    </div>
+
+                    <!-- Masked Content in Blind Mode -->
+                    <div id="modelMaskedContainer" class="blind-masked-box" style="display: none;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom: 0.5rem;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                        <div style="font-weight: 600; color: #cbd5e1; font-size: 0.85rem; margin-bottom: 0.25rem;">
+                            Model Output Masked
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--adj-text-muted); margin-bottom: 0.75rem;">
+                            Active blind review prevents automated prediction bias.
+                        </div>
+                        <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;" onclick="unmaskModelManually()">
+                            Reveal Model Assessment
+                        </button>
+                    </div>
+
+                    <!-- Unmasked Model Content -->
+                    <div id="modelUnmaskedContainer">
+                        {% if incident.prediction %}
+                            <div style="margin-bottom: 0.75rem;">
+                                {% if incident.prediction.psif_predicted %}
+                                    <span class="adj-badge adj-badge-psif" style="font-size: 0.85rem;">
+                                        MODEL: PSIF ({{ incident.prediction.psif_probability|default:0|floatformat:4 }})
+                                    </span>
+                                {% else %}
+                                    <span class="adj-badge adj-badge-not-psif" style="font-size: 0.85rem;">
+                                        MODEL: NOT PSIF ({{ incident.prediction.psif_probability|default:0|floatformat:4 }})
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 0.5rem;">
+                                Evidence Strength: <strong>{{ incident.prediction.evidence_strength|default:"Standard" }}</strong>
+                                {% if incident.prediction.is_sparse_input %}
+                                <span style="color: #f59e0b; font-weight: 600;">(Sparse Narrative &lt; 10 words)</span>
+                                {% endif %}
+                            </div>
+                            {% if incident.prediction.top_factors %}
+                            <div style="font-size: 0.75rem; color: var(--adj-text-muted); margin-top: 0.5rem;">
+                                <strong>Top Predictive Factors:</strong>
+                                <ul style="margin: 0.25rem 0 0 1rem; padding: 0;">
+                                    {% for factor in incident.prediction.top_factors|slice:":3" %}
+                                    <li>{{ factor }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <div style="font-size: 0.85rem; color: var(--adj-text-muted); font-style: italic;">
+                                No automated model prediction generated for this incident.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--adj-text-muted); margin-top: 1rem; border-top: 1px solid var(--adj-border); padding-top: 0.5rem;">
+                    Immutable Machine Prediction. Never modified by human review.
+                </div>
+            </div>
+
+            <!-- PILLAR 2: RULE-GROUNDED ASSESSMENT -->
+            <div class="adj-pillar adj-pillar-rule">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #c084fc; text-transform: uppercase;">
+                            2. Rule-Grounded Assessment
+                        </span>
+                        <span style="font-size: 0.72rem; color: var(--adj-text-muted); font-family: var(--font-mono, monospace);">
+                            {{ knowledge_base_version }}
+                        </span>
+                    </div>
+
+                    <div style="margin-bottom: 0.75rem;">
+                        {% if reasoning.decision == 'PSIF' %}
+                            <span class="adj-badge adj-badge-psif" style="font-size: 0.85rem;">
+                                RULE: PSIF
+                            </span>
+                        {% elif reasoning.decision == 'NOT_PSIF' %}
+                            <span class="adj-badge adj-badge-not-psif" style="font-size: 0.85rem;">
+                                RULE: NOT PSIF
+                            </span>
+                        {% else %}
+                            <span class="adj-badge adj-badge-insufficient" style="font-size: 0.85rem;">
+                                RULE: INSUFFICIENT INFO
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 0.5rem;">
+                        EEI Capacity State: <strong>{{ reasoning.state|default:"UNKNOWN" }}</strong><br>
+                        Evidence Strength: <strong>{{ reasoning.evidence_strength.classification|default:"STANDARD" }}</strong>
+                    </div>
+
+                    {% if reasoning.iogp_matches %}
+                    <div style="font-size: 0.75rem; color: #e2e8f0; margin-top: 0.5rem;">
+                        <strong>IOGP Rule Match:</strong>
+                        {% for r in reasoning.iogp_matches %}
+                        <div style="margin-top: 0.2rem; color: #cbd5e1;">
+                            &bull; <strong>Rule {{ r.rule_id }}:</strong> {{ r.rule_name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.7rem; color: var(--adj-text-muted); margin-top: 1rem; border-top: 1px solid var(--adj-border); padding-top: 0.5rem;">
+                    Deterministic Logic Evaluation. Ruleset version: {{ reasoning_ruleset_version }}.
+                </div>
+            </div>
+
+            <!-- PILLAR 3: HUMAN ADJUDICATION -->
+            <div class="adj-pillar adj-pillar-human">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #facc15; text-transform: uppercase;">
+                            3. Human Adjudication
+                        </span>
+                        <span style="font-size: 0.72rem; color: var(--adj-text-muted);">
+                            {% if has_review %}ADJUDICATED{% else %}PENDING{% endif %}
+                        </span>
+                    </div>
+
+                    {% if has_review and latest_review %}
+                        <div style="margin-bottom: 0.75rem;">
+                            {% if latest_review.decision == 'PSIF' %}
+                                <span class="adj-badge adj-badge-psif" style="font-size: 0.85rem;">
+                                    HUMAN: PSIF
+                                </span>
+                            {% elif latest_review.decision == 'NOT_PSIF' %}
+                                <span class="adj-badge adj-badge-not-psif" style="font-size: 0.85rem;">
+                                    HUMAN: NOT PSIF
+                                </span>
+                            {% else %}
+                                <span class="adj-badge adj-badge-insufficient" style="font-size: 0.85rem;">
+                                    HUMAN: INSUFFICIENT INFORMATION
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 0.5rem;">
+                            Reviewer: <strong>{{ latest_review.reviewer.username|default:"Authorized Reviewer" }}</strong><br>
+                            Timestamp: <strong>{{ latest_review.created_at|date:"Y-m-d H:i" }}</strong><br>
+                            Mode: <strong>{% if latest_review.was_blinded %}Blinded Evaluation{% else %}Unblinded{% endif %}</strong>
+                        </div>
+                        {% if reconciliation %}
+                        <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(15, 23, 42, 0.6); border-radius: 4px; border: 1px solid var(--adj-border);">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: #facc15;">
+                                Tripartite Agreement State:
+                            </div>
+                            <div style="font-size: 0.8rem; font-weight: 600; color: #f8fafc;">
+                                {{ reconciliation.agreement_state|cut:"_" }}
+                            </div>
+                            <div style="font-size: 0.72rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                                Model vs Human: <strong>{{ reconciliation.model_vs_human }}</strong> &bull;
+                                Rule vs Human: <strong>{{ reconciliation.rule_vs_human }}</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div style="margin-bottom: 0.75rem;">
+                            <span class="adj-badge adj-badge-neutral" style="font-size: 0.85rem;">
+                                UNREVIEWED
+                            </span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--adj-text-muted); line-height: 1.5;">
+                            No authoritative human adjudication recorded yet. Complete the review form below to submit your HSE determination.
+                        </div>
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.7rem; color: var(--adj-text-muted); margin-top: 1rem; border-top: 1px solid var(--adj-border); padding-top: 0.5rem;">
+                    HSE Domain Authority. Creates separate auditable adjudication record.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 3. STRUCTURED EVIDENCE MATRIX ───────────────────────────────────── -->
+    <div class="adj-card">
+        <div class="adj-card-header">
+            <h3 class="adj-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Incident Evidence Matrix & Structured Attributes
+            </h3>
+            <span style="font-size: 0.78rem; color: var(--adj-text-muted);">
+                Same canonical evidence presented to Foresight intelligence pipeline
+            </span>
+        </div>
+
+        <table class="adj-matrix-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Analytical Dimension</th>
+                    <th style="width: 35%;">Extracted Structured Value</th>
+                    <th style="width: 40%;">Source Grounding / Physical Rationale</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>High-Energy Hazard</strong></td>
+                    <td>
+                        {% if incident.high_energy_present %}
+                            <span style="color: #fca5a5; font-weight: 700;">YES &mdash; {{ incident.energy_type|default:"Energy Present" }}</span>
+                        {% else %}
+                            <span style="color: #86efac; font-weight: 600;">NO / Low Energy</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--adj-text-muted);">
+                        Energy context: {{ incident.energy_type|default:"Gravity / Mechanical / Chemical / Pressure" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Worker Exposure</strong></td>
+                    <td>
+                        {% if incident.worker_exposed %}
+                            <span style="color: #fca5a5; font-weight: 700;">YES &mdash; In Line of Fire / Zone of Danger</span>
+                        {% else %}
+                            <span style="color: #86efac; font-weight: 600;">NO &mdash; Controlled Distance</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--adj-text-muted);">
+                        Worker position relative to hazardous energy release
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Critical Control Condition</strong></td>
+                    <td>
+                        <strong>{{ incident.control_condition|default:"Unknown" }}</strong>
+                        {% if incident.control_failed_bypassed %}
+                            <span style="color: #ef4444; font-weight: 700;">(FAILED / BYPASSED)</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--adj-text-muted);">
+                        Primary barrier state: {{ incident.control_type|default:"Not specified" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Actual & Potential Severity</strong></td>
+                    <td>
+                        Actual: <strong>{{ incident.get_severity_actual_display|default:"None" }}</strong> &bull;
+                        Potential: <strong>{{ incident.get_severity_potential_display|default:"Unknown" }}</strong>
+                    </td>
+                    <td style="color: var(--adj-text-muted);">
+                        Injury: {{ incident.injury_type|default:"None" }} &bull; Body Part: {{ incident.body_part|default:"None" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Data Quality Screening</strong></td>
+                    <td>
+                        {% if incident.data_quality %}
+                            Status: <strong>{{ incident.data_quality.status }}</strong> (Confidence: {{ incident.data_quality.confidence_score }})
+                        {% else %}
+                            <span>Not Screened</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--adj-text-muted);">
+                        {{ incident.data_quality.summary|default:"Automated narrative length, completeness, and consistency checks." }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── 4. REASONING TRACE ──────────────────────────────────────────────── -->
+    <div class="adj-card">
+        <div class="adj-card-header">
+            <h3 class="adj-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                Foresight 7-Node Reasoning Trace
+            </h3>
+            <span style="font-size: 0.78rem; color: var(--adj-text-muted);">
+                Transparent logical chain evaluated against psif_ruleset_v1.0
+            </span>
+        </div>
+
+        <div class="trace-timeline">
+            <!-- Node 1 -->
+            <div class="trace-node">
+                <div class="trace-dot trace-dot-pass"></div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                    Node 1: Input Evidence Extraction & Attribute Mapping
+                </div>
+                <div style="font-size: 0.8rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                    Processed composite narrative, equipment, activity, and structured energy/control fields.
+                </div>
+            </div>
+
+            <!-- Node 2 -->
+            <div class="trace-node">
+                <div class="trace-dot {% if incident.data_quality.status == 'CRITICAL' %}trace-dot-fail{% elif incident.data_quality.status == 'WARNING' %}trace-dot-warn{% else %}trace-dot-pass{% endif %}"></div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                    Node 2: Data Quality & Narrative Sufficiency Verification
+                </div>
+                <div style="font-size: 0.8rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                    DQ Status: {{ incident.data_quality.status|default:"VALID" }}. Word count check and contradiction screening complete.
+                </div>
+            </div>
+
+            <!-- Node 3 -->
+            <div class="trace-node">
+                <div class="trace-dot {% if incident.high_energy_present %}trace-dot-fail{% else %}trace-dot-pass{% endif %}"></div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                    Node 3: High-Energy Hazard Detection
+                </div>
+                <div style="font-size: 0.8rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                    {{ reasoning.steps.2.rationale|default:"Evaluated presence of fatal-calibre energy release." }}
+                </div>
+            </div>
+
+            <!-- Node 4 -->
+            <div class="trace-node">
+                <div class="trace-dot {% if incident.worker_exposed %}trace-dot-fail{% else %}trace-dot-pass{% endif %}"></div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                    Node 4: Worker Exposure & Line-of-Fire Verification
+                </div>
+                <div style="font-size: 0.8rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                    {{ reasoning.steps.3.rationale|default:"Evaluated personnel positioning within hazardous energy envelope." }}
+                </div>
+            </div>
+
+            <!-- Node 5 -->
+            <div class="trace-node">
+                <div class="trace-dot {% if incident.control_failed_bypassed %}trace-dot-fail{% else %}trace-dot-pass{% endif %}"></div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                    Node 5: Critical Control & Barrier Integrity
+                </div>
+                <div style="font-size: 0.8rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                    {{ reasoning.steps.4.rationale|default:"Evaluated whether primary barrier operated successfully or broke down." }}
+                </div>
+            </div>
+
+            <!-- Node 6 -->
+            <div class="trace-node">
+                <div class="trace-dot trace-dot-pass"></div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                    Node 6: IOGP Life-Saving Rules Alignment
+                </div>
+                <div style="font-size: 0.8rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                    Mapped against 9 Life-Saving Rules: {{ reasoning.iogp_matches|length }} matching rules identified.
+                </div>
+            </div>
+
+            <!-- Node 7 -->
+            <div class="trace-node">
+                <div class="trace-dot trace-dot-pass"></div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #f8fafc;">
+                    Node 7: Final SIF Precursor Synthesis
+                </div>
+                <div style="font-size: 0.8rem; color: var(--adj-text-muted); margin-top: 0.2rem;">
+                    Deterministic Rule Output: <strong>{{ reasoning.decision|default:"NOT_PSIF" }}</strong> &bull;
+                    EEI State: <strong>{{ reasoning.state|default:"UNKNOWN" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 5. GROUNDED CORRECTIVE ACTIONS ─────────────────────────────────── -->
+    {% if actions and actions.actions %}
+    <div class="adj-card">
+        <div class="adj-card-header">
+            <h3 class="adj-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Grounded Corrective Actions & Next Steps
+            </h3>
+            <span style="font-size: 0.78rem; color: var(--adj-text-muted);">
+                Library Version: {{ action_library_version }}
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+            {% for action in actions.actions|slice:":3" %}
+            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--adj-border); border-radius: 6px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">
+                        {{ action.hierarchy|default:"CORRECTIVE" }}
+                    </span>
+                    <span class="adj-badge adj-badge-neutral" style="font-size: 0.7rem;">
+                        {{ action.timing|default:"IMMEDIATE" }}
+                    </span>
+                </div>
+                <h4 style="margin: 0 0 0.4rem 0; font-size: 0.92rem; color: #f8fafc;">
+                    {{ action.title }}
+                </h4>
+                <p style="margin: 0; font-size: 0.82rem; color: var(--adj-text-muted); line-height: 1.5;">
+                    {{ action.description }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── 6. REVIEW DECISION & RATIONALE SUBMISSION FORM ──────────────────── -->
+    <div class="adj-card" style="border-top: 3px solid var(--adj-border-accent);">
+        <div class="adj-card-header">
+            <h3 class="adj-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Authoritative HSE Adjudication Form
+            </h3>
+            <span style="font-size: 0.78rem; color: var(--adj-text-muted);">
+                Reviewer: <strong>{{ request.user.username }}</strong> &bull; Version Locking Active
+            </span>
+        </div>
+
+        <form id="adjudicationForm" method="POST" action="{% url 'incidents:adjudicate' incident.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="was_blinded" id="was_blinded_input" value="true">
+
+            <!-- DECISION SELECTION (Section 2: exactly PSIF, NOT_PSIF, INSUFFICIENT_INFORMATION) -->
+            <div class="adj-form-group">
+                <label class="adj-form-label">
+                    Review Decision <span style="color: var(--adj-danger);">*</span>
+                </label>
+                <div class="decision-selector-group">
+                    <label class="decision-option-label" id="label_psif" onclick="selectDecision('PSIF')">
+                        <input type="radio" name="decision" value="PSIF" required {% if latest_review.decision == 'PSIF' %}checked{% endif %}>
+                        <span style="font-weight: 700; color: #fca5a5; font-size: 0.95rem;">PSIF</span>
+                        <span style="font-size: 0.75rem; color: var(--adj-text-muted); margin-top: 0.25rem;">
+                            High energy present AND worker exposed AND controls absent/failed.
+                        </span>
+                    </label>
+
+                    <label class="decision-option-label" id="label_not_psif" onclick="selectDecision('NOT_PSIF')">
+                        <input type="radio" name="decision" value="NOT_PSIF" required {% if latest_review.decision == 'NOT_PSIF' %}checked{% endif %}>
+                        <span style="font-weight: 700; color: #86efac; font-size: 0.95rem;">NOT PSIF</span>
+                        <span style="font-size: 0.75rem; color: var(--adj-text-muted); margin-top: 0.25rem;">
+                            No high energy OR controls functioned effectively OR no line-of-fire.
+                        </span>
+                    </label>
+
+                    <label class="decision-option-label" id="label_insufficient" onclick="selectDecision('INSUFFICIENT_INFORMATION')">
+                        <input type="radio" name="decision" value="INSUFFICIENT_INFORMATION" required {% if latest_review.decision == 'INSUFFICIENT_INFORMATION' %}checked{% endif %}>
+                        <span style="font-weight: 700; color: #fde047; font-size: 0.95rem;">INSUFFICIENT INFORMATION</span>
+                        <span style="font-size: 0.75rem; color: var(--adj-text-muted); margin-top: 0.25rem;">
+                            Narrative lacks critical facts required to determine barrier condition or exposure.
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- MANDATORY RATIONALE (Section 5) -->
+            <div class="adj-form-group">
+                <label class="adj-form-label" for="rationale">
+                    Adjudication Rationale <span style="color: var(--adj-danger);">*</span>
+                    <span style="font-size: 0.75rem; font-weight: normal; color: var(--adj-text-muted); text-transform: none;">
+                        (Explain WHY PSIF, WHY NOT PSIF, or WHY INSUFFICIENT &mdash; minimum 10 characters)
+                    </span>
+                </label>
+                <textarea
+                    name="rationale"
+                    id="rationale"
+                    class="adj-textarea"
+                    required
+                    placeholder="Enter your substantive domain reasoning explaining this adjudication...">{{ latest_review.rationale|default:"" }}</textarea>
+            </div>
+
+            <!-- STRUCTURED OPTIONAL EVIDENCE FIELDS (Section 5) -->
+            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--adj-border); border-radius: 6px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                <div style="font-size: 0.85rem; font-weight: 700; color: #e2e8f0; margin-bottom: 0.75rem; text-transform: uppercase;">
+                    Structured Evidence Dimensions (Optional Domain Anchors)
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label class="adj-form-label" for="high_energy_hazard">High-Energy Hazard</label>
+                        <select name="high_energy_hazard" id="high_energy_hazard" class="adj-select">
+                            <option value="">-- Select or confirm hazard --</option>
+                            <option value="Gravity (Fall / Dropped Object)" {% if incident.energy_type == 'Gravity' %}selected{% endif %}>Gravity (Fall / Dropped Object)</option>
+                            <option value="Mechanical / Rotating Equipment" {% if incident.energy_type == 'Mechanical' %}selected{% endif %}>Mechanical / Rotating Equipment</option>
+                            <option value="Electrical (Arc Flash / Shock)" {% if incident.energy_type == 'Electrical' %}selected{% endif %}>Electrical (Arc Flash / Shock)</option>
+                            <option value="Chemical / Toxic Release" {% if incident.energy_type == 'Chemical' %}selected{% endif %}>Chemical / Toxic Release</option>
+                            <option value="Pressure / Hydraulic Release" {% if incident.energy_type == 'Pressure' %}selected{% endif %}>Pressure / Hydraulic Release</option>
+                            <option value="Thermal / Steam" {% if incident.energy_type == 'Thermal' %}selected{% endif %}>Thermal / Steam</option>
+                            <option value="No High Energy Present">No High Energy Present</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="adj-form-label" for="worker_exposure">Worker Exposure</label>
+                        <select name="worker_exposure" id="worker_exposure" class="adj-select">
+                            <option value="">-- Select worker position --</option>
+                            <option value="In direct line of fire" {% if incident.worker_exposed %}selected{% endif %}>In direct line of fire</option>
+                            <option value="Within drop / splash zone">Within drop / splash zone</option>
+                            <option value="Body part within machinery hazard zone">Body part within machinery hazard zone</option>
+                            <option value="Worker shielded by barrier">Worker shielded by barrier</option>
+                            <option value="Not exposed / Safe distance">Not exposed / Safe distance</option>
+                            <option value="Exposure unknown from report">Exposure unknown from report</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="adj-form-label" for="critical_control">Critical Control & State</label>
+                        <select name="control_state" id="control_state" class="adj-select">
+                            <option value="">-- Select control state --</option>
+                            <option value="Functioned effectively" {% if incident.control_condition == 'effective' %}selected{% endif %}>Functioned effectively</option>
+                            <option value="Failed under load" {% if incident.control_condition == 'failed' %}selected{% endif %}>Failed under load</option>
+                            <option value="Bypassed / Defeated" {% if incident.control_condition == 'bypassed' %}selected{% endif %}>Bypassed / Defeated</option>
+                            <option value="Absent / Not implemented" {% if incident.control_condition == 'absent' %}selected{% endif %}>Absent / Not implemented</option>
+                            <option value="Unknown from narrative">Unknown from narrative</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="adj-form-label" for="iogp_rule">IOGP Life-Saving Rule</label>
+                        <select name="iogp_rule" id="iogp_rule" class="adj-select">
+                            <option value="">-- Align with IOGP Rule --</option>
+                            <option value="Bypass Safety Controls">Bypass Safety Controls</option>
+                            <option value="Confined Space">Confined Space</option>
+                            <option value="Driving">Driving</option>
+                            <option value="Energy Isolation (LOTO)">Energy Isolation (LOTO)</option>
+                            <option value="Hot Work">Hot Work</option>
+                            <option value="Line of Fire">Line of Fire</option>
+                            <option value="Safe Mechanical Lifting">Safe Mechanical Lifting</option>
+                            <option value="Work Authorization">Work Authorization</option>
+                            <option value="Working at Height">Working at Height</option>
+                            <option value="None applicable">None applicable</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REVIEWER EVIDENCE NOTES (Section 10: Annotate why they disagree or observations) -->
+            <div class="adj-form-group">
+                <label class="adj-form-label" for="evidence_notes">
+                    Reviewer Evidence Notes & Disagreement Justification (Optional)
+                    <span style="font-size: 0.75rem; font-weight: normal; color: var(--adj-text-muted); text-transform: none;">
+                        (e.g. &quot;Worker position verified in attachment&quot;, &quot;Control failure was historical&quot; &mdash; does not modify narrative)
+                    </span>
+                </label>
+                <textarea
+                    name="evidence_notes"
+                    id="evidence_notes"
+                    class="adj-textarea"
+                    style="min-height: 70px;"
+                    placeholder="Provide specific notes regarding why you agree or disagree with the model or rule assessment...">{{ latest_review.evidence_notes|default:"" }}</textarea>
+            </div>
+
+            <!-- SUBMISSION BUTTONS -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="font-size: 0.78rem; color: var(--adj-text-muted);">
+                    ⚡ Submitting will lock model/knowledge versions and update adjudication reconciliation.
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <a href="{% url 'predictions:review_queue' %}" class="btn btn-secondary" style="padding: 0.55rem 1.25rem;">
+                        Cancel
+                    </a>
+                    <button type="submit" id="submitReviewBtn" class="btn btn-primary" style="padding: 0.55rem 1.5rem; font-weight: 700;">
+                        Submit Official Adjudication
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── 7. AUDIT TRAIL / REVIEW HISTORY (Section 11) ────────────────────── -->
+    <div class="adj-card">
+        <div class="adj-card-header">
+            <h3 class="adj-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                Adjudication Audit Trail & Version History
+            </h3>
+            <span style="font-size: 0.78rem; color: var(--adj-text-muted);">
+                Complete immutable record of all HSE evaluations for Incident #{{ incident.id }}
+            </span>
+        </div>
+
+        {% if reviews_history %}
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Reviewer</th>
+                    <th>Decision</th>
+                    <th>Previous</th>
+                    <th>Agreement State</th>
+                    <th>Blinded</th>
+                    <th>Rationale & Notes</th>
+                    <th>Model Lock</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rev in reviews_history %}
+                <tr>
+                    <td style="font-family: var(--font-mono, monospace); white-space: nowrap;">
+                        {{ rev.created_at|date:"Y-m-d H:i" }}
+                    </td>
+                    <td>
+                        <strong>{{ rev.reviewer.username|default:"System" }}</strong>
+                    </td>
+                    <td>
+                        {% if rev.decision == 'PSIF' %}
+                            <span class="adj-badge adj-badge-psif" style="font-size: 0.7rem;">PSIF</span>
+                        {% elif rev.decision == 'NOT_PSIF' %}
+                            <span class="adj-badge adj-badge-not-psif" style="font-size: 0.7rem;">NOT PSIF</span>
+                        {% else %}
+                            <span class="adj-badge adj-badge-insufficient" style="font-size: 0.7rem;">INSUFFICIENT</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ rev.previous_decision|default:"&mdash;" }}
+                    </td>
+                    <td>
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #93c5fd;">
+                            {{ rev.agreement_state|default:"&mdash;" }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if rev.was_blinded %}
+                            <span style="color: #cbd5e1;">Yes</span>
+                        {% else %}
+                            <span style="color: var(--adj-text-muted);">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="max-width: 320px; line-height: 1.4;">
+                            <div>{{ rev.rationale }}</div>
+                            {% if rev.evidence_notes %}
+                            <div style="font-size: 0.75rem; color: #38bdf8; margin-top: 0.25rem;">
+                                Notes: {{ rev.evidence_notes }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="font-family: var(--font-mono, monospace); font-size: 0.72rem; color: var(--adj-text-muted);">
+                        {{ rev.model_version|default:"psif_rf_v1.0" }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 2rem; color: var(--adj-text-muted); font-size: 0.88rem;">
+            No historical reviews recorded for this incident. Submit the form above to record the initial adjudication.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ── Interactive Blind Mode & Form Script ─────────────────────────────────── -->
+<script>
+let isBlindMode = {% if not has_review %}true{% else %}false{% endif %};
+
+function initAdjudication() {
+    toggleBlindReviewMode(isBlindMode);
+    
+    // Highlight existing selection if any
+    const checkedRadio = document.querySelector('input[name="decision"]:checked');
+    if (checkedRadio) {
+        selectDecision(checkedRadio.value);
+    }
+}
+
+function toggleBlindReviewMode(enabled) {
+    isBlindMode = enabled;
+    const maskedBox = document.getElementById('modelMaskedContainer');
+    const unmaskedBox = document.getElementById('modelUnmaskedContainer');
+    const hiddenInput = document.getElementById('was_blinded_input');
+    const toggle = document.getElementById('blindReviewToggle');
+    
+    if (toggle) toggle.checked = enabled;
+    if (hiddenInput) hiddenInput.value = enabled ? "true" : "false";
+
+    if (enabled) {
+        if (maskedBox) maskedBox.style.display = 'block';
+        if (unmaskedBox) unmaskedBox.style.display = 'none';
+    } else {
+        if (maskedBox) maskedBox.style.display = 'none';
+        if (unmaskedBox) unmaskedBox.style.display = 'block';
+    }
+}
+
+function unmaskModelManually() {
+    toggleBlindReviewMode(false);
+}
+
+function selectDecision(decision) {
+    const pLabel = document.getElementById('label_psif');
+    const npLabel = document.getElementById('label_not_psif');
+    const infLabel = document.getElementById('label_insufficient');
+    
+    pLabel.classList.remove('selected-psif', 'selected-not-psif', 'selected-insufficient');
+    npLabel.classList.remove('selected-psif', 'selected-not-psif', 'selected-insufficient');
+    infLabel.classList.remove('selected-psif', 'selected-not-psif', 'selected-insufficient');
+    
+    if (decision === 'PSIF') {
+        pLabel.classList.add('selected-psif');
+        document.querySelector('input[name="decision"][value="PSIF"]').checked = true;
+    } else if (decision === 'NOT_PSIF') {
+        npLabel.classList.add('selected-not-psif');
+        document.querySelector('input[name="decision"][value="NOT_PSIF"]').checked = true;
+    } else if (decision === 'INSUFFICIENT_INFORMATION') {
+        infLabel.classList.add('selected-insufficient');
+        document.querySelector('input[name="decision"][value="INSUFFICIENT_INFORMATION"]').checked = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initAdjudication);
+</script>
+{% endblock %}

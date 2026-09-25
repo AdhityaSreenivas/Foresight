@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Login — Foresight PSIF Platform{% endblock %}
+
+{% block extra_head %}
+<!-- Auth page uses full screen layout without sidebar -->
+<style>
+    .psif-sidebar { display: none; }
+    .psif-main { padding: 0; background: var(--black); }
+    .psif-content-inner { height: 100%; margin: 0; padding: 0; max-width: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-split">
+    <div class="auth-content">
+        <div class="auth-form-wrapper">
+            <a href="/" class="sidebar-brand" style="color: var(--black); margin-bottom: 2rem;">
+                <span class="sidebar-brand-icon" aria-hidden="true">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                Foresight
+            </a>
+            
+            <h1 class="page-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Sign In</h1>
+            <p class="page-subtitle" style="margin-bottom: 2rem;">Access the PSIF Prediction Platform.</p>
+
+            {% if form.errors %}
+                <div class="message message-error">
+                    Your username and password didn't match. Please try again.
+                </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_username" class="form-label">Username</label>
+                    <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password" class="form-label">Password</label>
+                    <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 1rem;">Sign In</button>
+                <input type="hidden" name="next" value="{{ next|default:'/dashboard/' }}" />
+            </form>
+
+            <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin: 0;">Quick Demo Switcher</h3>
+                    <span class="badge" style="background: rgba(168, 184, 120, 0.2); color: var(--olive-dark); font-size: 0.7rem; font-weight: 700;">SIH 26165 Demo</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <button type="button" class="btn btn-secondary" style="text-align: left; padding: 0.65rem 0.85rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; background: rgba(168, 184, 120, 0.15); border: 1.5px solid var(--brand); cursor: pointer;" onclick="document.getElementById('id_username').value='admin_flow@foresight.app'; document.getElementById('id_password').value='foresight2026';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <strong style="color: var(--text-primary); font-size: 0.9rem;">Admin Flow</strong>
+                                <span class="badge" style="background: var(--brand); color: var(--white); font-size: 0.65rem; padding: 2px 6px;">Judge Demo</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal; display: block; margin-top: 2px;">Isolated Demonstration Workspace (Judge Review)</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--olive-dark); font-weight: 700;">Fill &rarr;</span>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" style="text-align: left; padding: 0.65rem 0.85rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; background: var(--bg-alt); border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('id_username').value='admin@foresight.app'; document.getElementById('id_password').value='foresight2026';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <strong style="color: var(--text-primary); font-size: 0.9rem;">Admin</strong>
+                                <span class="badge" style="background: var(--brand); color: var(--white); font-size: 0.65rem; padding: 2px 6px;">Full Access</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal; display: block; margin-top: 2px;">Dashboard, Datasets, Incidents, Models, Reports</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--olive-dark); font-weight: 600;">Fill &rarr;</span>
+                    </button>
+                    
+                    <button type="button" class="btn btn-secondary" style="text-align: left; padding: 0.65rem 0.85rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; background: var(--bg-alt); border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('id_username').value='safety@foresight.app'; document.getElementById('id_password').value='foresight2026';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <strong style="color: var(--text-primary); font-size: 0.9rem;">Safety Officer</strong>
+                                <span class="badge" style="background: var(--olive-dark); color: var(--white); font-size: 0.65rem; padding: 2px 6px;">Triage Review</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal; display: block; margin-top: 2px;">Review Queue, Incident Detail, PSIF Validation</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--olive-dark); font-weight: 600;">Fill &rarr;</span>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" style="text-align: left; padding: 0.65rem 0.85rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; background: var(--bg-alt); border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('id_username').value='analyst@foresight.app'; document.getElementById('id_password').value='foresight2026';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <strong style="color: var(--text-primary); font-size: 0.9rem;">Analyst</strong>
+                                <span class="badge" style="background: #D5D5CD; color: var(--text-primary); font-size: 0.65rem; padding: 2px 6px;">Analytics</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal; display: block; margin-top: 2px;">Dashboard Trends, Single Predictor, Reports</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--olive-dark); font-weight: 600;">Fill &rarr;</span>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" style="text-align: left; padding: 0.65rem 0.85rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; background: var(--bg-alt); border: 1px solid var(--border-color); cursor: pointer;" onclick="document.getElementById('id_username').value='viewer@foresight.app'; document.getElementById('id_password').value='foresight2026';">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <strong style="color: var(--text-primary); font-size: 0.9rem;">Viewer</strong>
+                                <span class="badge" style="background: #E5E5DE; color: var(--text-secondary); font-size: 0.65rem; padding: 2px 6px;">Read Only</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal; display: block; margin-top: 2px;">Executive Dashboard & Published Reports</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--olive-dark); font-weight: 600;">Fill &rarr;</span>
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <a href="{% url 'accounts:register' %}" style="font-weight: 600; color: var(--olive-dark); font-size: 0.9rem;">Create a new account</a>
+            </div>
+        </div>
+    </div>
+    <div class="auth-image" style="background-image: url('{{ hero_image|default:"/static/img/auth_hero.jpg" }}');"></div>
+</div>
+
+<script>
+function getCsrfCookie() {
+    const name = 'csrftoken';
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+    }
+    return null;
+}
+
+function ensureFreshCsrfToken() {
+    const cookieToken = getCsrfCookie();
+    if (cookieToken) {
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput && csrfInput.value !== cookieToken) {
+            csrfInput.value = cookieToken;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', ensureFreshCsrfToken);
+const loginFormElem = document.querySelector('form[action*="login"]');
+if (loginFormElem) {
+    loginFormElem.addEventListener('submit', ensureFreshCsrfToken);
+}
+</script>
+{% endblock %}

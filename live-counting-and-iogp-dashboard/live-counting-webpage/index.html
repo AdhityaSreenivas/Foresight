@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Processing — FORESIGHT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F6F4;
+    --surface:#FFFFFF;
+    --surface-sunk:#EFF2F0;
+    --border:#DFE4E1;
+    --border-strong:#C7CFCA;
+    --ink-900:#121B1A;
+    --ink-700:#374440;
+    --ink-500:#66756F;
+    --ink-400:#8B9A93;
+    --teal:#1B6C66;
+    --teal-dark:#144F4B;
+    --teal-soft:#E3F0EE;
+    --amber:#A9700F;
+    --amber-soft:#FAF0DC;
+    --red:#A23A2B;
+    --red-soft:#FBEAE6;
+    --red-deep:#7C2A1F;
+    --green:#3C7551;
+    --green-soft:#E7F2EA;
+    --font-ui:'IBM Plex Sans', system-ui, sans-serif;
+    --font-num:'Space Grotesk', system-ui, sans-serif;
+    --radius-md:10px;
+    --radius-lg:14px;
+    --shadow-card: 0 1px 2px rgba(18,27,26,0.04), 0 1px 0 rgba(18,27,26,0.03);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink-900);
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+
+  .page{
+    max-width:1280px;
+    margin:0 auto;
+    padding:28px 32px 80px;
+  }
+
+  /* ---------- HEADER ---------- */
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-500);
+    text-decoration:none;
+    padding:4px 0;
+    border:none;
+    background:none;
+    cursor:pointer;
+  }
+  .back-link:hover{ color:var(--ink-900); }
+  .back-link svg{ width:14px; height:14px; }
+
+  .header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    margin-top:14px;
+    padding-bottom:22px;
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+
+  .header-title-block h1{
+    font-family:var(--font-num);
+    font-size:28px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0 0 4px;
+    color:var(--ink-900);
+  }
+  .header-title-block p{
+    margin:0;
+    font-size:14px;
+    color:var(--ink-500);
+  }
+
+  .status-cluster{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .conn-dot-wrap{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--ink-400);
+  }
+  .conn-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--green);
+  }
+  .conn-dot.pulse{ animation:connPulse 2s ease-in-out infinite; }
+  @keyframes connPulse{
+    0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(60,117,81,0.4); }
+    50%{ opacity:0.6; box-shadow:0 0 0 4px rgba(60,117,81,0); }
+  }
+
+  .status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    border:1px solid transparent;
+  }
+  .status-badge.processing{ background:var(--teal-soft); color:var(--teal-dark); border-color:#BFE0DB; }
+  .status-badge.completed{ background:var(--green-soft); color:var(--green); border-color:#C9E4D2; }
+  .status-badge.failed{ background:var(--red-soft); color:var(--red); border-color:#F0CCC4; }
+  .status-badge.cancelled{ background:var(--surface-sunk); color:var(--ink-500); border-color:var(--border-strong); }
+  .status-badge .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .status-badge.processing .dot{ animation:badgePulse 1.4s ease-in-out infinite; }
+  @keyframes badgePulse{
+    0%,100%{ transform:scale(1); opacity:1; }
+    50%{ transform:scale(1.4); opacity:0.5; }
+  }
+
+  /* ---------- MAIN GRID ---------- */
+  .main-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1.9fr) minmax(300px,1fr);
+    gap:20px;
+    margin-top:24px;
+    align-items:start;
+  }
+
+  .left-col{ display:flex; flex-direction:column; gap:20px; }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
+  }
+
+  /* ---------- METRIC CARDS ---------- */
+  .metric-card{
+    padding:24px 26px;
+    position:relative;
+    overflow:hidden;
+  }
+  .metric-card .eyebrow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-500);
+    margin-bottom:14px;
+  }
+  .metric-card.psif .eyebrow{ color:var(--red); }
+  .metric-card.nonpsif .eyebrow{ color:var(--teal); }
+
+  .metric-tag{
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    padding:3px 8px;
+    border-radius:999px;
+    text-transform:none;
+  }
+  .metric-card.psif .metric-tag{ background:var(--red-soft); color:var(--red); }
+  .metric-card.nonpsif .metric-tag{ background:var(--teal-soft); color:var(--teal-dark); }
+
+  .metric-number-row{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:6px;
+  }
+  .metric-number{
+    font-family:var(--font-num);
+    font-size:52px;
+    font-weight:600;
+    letter-spacing:-0.02em;
+    color:var(--ink-900);
+    font-variant-numeric:tabular-nums;
+    transition:color 0.3s ease;
+  }
+  .metric-number.flash{ color:var(--teal); }
+  .metric-card.psif .metric-number.flash{ color:var(--red); }
+
+  .metric-pct{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink-500);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .metric-desc{
+    font-size:13px;
+    color:var(--ink-500);
+    max-width:46ch;
+    margin-top:10px;
+  }
+
+  .metric-bar-track{
+    height:5px;
+    border-radius:4px;
+    background:var(--surface-sunk);
+    margin-top:16px;
+    overflow:hidden;
+  }
+  .metric-bar-fill{
+    height:100%;
+    border-radius:4px;
+    transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .metric-card.psif .metric-bar-fill{ background:var(--red); }
+  .metric-card.nonpsif .metric-bar-fill{ background:var(--teal); }
+
+  /* ---------- STATUS CARD (right) ---------- */
+  .status-card{
+    padding:22px 24px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    position:sticky;
+    top:20px;
+  }
+  .status-card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .status-card-head h2{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-700);
+    margin:0;
+  }
+
+  .live-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--teal-dark);
+  }
+  .spinner{
+    width:12px;height:12px;
+    border-radius:50%;
+    border:2px solid var(--teal-soft);
+    border-top-color:var(--teal);
+    animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .current-file-block{
+    background:var(--surface-sunk);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+  }
+  .current-file-label{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-400);
+    margin-bottom:5px;
+  }
+  .current-file-name{
+    font-family:var(--font-num);
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink-900);
+    word-break:break-all;
+  }
+
+  .row-progress-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13px;
+    color:var(--ink-700);
+    margin-bottom:8px;
+  }
+  .row-progress-head .pct{
+    font-family:var(--font-num);
+    font-weight:600;
+    color:var(--ink-900);
+    font-variant-numeric:tabular-nums;
+  }
+  .progress-track{
+    height:8px;
+    background:var(--surface-sunk);
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--teal),#249089);
+    border-radius:6px;
+    transition:width 0.4s ease;
+  }
+
+  .timing-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin-top:2px;
+  }
+  .timing-item{
+    text-align:left;
+  }
+  .timing-item .k{
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink-400);
+    margin-bottom:3px;
+  }
+  .timing-item .v{
+    font-family:var(--font-num);
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink-900);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .divider{ height:1px; background:var(--border); }
+
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .stat-item{
+    background:var(--surface-sunk);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:12px 10px;
+    text-align:center;
+  }
+  .stat-item .v{
+    font-family:var(--font-num);
+    font-size:20px;
+    font-weight:600;
+    color:var(--ink-900);
+    font-variant-numeric:tabular-nums;
+  }
+  .stat-item .k{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink-400);
+    margin-top:2px;
+  }
+
+  .quality-block h3{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-500);
+    margin:0 0 10px;
+  }
+  .quality-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:7px 0;
+    font-size:13.5px;
+    color:var(--ink-700);
+  }
+  .quality-row + .quality-row{ border-top:1px solid var(--border); }
+  .quality-label{ display:flex; align-items:center; gap:8px; }
+  .q-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .q-dot.accepted{ background:var(--green); }
+  .q-dot.warning{ background:var(--amber); }
+  .q-dot.rejected{ background:var(--red); }
+  .quality-count{
+    font-family:var(--font-num);
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+    color:var(--ink-900);
+  }
+
+  .completed-banner{
+    display:none;
+    flex-direction:column;
+    gap:14px;
+    padding:20px 22px;
+    background:var(--green-soft);
+    border:1px solid #C9E4D2;
+    border-radius:var(--radius-lg);
+    margin-top:24px;
+  }
+  .completed-banner.show{ display:flex; }
+  .completed-banner-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--green);
+  }
+  .completed-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+  }
+  .completed-stats .v{
+    font-family:var(--font-num);
+    font-size:22px;
+    font-weight:600;
+    color:var(--ink-900);
+  }
+  .completed-stats .k{
+    font-size:11.5px;
+    color:var(--ink-500);
+    margin-top:2px;
+  }
+  .completed-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--font-ui);
+    font-size:13px;
+    font-weight:600;
+    padding:9px 16px;
+    border-radius:8px;
+    border:1px solid var(--border-strong);
+    background:var(--surface);
+    color:var(--ink-900);
+    cursor:pointer;
+  }
+  .btn:hover{ background:var(--surface-sunk); }
+  .btn.primary{
+    background:var(--teal-dark);
+    border-color:var(--teal-dark);
+    color:#fff;
+  }
+  .btn.primary:hover{ background:var(--teal); }
+
+  /* ---------- FILES SECTION ---------- */
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin:40px 0 14px;
+  }
+  .section-head h2{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-700);
+    margin:0;
+  }
+  .section-head .sub{
+    font-size:12.5px;
+    color:var(--ink-400);
+  }
+
+  .files-card{ padding:6px; }
+  .file-row{
+    display:grid;
+    grid-template-columns:22px minmax(0,1fr) 190px 110px;
+    align-items:center;
+    gap:16px;
+    padding:14px 16px;
+    border-radius:var(--radius-md);
+    transition:background 0.3s ease;
+  }
+  .file-row.active{ background:var(--teal-soft); }
+  .file-row + .file-row{ border-top:1px solid var(--border); }
+
+  .file-icon{ display:flex; align-items:center; justify-content:center; }
+  .file-icon svg{ width:16px; height:16px; }
+  .file-icon.completed{ color:var(--green); }
+  .file-icon.processing{ color:var(--teal); }
+  .file-icon.queued{ color:var(--ink-400); }
+  .file-icon.failed{ color:var(--red); }
+  .file-icon.processing .ring{ animation:ringPulse 1.3s ease-in-out infinite; transform-origin:center; }
+  @keyframes ringPulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .file-name{
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink-900);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .file-sub{
+    font-size:12px;
+    color:var(--ink-400);
+    margin-top:1px;
+  }
+
+  .file-progress-wrap{ display:flex; flex-direction:column; gap:5px; }
+  .file-progress-text{
+    font-size:12px;
+    color:var(--ink-500);
+    display:flex;
+    justify-content:space-between;
+    font-variant-numeric:tabular-nums;
+  }
+  .file-progress-track{
+    height:5px;
+    background:var(--surface-sunk);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .file-progress-fill{
+    height:100%;
+    border-radius:4px;
+    transition:width 0.4s ease;
+  }
+  .file-row.completed .file-progress-fill{ background:var(--green); }
+  .file-row.processing .file-progress-fill{ background:var(--teal); }
+  .file-row.queued .file-progress-fill{ background:var(--border-strong); }
+
+  .file-status-tag{
+    justify-self:end;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:4px 10px;
+    border-radius:999px;
+  }
+  .file-status-tag.completed{ background:var(--green-soft); color:var(--green); }
+  .file-status-tag.processing{ background:var(--teal-soft); color:var(--teal-dark); }
+  .file-status-tag.queued{ background:var(--surface-sunk); color:var(--ink-400); }
+  .file-status-tag.failed{ background:var(--red-soft); color:var(--red); }
+
+  /* ---------- BARRIER SECTION ---------- */
+  .barrier-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+  }
+  @media (max-width:980px){ .barrier-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:620px){ .barrier-grid{ grid-template-columns:1fr; } }
+
+  .barrier-card{
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .barrier-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .barrier-name{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink-900);
+    line-height:1.3;
+  }
+  .barrier-pct-badge{
+    font-family:var(--font-num);
+    font-size:12.5px;
+    font-weight:600;
+    padding:4px 9px;
+    border-radius:999px;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+  .risk-low{ background:var(--green-soft); color:var(--green); }
+  .risk-medium{ background:var(--amber-soft); color:var(--amber); }
+  .risk-high{ background:#FBE4DA; color:#B14A1F; }
+  .risk-veryhigh{ background:var(--red-soft); color:var(--red-deep); }
+
+  .barrier-metrics{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+  }
+  .barrier-metric .v{
+    font-family:var(--font-num);
+    font-size:17px;
+    font-weight:600;
+    color:var(--ink-900);
+    font-variant-numeric:tabular-nums;
+  }
+  .barrier-metric .k{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-400);
+    margin-top:2px;
+  }
+
+  .barrier-linkage-label{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-400);
+  }
+  .barrier-bar-track{
+    height:6px;
+    background:var(--surface-sunk);
+    border-radius:4px;
+    overflow:hidden;
+    margin-top:6px;
+  }
+  .barrier-bar-fill{
+    height:100%;
+    border-radius:4px;
+    transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .barrier-bar-fill.risk-low{ background:var(--green); }
+  .barrier-bar-fill.risk-medium{ background:var(--amber); }
+  .barrier-bar-fill.risk-high{ background:#B14A1F; }
+  .barrier-bar-fill.risk-veryhigh{ background:var(--red-deep); }
+
+  .barrier-actions{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:2px;
+  }
+  .barrier-detail-btn{
+    font-family:var(--font-ui);
+    font-size:12px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:7px;
+    border:1px solid var(--border-strong);
+    background:var(--surface);
+    color:var(--ink-700);
+    cursor:pointer;
+  }
+  .barrier-detail-btn:hover{ background:var(--surface-sunk); }
+  .barrier-report-link{
+    font-size:12px;
+    font-weight:600;
+    color:var(--teal-dark);
+  }
+
+  .sim-note{
+    margin-top:44px;
+    padding:14px 18px;
+    border:1px dashed var(--border-strong);
+    border-radius:var(--radius-md);
+    font-size:12px;
+    color:var(--ink-400);
+  }
+
+  @media (max-width:900px){
+    .main-grid{ grid-template-columns:1fr; }
+    .status-card{ position:static; }
+    .completed-stats{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:560px){
+    .page{ padding:20px 16px 60px; }
+    .header-row{ flex-direction:column; align-items:flex-start; gap:12px; }
+    .file-row{ grid-template-columns:20px 1fr; row-gap:8px; }
+    .file-progress-wrap{ grid-column:1 / -1; }
+    .file-status-tag{ grid-column:1 / -1; justify-self:start; }
+    .timing-row{ grid-template-columns:repeat(2,1fr); row-gap:10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <button class="back-link" onclick="void(0)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    Back to datasets
+  </button>
+
+  <div class="header-row">
+    <div class="header-title-block">
+      <h1>Live processing</h1>
+      <p>Processing multiple incident datasets · Job <span id="jobIdLabel">psif-8841</span></p>
+    </div>
+    <div class="status-cluster">
+      <div class="conn-dot-wrap">
+        <span class="conn-dot pulse" id="connDot"></span>
+        <span id="connLabel">Connected</span>
+      </div>
+      <span class="status-badge processing" id="statusBadge">
+        <span class="dot"></span>
+        <span id="statusBadgeText">Processing</span>
+      </span>
+      <a href="index.html" style="font-size:12.5px;font-weight:600;color:var(--teal-dark);background:var(--teal-soft);padding:6px 12px;border-radius:6px;text-decoration:none;border:1px solid #BFE0DB;">View Final Classification &rarr;</a>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <div class="left-col">
+
+      <!-- PSIF CARD -->
+      <div class="card metric-card psif">
+        <div class="eyebrow">
+          <span>PSIF candidates</span>
+          <span class="metric-tag">High risk</span>
+        </div>
+        <div class="metric-number-row">
+          <span class="metric-number" id="psifCount">0</span>
+          <span class="metric-pct"><span id="psifPct">0.0</span>% of processed incidents</span>
+        </div>
+        <div class="metric-desc">Events involving precursor energy or control failures with high potential for serious injury or fatality.</div>
+        <div class="metric-bar-track"><div class="metric-bar-fill" id="psifBar" style="width:0%"></div></div>
+      </div>
+
+      <!-- NON-PSIF CARD -->
+      <div class="card metric-card nonpsif">
+        <div class="eyebrow">
+          <span>Non‑PSIF</span>
+          <span class="metric-tag">Routine</span>
+        </div>
+        <div class="metric-number-row">
+          <span class="metric-number" id="nonpsifCount">0</span>
+          <span class="metric-pct"><span id="nonpsifPct">0.0</span>% of processed incidents</span>
+        </div>
+        <div class="metric-desc">Routine safety events or minor hazards without catastrophic life‑altering potential.</div>
+        <div class="metric-bar-track"><div class="metric-bar-fill" id="nonpsifBar" style="width:0%"></div></div>
+      </div>
+
+    </div>
+
+    <!-- PROCESSING STATUS -->
+    <div class="card status-card">
+      <div class="status-card-head">
+        <h2>Processing status</h2>
+        <span class="live-pill" id="livePill"><span class="spinner"></span> Live</span>
+      </div>
+
+      <div class="current-file-block">
+        <div class="current-file-label">Current file</div>
+        <div class="current-file-name" id="currentFileName">—</div>
+      </div>
+
+      <div>
+        <div class="row-progress-head">
+          <span id="rowProgressText">0 / 0 rows</span>
+          <span class="pct"><span id="rowProgressPct">0.0</span>%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="mainProgressFill" style="width:0%"></div></div>
+      </div>
+
+      <div class="timing-row">
+        <div class="timing-item"><div class="k">Elapsed</div><div class="v" id="elapsedTime">0s</div></div>
+        <div class="timing-item"><div class="k">Remaining</div><div class="v" id="remainingTime">—</div></div>
+        <div class="timing-item"><div class="k">Est. total</div><div class="v" id="estTotalTime">—</div></div>
+        <div class="timing-item"><div class="k">Rate</div><div class="v" id="rateValue">0/s</div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="stat-row">
+        <div class="stat-item"><div class="v" id="statProcessed">0</div><div class="k">Processed</div></div>
+        <div class="stat-item"><div class="v" id="statTotal">0</div><div class="k">Total</div></div>
+        <div class="stat-item"><div class="v" id="statComplete">0%</div><div class="k">Complete</div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="quality-block">
+        <h3>Data quality summary</h3>
+        <div class="quality-row">
+          <span class="quality-label"><span class="q-dot accepted"></span>Accepted</span>
+          <span class="quality-count" id="qualityAccepted">0</span>
+        </div>
+        <div class="quality-row">
+          <span class="quality-label"><span class="q-dot warning"></span>Accepted with warning</span>
+          <span class="quality-count" id="qualityWarning">0</span>
+        </div>
+        <div class="quality-row">
+          <span class="quality-label"><span class="q-dot rejected"></span>Rejected</span>
+          <span class="quality-count" id="qualityRejected">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLETED BANNER -->
+  <div class="completed-banner" id="completedBanner">
+    <div class="completed-banner-head">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      Processing complete
+    </div>
+    <div class="completed-stats">
+      <div><div class="v" id="doneFiles">0</div><div class="k">Files processed</div></div>
+      <div><div class="v" id="doneRows">0</div><div class="k">Rows processed</div></div>
+      <div><div class="v" id="donePsif">0</div><div class="k">PSIF candidates</div></div>
+      <div><div class="v" id="doneNonPsif">0</div><div class="k">Non‑PSIF incidents</div></div>
+    </div>
+    <div class="completed-actions">
+      <button class="btn primary" onclick="window.location.href='index.html'">View incident results</button>
+      <button class="btn" onclick="window.location.href='index.html'">Incident classification</button>
+      <button class="btn" id="rerunBtn">Run another job</button>
+    </div>
+  </div>
+
+  <!-- FILES SECTION -->
+  <div class="section-head">
+    <h2>Files in this job</h2>
+    <span class="sub" id="filesSummary">0 of 0 files complete</span>
+  </div>
+  <div class="card files-card" id="filesList"></div>
+
+  <!-- BARRIER INTELLIGENCE -->
+  <div class="section-head">
+    <h2>Barrier intelligence portfolio</h2>
+    <span class="sub">IOGP barrier categories · live from this job</span>
+  </div>
+  <div class="barrier-grid" id="barrierGrid"></div>
+
+  <div class="sim-note">
+    Frontend reference build. Numbers are driven by an in‑browser event pipeline that emits the same event contract a real backend would send (<code>JOB_PROGRESS</code>, <code>CLASSIFICATION_UPDATE</code>, <code>BARRIER_UPDATE</code>, <code>FILE_COMPLETED</code>, <code>JOB_COMPLETED</code>) over a mock channel — see <code>MockJobChannel</code> in the source. Point that channel at a real WebSocket/SSE endpoint to go live.
+  </div>
+
+</div>
+
+<script>
+/* =========================================================================
+   DATA MODEL — mirrors the ProcessingJob / DatasetFile contract in the spec
+   ========================================================================= */
+
+const BARRIERS = [
+  { key:'lifting',   name:'Safe Mechanical Lifting', psifWeight:0.11, nonWeight:0.11 },
+  { key:'isolation',  name:'Energy Isolation',         psifWeight:0.10, nonWeight:0.10 },
+  { key:'driving',    name:'Driving',                  psifWeight:0.12, nonWeight:0.18 },
+  { key:'hotwork',    name:'Hot Work',                 psifWeight:0.03, nonWeight:0.15 },
+  { key:'height',     name:'Working at Height',        psifWeight:0.16, nonWeight:0.07 },
+  { key:'confined',   name:'Confined Space',           psifWeight:0.14, nonWeight:0.08 },
+  { key:'lof',        name:'Line of Fire',              psifWeight:0.08, nonWeight:0.12 },
+  { key:'authorization', name:'Work Authorization',    psifWeight:0.06, nonWeight:0.13 },
+  { key:'bypass',     name:'Bypassing Safety Controls', psifWeight:0.20, nonWeight:0.06 },
+];
+
+function makeFiles(){
+  return [
+    { id:'f1', filename:'incident_january.csv',  totalRows:420, processedRows:0, status:'QUEUED', accepted:0, warning:0, rejected:0, psif:0, nonPsif:0 },
+    { id:'f2', filename:'incident_february.csv', totalRows:365, processedRows:0, status:'QUEUED', accepted:0, warning:0, rejected:0, psif:0, nonPsif:0 },
+    { id:'f3', filename:'incident_march.csv',    totalRows:240, processedRows:0, status:'QUEUED', accepted:0, warning:0, rejected:0, psif:0, nonPsif:0 },
+    { id:'f4', filename:'incident_april.csv',    totalRows:300, processedRows:0, status:'QUEUED', accepted:0, warning:0, rejected:0, psif:0, nonPsif:0 },
+  ];
+}
+
+function makeJobState(){
+  return {
+    id: 'psif-' + Math.floor(1000 + Math.random()*9000),
+    status: 'PROCESSING',
+    files: makeFiles(),
+    totalRows: 0,
+    processedRows: 0,
+    accepted: 0,
+    warning: 0,
+    rejected: 0,
+    psifCount: 0,
+    nonPsifCount: 0,
+    startedAt: Date.now(),
+    barriers: Object.fromEntries(BARRIERS.map(b => [b.key, { matched:0, psifLinked:0 }])),
+  };
+}
+
+/* =========================================================================
+   MOCK JOB CHANNEL — stands in for a WebSocket/SSE connection to
+   /jobs/{jobId}/events. Emits the exact event `type`s described in the spec.
+   Swap `connect()` for a real `new WebSocket(...)` and forward its
+   `onmessage` payloads into `handleEvent()` to go live — the rest of the
+   dashboard does not need to change.
+   ========================================================================= */
+
+class MockJobChannel extends EventTarget {
+  constructor(job){
+    super();
+    this.job = job;
+    this.tickHandle = null;
+    this.fileIndex = 0;
+  }
+
+  connect(){
+    this.emit('JOB_STARTED', { jobId:this.job.id });
+    this.job.totalRows = this.job.files.reduce((s,f)=>s+f.totalRows,0);
+    this._startNextFile();
+    this.tickHandle = setInterval(()=>this._tick(), 220);
+  }
+
+  disconnect(){
+    if (this.tickHandle) clearInterval(this.tickHandle);
+  }
+
+  emit(type, payload){
+    this.dispatchEvent(new CustomEvent('event', { detail:{ type, ...payload } }));
+  }
+
+  _startNextFile(){
+    const file = this.job.files[this.fileIndex];
+    if (!file) return;
+    file.status = 'PROCESSING';
+    file.startedAt = Date.now();
+    this.emit('FILE_STARTED', { fileId:file.id, filename:file.filename });
+  }
+
+  _weightedPick(weightKey){
+    const total = BARRIERS.reduce((s,b)=>s+b[weightKey],0);
+    let r = Math.random()*total;
+    for (const b of BARRIERS){
+      r -= b[weightKey];
+      if (r <= 0) return b;
+    }
+    return BARRIERS[BARRIERS.length-1];
+  }
+
+  _processRow(file){
+    const roll = Math.random();
+    let validation = 'ACCEPTED';
+    if (roll < 0.006) validation = 'REJECTED';
+    else if (roll < 0.02) validation = 'ACCEPTED_WITH_WARNING';
+
+    file.processedRows++;
+    this.job.processedRows++;
+
+    if (validation === 'REJECTED'){
+      file.rejected++; this.job.rejected++;
+      this.emit('ROW_REJECTED', { fileId:file.id, processedRows:this.job.processedRows });
+      return;
+    }
+    if (validation === 'ACCEPTED_WITH_WARNING'){ file.warning++; this.job.warning++; }
+    else { file.accepted++; this.job.accepted++; }
+
+    const isPsif = Math.random() < 0.191;
+    if (isPsif){ file.psif++; this.job.psifCount++; }
+    else { file.nonPsif++; this.job.nonPsifCount++; }
+
+    this.emit('CLASSIFICATION_UPDATE', {
+      fileId:file.id,
+      classification: isPsif ? 'PSIF' : 'NON_PSIF',
+      processedRows:this.job.processedRows,
+      totalRows:this.job.totalRows,
+      psifCount:this.job.psifCount,
+      nonPsifCount:this.job.nonPsifCount,
+    });
+
+    const numBarriers = Math.random() < 0.35 ? 2 : 1;
+    const picked = new Set();
+    for (let i=0;i<numBarriers;i++){
+      const b = this._weightedPick(isPsif ? 'psifWeight' : 'nonWeight');
+      picked.add(b.key);
+    }
+    picked.forEach(key => {
+      const bs = this.job.barriers[key];
+      bs.matched++;
+      const barrierDef = BARRIERS.find(b=>b.key===key);
+      const linkChance = isPsif ? (0.55 + barrierDef.psifWeight*1.6) : 0.04;
+      if (Math.random() < linkChance) bs.psifLinked++;
+      this.emit('BARRIER_UPDATE', { key, matched:bs.matched, psifLinked:bs.psifLinked });
+    });
+  }
+
+  _tick(){
+    if (this.job.status !== 'PROCESSING') return;
+    const file = this.job.files[this.fileIndex];
+    if (!file){ this._complete(); return; }
+
+    const rowsThisTick = 6 + Math.floor(Math.random()*6);
+    for (let i=0;i<rowsThisTick && file.processedRows < file.totalRows; i++){
+      this._processRow(file);
+    }
+
+    const elapsed = (Date.now() - this.job.startedAt) / 1000;
+    const rate = elapsed > 0 ? this.job.processedRows / elapsed : 0;
+    const remaining = rate > 0 ? (this.job.totalRows - this.job.processedRows) / rate : 0;
+
+    this.emit('JOB_PROGRESS', {
+      processedRows:this.job.processedRows,
+      totalRows:this.job.totalRows,
+      acceptedRows:this.job.accepted,
+      warningRows:this.job.warning,
+      rejectedRows:this.job.rejected,
+      psifCount:this.job.psifCount,
+      nonPsifCount:this.job.nonPsifCount,
+      processingRate:rate,
+      elapsedSeconds:elapsed,
+      estimatedRemainingSeconds:remaining,
+      currentFile:file.filename,
+      currentFileId:file.id,
+      currentFileProcessed:file.processedRows,
+      currentFileTotal:file.totalRows,
+    });
+
+    if (file.processedRows >= file.totalRows){
+      file.status = 'COMPLETED';
+      file.completedAt = Date.now();
+      this.emit('FILE_COMPLETED', { fileId:file.id });
+      this.fileIndex++;
+      this._startNextFile();
+    }
+  }
+
+  _complete(){
+    this.job.status = 'COMPLETED';
+    this.job.completedAt = Date.now();
+    this.emit('JOB_COMPLETED', {
+      jobId:this.job.id,
+      totalFiles:this.job.files.length,
+      processedRows:this.job.processedRows,
+      psifCount:this.job.psifCount,
+      nonPsifCount:this.job.nonPsifCount,
+    });
+    this.disconnect();
+  }
+}
+
+/* =========================================================================
+   DASHBOARD — subscribes to channel events and updates the DOM.
+   ========================================================================= */
+
+const $ = id => document.getElementById(id);
+
+function animateNumber(el, to, duration=450){
+  const from = parseInt(el.dataset.val || '0', 10);
+  if (from === to){ el.textContent = to.toLocaleString(); return; }
+  el.dataset.val = to;
+  el.classList.add('flash');
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const val = Math.round(from + (to - from) * eased);
+    el.textContent = val.toLocaleString();
+    if (t < 1) requestAnimationFrame(step);
+    else setTimeout(()=>el.classList.remove('flash'), 200);
+  }
+  requestAnimationFrame(step);
+}
+
+function fmtTime(sec){
+  if (!isFinite(sec) || sec < 0) return '—';
+  if (sec < 1) return '<1s';
+  if (sec < 60) return Math.round(sec) + 's';
+  const m = Math.floor(sec/60), s = Math.round(sec%60);
+  return `${m}m ${s}s`;
+}
+
+function riskClass(pct){
+  if (pct < 45) return 'risk-low';
+  if (pct < 60) return 'risk-medium';
+  if (pct < 75) return 'risk-high';
+  return 'risk-veryhigh';
+}
+
+const fileIcons = {
+  COMPLETED: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
+  PROCESSING: `<svg class="ring" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>`,
+  QUEUED: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>`,
+  FAILED: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
+};
+
+let job, channel;
+
+function renderFiles(){
+  const container = $('filesList');
+  container.innerHTML = '';
+  let doneCount = 0;
+  job.files.forEach(f => {
+    if (f.status === 'COMPLETED') doneCount++;
+    const pct = f.totalRows ? (f.processedRows/f.totalRows*100) : 0;
+    const statusLower = f.status.toLowerCase();
+    const row = document.createElement('div');
+    row.className = `file-row ${statusLower}`;
+    row.innerHTML = `
+      <div class="file-icon ${statusLower}">${fileIcons[f.status] || ''}</div>
+      <div>
+        <div class="file-name">${f.filename}</div>
+        <div class="file-sub">${f.totalRows.toLocaleString()} rows</div>
+      </div>
+      <div class="file-progress-wrap">
+        <div class="file-progress-text"><span>${f.status==='QUEUED' ? 'Waiting' : f.processedRows.toLocaleString() + ' / ' + f.totalRows.toLocaleString()}</span><span>${f.status==='QUEUED' ? '' : pct.toFixed(0)+'%'}</span></div>
+        <div class="file-progress-track"><div class="file-progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="file-status-tag ${statusLower}">${f.status}</div>
+    `;
+    container.appendChild(row);
+  });
+  $('filesSummary').textContent = `${doneCount} of ${job.files.length} files complete`;
+}
+
+function renderBarriers(){
+  const container = $('barrierGrid');
+  if (!container.dataset.built){
+    container.innerHTML = BARRIERS.map(b => `
+      <div class="card barrier-card" id="barrier-${b.key}">
+        <div class="barrier-card-head">
+          <div class="barrier-name">${b.name}</div>
+          <div class="barrier-pct-badge risk-low" id="barrierPct-${b.key}">0.0% PSIF</div>
+        </div>
+        <div class="barrier-metrics">
+          <div class="barrier-metric"><div class="v" id="barrierMatched-${b.key}">0</div><div class="k">Matched</div></div>
+          <div class="barrier-metric"><div class="v" id="barrierLinked-${b.key}">0</div><div class="k">PSIF‑linked</div></div>
+          <div class="barrier-metric"><div class="v" id="barrierSites-${b.key}">0</div><div class="k">Sites</div></div>
+        </div>
+        <div>
+          <div class="barrier-linkage-label">PSIF risk linkage</div>
+          <div class="barrier-bar-track"><div class="barrier-bar-fill risk-low" id="barrierBar-${b.key}" style="width:0%"></div></div>
+        </div>
+        <div class="barrier-actions">
+          <button class="barrier-detail-btn">Detail</button>
+          <span class="barrier-report-link" id="barrierReports-${b.key}">0 reports →</span>
+        </div>
+      </div>
+    `).join('');
+    container.dataset.built = '1';
+  }
+  BARRIERS.forEach(b => {
+    const bs = job.barriers[b.key];
+    const pct = bs.matched ? (bs.psifLinked/bs.matched*100) : 0;
+    const rc = riskClass(pct);
+    animateNumber($(`barrierMatched-${b.key}`), bs.matched);
+    animateNumber($(`barrierLinked-${b.key}`), bs.psifLinked);
+    const sites = Math.max(bs.matched > 0 ? 1 : 0, Math.round(Math.sqrt(bs.matched) * 1.7));
+    animateNumber($(`barrierSites-${b.key}`), sites);
+    $(`barrierPct-${b.key}`).textContent = pct.toFixed(1) + '% PSIF';
+    $(`barrierPct-${b.key}`).className = 'barrier-pct-badge ' + rc;
+    $(`barrierBar-${b.key}`).style.width = pct + '%';
+    $(`barrierBar-${b.key}`).className = 'barrier-bar-fill ' + rc;
+    $(`barrierReports-${b.key}`).textContent = bs.matched.toLocaleString() + ' reports →';
+  });
+}
+
+function handleEvent(e){
+  const { type } = e.detail;
+
+  if (type === 'JOB_PROGRESS'){
+    const d = e.detail;
+    $('currentFileName').textContent = d.currentFile;
+    $('rowProgressText').textContent = `${d.currentFileProcessed.toLocaleString()} / ${d.currentFileTotal.toLocaleString()} rows`;
+    const filePct = d.currentFileTotal ? (d.currentFileProcessed/d.currentFileTotal*100) : 0;
+    $('rowProgressPct').textContent = filePct.toFixed(1);
+    $('mainProgressFill').style.width = filePct + '%';
+
+    $('elapsedTime').textContent = fmtTime(d.elapsedSeconds);
+    $('remainingTime').textContent = '~' + fmtTime(d.estimatedRemainingSeconds);
+    $('estTotalTime').textContent = '~' + fmtTime(d.elapsedSeconds + d.estimatedRemainingSeconds);
+    $('rateValue').textContent = d.processingRate.toFixed(1) + '/s';
+
+    animateNumber($('statProcessed'), d.processedRows);
+    animateNumber($('statTotal'), d.totalRows);
+    const overallPct = d.totalRows ? (d.processedRows/d.totalRows*100) : 0;
+    $('statComplete').textContent = overallPct.toFixed(1) + '%';
+
+    animateNumber($('qualityAccepted'), d.acceptedRows);
+    animateNumber($('qualityWarning'), d.warningRows);
+    animateNumber($('qualityRejected'), d.rejectedRows);
+
+    const total = d.psifCount + d.nonPsifCount;
+    const psifPct = total ? (d.psifCount/total*100) : 0;
+    const nonPct = total ? (d.nonPsifCount/total*100) : 0;
+    animateNumber($('psifCount'), d.psifCount);
+    animateNumber($('nonpsifCount'), d.nonPsifCount);
+    $('psifPct').textContent = psifPct.toFixed(1);
+    $('nonpsifPct').textContent = nonPct.toFixed(1);
+    $('psifBar').style.width = psifPct + '%';
+    $('nonpsifBar').style.width = nonPct + '%';
+
+    renderFiles();
+  }
+
+  if (type === 'BARRIER_UPDATE'){
+    renderBarriers();
+  }
+
+  if (type === 'JOB_COMPLETED'){
+    $('statusBadge').className = 'status-badge completed';
+    $('statusBadgeText').textContent = 'Completed';
+    $('livePill').style.display = 'none';
+    $('connLabel').textContent = 'Stream closed';
+    $('connDot').classList.remove('pulse');
+    $('connDot').style.background = 'var(--ink-400)';
+    $('currentFileName').textContent = '— all files processed —';
+
+    animateNumber($('doneFiles'), job.files.length);
+    animateNumber($('doneRows'), job.processedRows);
+    animateNumber($('donePsif'), job.psifCount);
+    animateNumber($('doneNonPsif'), job.nonPsifCount);
+    $('completedBanner').classList.add('show');
+    renderFiles();
+  }
+}
+
+function startJob(){
+  job = makeJobState();
+  $('jobIdLabel').textContent = job.id;
+  $('statusBadge').className = 'status-badge processing';
+  $('statusBadgeText').textContent = 'Processing';
+  $('livePill').style.display = '';
+  $('connLabel').textContent = 'Connected';
+  $('connDot').classList.add('pulse');
+  $('connDot').style.background = 'var(--green)';
+  $('completedBanner').classList.remove('show');
+  document.getElementById('barrierGrid').dataset.built = '';
+
+  ['psifCount','nonpsifCount','statProcessed','statTotal','qualityAccepted','qualityWarning','qualityRejected','doneFiles','doneRows','donePsif','doneNonPsif']
+    .forEach(id => { $(id).dataset.val = '0'; $(id).textContent = '0'; });
+
+  channel = new MockJobChannel(job);
+  channel.addEventListener('event', handleEvent);
+  renderFiles();
+  renderBarriers();
+  channel.connect();
+}
+
+$('rerunBtn').addEventListener('click', () => {
+  if (channel) channel.disconnect();
+  startJob();
+});
+
+startJob();
+</script>
+
+</body>
+</html>

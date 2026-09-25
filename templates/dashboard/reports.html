@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Reports & Analytics — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Deep-dive reports on PSIF trends, risk distribution, and department performance.{% endblock %}
+
+{% block nav_reports %}active{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="page-title">Reports &amp; Analytics</h1>
+            <p class="page-subtitle">Comprehensive overview of workplace safety trends and AI-driven PSIF predictions.</p>
+        </div>
+        <div>
+            <a href="/dashboard/barriers/" class="btn btn-outline" style="font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Barrier Intelligence &rarr;
+            </a>
+        </div>
+    </div>
+
+    <div class="metrics-grid kpi-grid" id="stats-grid">
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Total Incidents</div>
+                <div style="color: var(--muted); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-total-incidents">{{ analytics_summary.formatted_total_incidents|default:analytics_summary.total_incidents|default:"—" }}</div>
+            <div class="metric-subtext" title="Total ingested observations">Total ingested observations</div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Prediction Eligible</div>
+                <div style="color: var(--cat-blue); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-eligible">{{ analytics_summary.formatted_prediction_eligible_count|default:analytics_summary.prediction_eligible_count|default:"—" }}</div>
+            <div class="metric-subtext" title="Non-sparse reports">Non-sparse reports</div>
+        </div>
+        <div class="metric kpi-card" style="border-top: 3px solid var(--risk-critical);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">PSIF Candidates</div>
+                <div style="color: var(--risk-critical); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-psifs" style="color: var(--risk-critical);">{{ analytics_summary.formatted_psif_count|default:analytics_summary.psif_count|default:"—" }}</div>
+            <div class="metric-subtext" id="val-rate-subtext" title="{% if analytics_summary and analytics_summary.psif_percentage is not None %}{{ analytics_summary.psif_percentage }}% of evaluated{% endif %}">
+                {% if analytics_summary and analytics_summary.psif_percentage is not None %}
+                    {{ analytics_summary.psif_percentage }}% of evaluated
+                {% endif %}
+            </div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">NOT PSIF</div>
+                <div style="color: var(--risk-low); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-not-psif">{{ analytics_summary.formatted_not_psif_count|default:analytics_summary.not_psif_count|default:"—" }}</div>
+            <div class="metric-subtext" title="Low precursor risk">Low precursor risk</div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Insufficient Evidence</div>
+                <div style="color: var(--risk-medium); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-insufficient">{{ analytics_summary.formatted_insufficient_evidence_count|default:analytics_summary.insufficient_evidence_count|default:"—" }}</div>
+            <div class="metric-subtext" title="Sparse narrative (&lt; 10 words)">Sparse narrative (&lt; 10 words)</div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Human Reviewed</div>
+                <div style="color: var(--brand); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="val-human-reviewed">{{ analytics_summary.formatted_human_reviewed_count|default:analytics_summary.human_reviewed_count|default:"—" }}</div>
+            <div class="metric-subtext" id="val-agreement-subtext" title="{% if analytics_summary and analytics_summary.human_psif_count is not None and analytics_summary.human_reviewed_count > 0 %}{{ analytics_summary.human_psif_count }} PSIF · {{ analytics_summary.human_not_psif_count }} NOT PSIF{% elif analytics_summary and analytics_summary.human_model_agreement_rate is not None %}Agreement: {% widthratio analytics_summary.human_model_agreement_rate 1 100 %}%{% else %}HSE Ground Truth{% endif %}">
+                {% if analytics_summary and analytics_summary.human_psif_count is not None and analytics_summary.human_reviewed_count > 0 %}
+                    {{ analytics_summary.human_psif_count }} PSIF · {{ analytics_summary.human_not_psif_count }} NOT PSIF
+                {% elif analytics_summary and analytics_summary.human_model_agreement_rate is not None %}
+                    Agreement: {% widthratio analytics_summary.human_model_agreement_rate 1 100 %}%
+                {% else %}
+                    HSE Ground Truth
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="card" style="margin-bottom: 2rem; display: flex; flex-direction: column;">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Incident Volume &amp; PSIF Trend (12 Months)</h3>
+            <div id="trendChartContainer" class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+            <div id="trendChartEmpty" class="state-panel" style="display: none; height: 350px;">
+                <div class="state-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 20V10M12 20V4M6 20V14"></path>
+                    </svg>
+                </div>
+                <h3 class="state-title">No trend data</h3>
+                <p class="state-text">No trend data available yet.</p>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card" style="display: flex; flex-direction: column;">
+                <h3 style="margin-bottom: 0.25rem; font-size: 1.25rem;">Binary PSIF Candidate Distribution</h3>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Candidate evaluation among prediction-eligible reports</div>
+                <div id="riskChartContainer" class="chart-container">
+                    <canvas id="riskChart"></canvas>
+                </div>
+                <div id="riskChartEmpty" class="state-panel" style="display: none; height: 350px;">
+                    <div class="state-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="state-title">No risk data</h3>
+                    <p class="state-text">No risk data available yet.</p>
+                </div>
+            </div>
+            
+            <div class="card" style="display: flex; flex-direction: column;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Incidents by Department</h3>
+                <div id="deptChartContainer" class="chart-container">
+                    <canvas id="deptChart"></canvas>
+                </div>
+                <div id="deptChartEmpty" class="state-panel" style="display: none; height: 350px;">
+                    <div class="state-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                    </div>
+                    <h3 class="state-title">No department data</h3>
+                    <p class="state-text">No department data available yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // Utility for fetching computed CSS variables
+    const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+    Chart.defaults.font.family = "'Public Sans', system-ui, sans-serif";
+    Chart.defaults.color = getCssVar('--text-secondary') || '#6B6B66';
+    
+    // Semantic risk colors
+    const colorLow = getCssVar('--risk-low') || '#6B7A4F';
+    const colorMedium = getCssVar('--risk-medium') || '#B08A2E';
+    const colorHigh = getCssVar('--risk-high') || '#B3611E';
+    const colorCritical = getCssVar('--risk-critical') || '#9C3B32';
+
+    // Categorical colors
+    const catBlue = getCssVar('--cat-blue') || '#5C7C8A';
+    const catAmber = getCssVar('--cat-amber') || '#C19358';
+    const catTerracotta = getCssVar('--cat-terracotta') || '#B96B50';
+    const catTeal = getCssVar('--cat-teal') || '#4B7F76';
+    const catSlate = getCssVar('--cat-slate') || '#6E7A83';
+    const catMauve = getCssVar('--cat-mauve') || '#8B7583';
+    const catOlive = getCssVar('--olive-dark') || '#657044';
+
+    const catPalette = [catBlue, catAmber, catTerracotta, catTeal, catOlive, catMauve, catSlate];
+
+    const colors = {
+        brand: getCssVar('--brand') || '#111111',
+        none: getCssVar('--border') || '#E3E3DB'
+    };
+
+    function fitSingleMetric(el) {
+        if (!el) return;
+        const len = el.textContent.trim().length;
+        if (len >= 13) {
+            el.style.fontSize = 'clamp(1.3rem, 1.7vw, 1.6rem)';
+            el.style.letterSpacing = '-0.035em';
+        } else if (len >= 11) {
+            el.style.fontSize = 'clamp(1.45rem, 1.9vw, 1.85rem)';
+            el.style.letterSpacing = '-0.03em';
+        } else if (len >= 9) {
+            el.style.fontSize = 'clamp(1.6rem, 2.1vw, 2.05rem)';
+            el.style.letterSpacing = '-0.025em';
+        } else {
+            el.style.fontSize = '';
+            el.style.letterSpacing = '';
+        }
+    }
+
+    function formatAndFit(id, val) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const num = Number(val);
+        el.textContent = isNaN(num) ? String(val) : num.toLocaleString();
+        fitSingleMetric(el);
+    }
+
+    // Immediately fit server-rendered values
+    document.querySelectorAll('.metric-value').forEach(fitSingleMetric);
+
+    try {
+        const [summaryRes, trendRes] = await Promise.all([
+            fetch('/api/analytics/summary/'),
+            fetch('/api/analytics/trend/')
+        ]);
+        
+        if (!summaryRes.ok || !trendRes.ok) {
+            throw new Error('API fetch failed');
+        }
+
+        const summary = await summaryRes.json();
+        const trend = await trendRes.json();
+        
+        // 1. Populate Stats
+        const total = summary.total_incidents || 0;
+        const eligible = summary.prediction_eligible_count !== undefined ? summary.prediction_eligible_count : (summary.prediction_eligible_incidents || 0);
+        const psifs = summary.psif_count !== undefined ? summary.psif_count : (summary.psif_incidents || 0);
+        const notPsifs = summary.not_psif_count !== undefined ? summary.not_psif_count : 0;
+        const insufficient = summary.insufficient_evidence_count !== undefined ? summary.insufficient_evidence_count : 0;
+        const humanReviewed = summary.human_reviewed_count !== undefined ? summary.human_reviewed_count : 0;
+
+        formatAndFit('val-total-incidents', total);
+        formatAndFit('val-eligible', eligible);
+        formatAndFit('val-psifs', psifs);
+        formatAndFit('val-not-psif', notPsifs);
+        formatAndFit('val-insufficient', insufficient);
+        formatAndFit('val-human-reviewed', humanReviewed);
+
+        const psifPct = summary.psif_percentage !== undefined ? summary.psif_percentage : ((summary.psif_prediction_rate || 0) * 100);
+        const rateSub = document.getElementById('val-rate-subtext');
+        if (rateSub) {
+            rateSub.textContent = `${psifPct.toFixed(1)}% of evaluated`;
+        }
+
+        const agreeSub = document.getElementById('val-agreement-subtext');
+        if (agreeSub) {
+            if (summary.human_model_agreement_rate !== null && summary.human_model_agreement_rate !== undefined) {
+                agreeSub.textContent = `Agreement: ${(summary.human_model_agreement_rate * 100).toFixed(1)}%`;
+            } else {
+                agreeSub.textContent = 'Pending HSE Review';
+            }
+        }
+
+        // 2. Trend Chart (Line + Bar)
+        if (trend.trends && trend.trends.length > 0) {
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'bar',
+                data: {
+                    labels: trend.trends.map(t => t.month),
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Total Incidents',
+                            data: trend.trends.map(t => t.total),
+                            borderColor: catSlate,
+                            backgroundColor: catSlate,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y',
+                            pointRadius: 3
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Predicted PSIFs',
+                            data: trend.trends.map(t => t.psif),
+                            backgroundColor: colorCritical,
+                            borderRadius: 4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { beginAtZero: true, position: 'left', grid: { color: colors.none } },
+                        y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true } },
+                        tooltip: { backgroundColor: 'rgba(17, 17, 17, 0.9)', titleFont: { family: 'Public Sans' }, bodyFont: { family: 'Public Sans' } }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('trendChartContainer').style.display = 'none';
+            document.getElementById('trendChartEmpty').style.display = 'flex';
+        }
+
+        // 3. Binary Distribution (Doughnut)
+        if (total > 0) {
+            const binDist = summary.binary_distribution || {
+                'PSIF': psifs,
+                'NOT_PSIF': notPsifs
+            };
+            const riskCtx = document.getElementById('riskChart').getContext('2d');
+            new Chart(riskCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['PSIF Candidates', 'NOT PSIF'],
+                    datasets: [{
+                        data: [
+                            binDist['PSIF'] || 0,
+                            binDist['NOT_PSIF'] || 0
+                        ],
+                        backgroundColor: [colorCritical, colorLow],
+                        borderWidth: 2,
+                        borderColor: getCssVar('--surface') || '#FFFFFF',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { padding: 20, font: { family: 'Public Sans' } } },
+                        tooltip: { backgroundColor: 'rgba(17, 17, 17, 0.9)' }
+                    },
+                    cutout: '70%'
+                }
+            });
+        } else {
+            document.getElementById('riskChartContainer').style.display = 'none';
+            document.getElementById('riskChartEmpty').style.display = 'flex';
+        }
+
+        // 4. Department Chart (Horizontal Bar)
+        const deptData = summary.top_departments ? summary.top_departments.filter(d => d.department) : [];
+        if (deptData.length > 0) {
+            const deptCtx = document.getElementById('deptChart').getContext('2d');
+            
+            // Generate categorical colors for each department
+            const deptColors = deptData.map((_, i) => catPalette[i % catPalette.length]);
+
+            new Chart(deptCtx, {
+                type: 'bar',
+                data: {
+                    labels: deptData.map(d => d.department),
+                    datasets: [{
+                        label: 'Incidents',
+                        data: deptData.map(d => d.count),
+                        backgroundColor: deptColors,
+                        borderRadius: 4,
+                        barPercentage: 0.7
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(17, 17, 17, 0.9)' }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: colors.none } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('deptChartContainer').style.display = 'none';
+            document.getElementById('deptChartEmpty').style.display = 'flex';
+        }
+
+    } catch (e) {
+        console.error('Error loading reports:', e);
+        ['trend', 'risk', 'dept'].forEach(prefix => {
+            const container = document.getElementById(`${prefix}ChartContainer`);
+            const empty = document.getElementById(`${prefix}ChartEmpty`);
+            if(container && empty) {
+                container.style.display = 'none';
+                empty.style.display = 'flex';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

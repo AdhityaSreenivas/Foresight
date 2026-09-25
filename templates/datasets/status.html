@@ -1,0 +1,593 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Processing Status — {{ dataset.name }} — PSIF Platform{% endblock %}
+{% block meta_description %}Live processing status for dataset {{ dataset.name }}.{% endblock %}
+
+{% block nav_datasets %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.status-page { max-width: 740px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+
+/* Status badge */
+.status-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.4rem 1rem; border-radius: 99px;
+    font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 1.5rem;
+}
+.status-badge.processing { background: rgba(176, 138, 46, 0.12); color: var(--risk-medium); border: 1px solid rgba(176, 138, 46, 0.3); }
+.status-badge.retrying   { background: rgba(217, 119, 6, 0.12); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.3); }
+.status-badge.cancel_requested { background: rgba(217, 119, 6, 0.12); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.3); }
+.status-badge.canceled   { background: rgba(100, 116, 139, 0.12); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.3); }
+.status-badge.completed  { background: rgba(107, 122, 79, 0.12); color: var(--risk-low); border: 1px solid rgba(107, 122, 79, 0.3); }
+.status-badge.completed_with_warnings { background: rgba(217, 119, 6, 0.12); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.3); }
+.status-badge.failed     { background: rgba(156, 59, 50, 0.12); color: var(--risk-critical); border: 1px solid rgba(156, 59, 50, 0.3); }
+.status-badge.mapping_pending { background: rgba(92, 124, 138, 0.12); color: var(--cat-blue); border: 1px solid rgba(92, 124, 138, 0.3); }
+.status-badge.uploaded   { background: var(--bg-alt); color: var(--text-secondary); border: 1px solid var(--border-color); }
+
+/* Status message banners */
+.status-banner {
+    padding: 0.85rem 1.15rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    display: none;
+}
+.status-banner.retrying {
+    display: block;
+    background: rgba(217, 119, 6, 0.08);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    color: #92400e;
+}
+.status-banner.cancel_requested {
+    display: block;
+    background: rgba(217, 119, 6, 0.08);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    color: #92400e;
+}
+.status-banner.canceled {
+    display: block;
+    background: rgba(100, 116, 139, 0.08);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    color: #475569;
+}
+.status-banner.failed {
+    display: block;
+    background: rgba(156, 59, 50, 0.08);
+    border: 1px solid rgba(156, 59, 50, 0.3);
+    color: var(--risk-critical);
+}
+.status-banner.completed_with_warnings {
+    display: block;
+    background: rgba(217, 119, 6, 0.08);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    color: #92400e;
+}
+
+/* Spinner */
+.spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid currentColor; border-top-color: transparent;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Progress bar */
+.progress-section { margin: 1.5rem 0; }
+.progress-labels {
+    display: flex; justify-content: space-between;
+    font-size: 0.85rem; color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+.progress-bar-outer {
+    height: 12px; background: var(--border);
+    border-radius: 99px; overflow: hidden;
+}
+.progress-bar-inner {
+    height: 100%; border-radius: 99px;
+    background: var(--brand);
+    transition: width 0.4s ease;
+    width: 0%;
+}
+.progress-bar-inner.completed { background: var(--risk-low); }
+.progress-bar-inner.failed    { background: var(--risk-critical); }
+
+/* Stat row */
+.stat-row { display: flex; gap: 3rem; margin-top: 2.5rem; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+.stat { text-align: left; }
+.stat-value { font-size: 2rem; font-weight: 600; color: var(--text-primary); line-height: 1; font-family: var(--font-mono); }
+.stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem; text-transform: uppercase; font-weight: 500; letter-spacing: 0.05em; }
+
+/* Error log */
+.error-log-section { margin-top: 2rem; }
+.error-log-title { font-size: 0.9rem; font-weight: 600; color: var(--risk-critical); margin-bottom: 0.5rem; }
+.error-log {
+    background: #fdf2f2; border: 1px solid var(--risk-critical);
+    border-radius: 4px; padding: 1rem;
+    font-size: 0.85rem; font-family: var(--font-mono);
+    color: var(--risk-critical); white-space: pre-wrap;
+    max-height: 250px; overflow-y: auto;
+}
+
+/* Bottom actions */
+.action-row { display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; }
+.btn-secondary { background: var(--surface); color: var(--text-primary);
+    border: 1px solid var(--border); text-decoration: none; display: inline-flex; align-items: center; }
+.btn-secondary:hover { background: var(--bg); }
+
+/* Status messages */
+.redirect-notice {
+    font-size: 0.85rem; color: var(--text-secondary);
+    margin-top: 1.5rem; display: none;
+}
+.redirect-notice.visible { display: block; }
+
+/* Data Quality Category Tooltips */
+.dq-status-cell {
+    position: relative;
+    padding: 0.6rem 0.5rem;
+    font-weight: 500;
+}
+.dq-status-label {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+.dq-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 0.45rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+.dq-info-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: var(--bg-alt);
+}
+.dq-info-btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+.dq-info-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 320px;
+    max-width: min(320px, calc(100vw - 3.5rem));
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14), 0 1px 4px rgba(0, 0, 0, 0.08);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    pointer-events: none;
+    font-family: var(--font-sans, 'Public Sans', sans-serif);
+    text-align: left;
+    white-space: normal;
+    box-sizing: border-box;
+}
+.dq-info-popover::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 18px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent var(--border) transparent;
+}
+.dq-info-popover::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 19px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent var(--surface) transparent;
+}
+.dq-info-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.dq-info-body {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.dq-info-popover.is-open,
+.dq-status-label:hover .dq-info-popover,
+.dq-info-btn:focus-visible ~ .dq-info-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+@media (max-width: 480px) {
+    .dq-info-popover {
+        width: 280px;
+        left: -8px;
+    }
+    .dq-info-popover::before { left: 20px; }
+    .dq-info-popover::after { left: 21px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container status-page">
+    <a href="{% url 'datasets:list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+        &larr; Back to Datasets
+    </a>
+
+    <div class="page-header" style="margin-bottom: 2rem;">
+        <h1 class="page-title">Processing Status</h1>
+        <div class="page-subtitle" aria-label="Dataset name" style="margin-top: 0.5rem;">{{ dataset.name }}</div>
+    </div>
+
+    <div class="card" id="status-card" role="region" aria-label="Processing progress" aria-live="polite">
+
+        <!-- Status badge -->
+        <div class="status-badge {{ dataset.status }}" id="status-badge">
+            <span id="status-spinner" class="spinner" style="display:none" aria-hidden="true"></span>
+            <span id="status-text">{{ dataset.get_status_display }}</span>
+        </div>
+
+        <!-- Status message banner -->
+        <div class="status-banner" id="status-banner" role="alert"></div>
+
+        {% if dataset.status == 'mapping_pending' or dataset.status == 'uploaded' %}
+        <div class="status-banner" id="status-banner-pending" style="display: block; background: rgba(92, 124, 138, 0.08); border: 1px solid rgba(92, 124, 138, 0.3); color: var(--text-primary); margin-bottom: 1.5rem;">
+            <strong>Awaiting Column Mapping:</strong> This dataset was uploaded but column mapping has not been finalized. Ingestion and predictions will not begin until columns are mapped.
+        </div>
+        {% endif %}
+
+        <!-- Progress bar -->
+        <div class="progress-section">
+            <div class="progress-labels">
+                <span id="rows-label" class="tabular-nums">
+                    {{ dataset.processed_rows|default:0 }} / {{ dataset.total_rows|default:"?" }} rows
+                </span>
+                <span id="pct-label" class="tabular-nums">
+                    {% if dataset.percent_complete %}{{ dataset.percent_complete }}%{% else %}0%{% endif %}
+                </span>
+            </div>
+            <div class="progress-bar-outer" role="progressbar"
+                 aria-valuenow="{{ dataset.percent_complete|default:0 }}"
+                 aria-valuemin="0" aria-valuemax="100"
+                 aria-label="Processing progress">
+                <div class="progress-bar-inner {{ dataset.status }}"
+                     id="progress-bar"
+                     style="width: {{ dataset.percent_complete|default:0 }}%">
+                </div>
+            </div>
+        </div>
+
+        <!-- Timing & ETA Metrics Strip -->
+        <div class="timing-strip" id="timing-strip" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; padding: 0.85rem 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.875rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);">
+                <span style="color: var(--text-secondary); font-weight: 500;">Elapsed:</span>
+                <span id="timing-elapsed" class="tabular-nums" style="font-weight: 600; font-family: var(--font-mono);">
+                    {{ dataset.get_timing_info.formatted_elapsed|default:"—" }}
+                </span>
+            </div>
+            <div id="timing-eta-wrap" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);">
+                <span style="color: var(--text-secondary); font-weight: 500;" id="timing-eta-label">Remaining:</span>
+                <span id="timing-remaining" class="tabular-nums" style="font-weight: 600; font-family: var(--font-mono); color: var(--brand);">
+                    {{ dataset.get_timing_info.formatted_remaining|default:"—" }}
+                </span>
+            </div>
+            <div id="timing-total-wrap" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+                <span style="font-weight: 500;">Est. Total:</span>
+                <span id="timing-total" class="tabular-nums" style="font-weight: 500; font-family: var(--font-mono);">
+                    {{ dataset.get_timing_info.formatted_total|default:"—" }}
+                </span>
+            </div>
+            <div id="timing-rate-wrap" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+                <span style="font-weight: 500;">Rate:</span>
+                <span id="timing-rate" class="tabular-nums" style="font-weight: 500; font-family: var(--font-mono);">
+                    {% if dataset.get_timing_info.processing_rate_rows_per_second %}
+                        ~{{ dataset.get_timing_info.processing_rate_rows_per_second }} rows/s
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stat-row">
+            <div class="stat">
+                <div class="stat-value" id="stat-processed">{{ dataset.processed_rows|default:0 }}</div>
+                <div class="stat-label">Rows Ingested</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-total">{{ dataset.total_rows|default:"—" }}</div>
+                <div class="stat-label">Total Rows</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-pct">
+                    {% if dataset.percent_complete %}{{ dataset.percent_complete }}{% else %}0{% endif %}%
+                </div>
+                <div class="stat-label">Complete</div>
+            </div>
+        </div>
+
+        <!-- Data Quality Summary -->
+        <div class="dq-summary-section" id="dq-summary-section" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">Data Quality Summary</h3>
+            <table class="table" style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                        <th style="padding: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Status</th>
+                        <th style="padding: 0.5rem; text-align: right; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td class="dq-status-cell" style="color: var(--risk-low);">
+                            <div class="dq-status-label">
+                                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--risk-low); margin-right:6px;" aria-hidden="true"></span>
+                                <span>Accepted</span>
+                                <button type="button" class="dq-info-btn" id="btn-info-accepted"
+                                        aria-label="About accepted records"
+                                        aria-expanded="false"
+                                        aria-controls="popover-info-accepted">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                </button>
+                                <div class="dq-info-popover" id="popover-info-accepted" role="tooltip" aria-hidden="true">
+                                    <div class="dq-info-title">
+                                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--risk-low);" aria-hidden="true"></span>
+                                        Accepted
+                                    </div>
+                                    <div class="dq-info-body">
+                                        These records contain sufficient information for automated safety analysis. The narrative and available structured fields are coherent enough to proceed with PSIF analysis and other downstream processing. Minor missing optional fields may still be present.
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 0.6rem 0.5rem; text-align: right; font-family: var(--font-mono); font-weight: 600;" id="dq-count-accepted">{{ dataset.quality_summary.accepted|default:dataset.processed_rows|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td class="dq-status-cell" style="color: var(--risk-medium);">
+                            <div class="dq-status-label">
+                                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--risk-medium); margin-right:6px;" aria-hidden="true"></span>
+                                <span>Accepted with Warning</span>
+                                <button type="button" class="dq-info-btn" id="btn-info-warnings"
+                                        aria-label="About records accepted with warnings"
+                                        aria-expanded="false"
+                                        aria-controls="popover-info-warnings">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                </button>
+                                <div class="dq-info-popover" id="popover-info-warnings" role="tooltip" aria-hidden="true">
+                                    <div class="dq-info-title">
+                                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--risk-medium);" aria-hidden="true"></span>
+                                        Accepted with Warning
+                                    </div>
+                                    <div class="dq-info-body">
+                                        These records contain enough information to be analyzed, but some data-quality limitations may reduce analytical confidence. Common examples include a short narrative, missing optional fields, or a missing report/incident date. These records are still processed for downstream PSIF predictions and explanations.
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 0.6rem 0.5rem; text-align: right; font-family: var(--font-mono); font-weight: 600;" id="dq-count-warnings">{{ dataset.quality_summary.accepted_with_warnings|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td class="dq-status-cell" style="color: var(--risk-critical);">
+                            <div class="dq-status-label">
+                                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--risk-critical); margin-right:6px;" aria-hidden="true"></span>
+                                <span>Rejected</span>
+                                <button type="button" class="dq-info-btn" id="btn-info-rejected"
+                                        aria-label="About rejected records"
+                                        aria-expanded="false"
+                                        aria-controls="popover-info-rejected">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                </button>
+                                <div class="dq-info-popover" id="popover-info-rejected" role="tooltip" aria-hidden="true">
+                                    <div class="dq-info-title">
+                                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--risk-critical);" aria-hidden="true"></span>
+                                        Rejected
+                                    </div>
+                                    <div class="dq-info-body">
+                                        These records contain critical data-quality problems that make reliable automated analysis inappropriate. Common examples include missing or empty incident narratives, placeholder or meaningless text, materially insufficient information, impossible dates, or serious contradictions between reported fields. Rejected records do not receive automated PSIF predictions or SHAP explanations and are not included in model training.
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 0.6rem 0.5rem; text-align: right; font-family: var(--font-mono); font-weight: 600;" id="dq-count-rejected">{{ dataset.quality_summary.rejected|default:dataset.error_rows|default:0 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div id="dq-rejections-container" style="{% if not dataset.quality_summary.rejections %}display:none;{% endif %} margin-top: 1rem;">
+                <div style="font-size: 0.875rem; font-weight: 600; color: var(--risk-critical); margin-bottom: 0.5rem;">Rejected Row Details:</div>
+                <div id="dq-rejections-list" style="background: rgba(156, 59, 50, 0.05); border: 1px solid rgba(156, 59, 50, 0.25); border-radius: 4px; padding: 0.75rem; max-height: 200px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.6;">
+                    {% for rej in dataset.quality_summary.rejections %}
+                    <div><strong>Row {{ rej.row }}</strong>: Rejected &mdash; Reason: {{ rej.reason }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- PSIF Classification Summary -->
+        <div class="classification-summary-section" id="classification-summary-section" style="margin-top: 1.75rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">PSIF Classification Results</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Automated AI model classification for accepted incident records in this dataset.</p>
+                </div>
+                <a href="/incidents/?dataset={{ dataset_id }}" class="btn btn-secondary btn-small" id="btn-browse-dataset-incidents" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    Filter Incidents in Dataset &rarr;
+                </a>
+            </div>
+
+            <div class="classification-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <!-- PSIF Candidate Card -->
+                <div class="classification-card" style="background: rgba(153, 27, 27, 0.04); border: 1px solid rgba(153, 27, 27, 0.25); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span class="badge badge-risk-critical" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em;">PSIF CANDIDATE</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--risk-critical)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                        <span class="classification-value tabular-nums" id="classification-count-psif" style="font-size: 1.85rem; font-weight: 700; color: var(--risk-critical); font-family: var(--font-mono);">
+                            {{ dataset.psif_count|default:0 }}
+                        </span>
+                        <span style="font-size: 0.825rem; color: var(--text-secondary); font-family: var(--font-mono);" id="classification-pct-psif"></span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+                        Events involving precursor energies or control failures with high fatality/serious injury potential.
+                    </div>
+                </div>
+
+                <!-- Non-PSIF Card -->
+                <div class="classification-card" style="background: rgba(22, 101, 52, 0.04); border: 1px solid rgba(22, 101, 52, 0.25); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span class="badge badge-risk-low" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em;">NON-PSIF</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--risk-low)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                        <span class="classification-value tabular-nums" id="classification-count-non-psif" style="font-size: 1.85rem; font-weight: 700; color: var(--risk-low); font-family: var(--font-mono);">
+                            {{ dataset.non_psif_count|default:0 }}
+                        </span>
+                        <span style="font-size: 0.825rem; color: var(--text-secondary); font-family: var(--font-mono);" id="classification-pct-non-psif"></span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+                        Routine safety events or minor hazards without catastrophic life-altering potential.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error log (hidden unless errors present) -->
+        <div class="error-log-section" id="error-log-section" style="display:none">
+            <div class="error-log-title" id="error-log-title">⚠ Processing Details &amp; Error Log</div>
+            <pre class="error-log" id="error-log" aria-label="Error details"></pre>
+        </div>
+
+        <!-- Redirect notice -->
+        <div class="redirect-notice" id="redirect-notice" aria-live="polite">
+            Processing complete! Redirecting to incident list…
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row" id="action-row-pending" style="{% if dataset.status == 'mapping_pending' or dataset.status == 'uploaded' %}display:flex;{% else %}display:none;{% endif %} align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="/datasets/upload/?resume={{ dataset_id }}" class="btn btn-primary" id="btn-resume-mapping">
+                Resume Mapping →
+            </a>
+            <button type="button" class="btn btn-outline btn-discard-status" id="btn-discard-status" style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Cancel &amp; Discard
+            </button>
+            <a href="/datasets/" class="btn btn-secondary">Back to Datasets</a>
+        </div>
+
+        <div class="action-row" id="action-row-complete" style="display:none">
+            <a href="/incidents/?dataset={{ dataset_id }}" class="btn btn-primary" id="btn-view-incidents">
+                View Incidents from this Dataset →
+            </a>
+            <a href="/datasets/upload/" class="btn btn-secondary">Upload Another</a>
+            <button type="button" class="btn btn-outline" id="btn-delete-completed" style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete Dataset
+            </button>
+        </div>
+
+        <div class="action-row" id="action-row-failed" style="display:none; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" id="btn-retry-dataset" style="display:inline-flex; align-items:center; gap:0.5rem;">
+                <span class="spinner" id="retry-spinner" style="display:none;" aria-hidden="true"></span>
+                ↻ Retry Dataset
+            </button>
+            <button type="button" class="btn btn-outline btn-discard-failed" id="btn-discard-failed" style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Discard Dataset
+            </button>
+            <a href="/datasets/upload/" class="btn btn-secondary">Upload Again</a>
+        </div>
+
+        <!-- Actions: Processing / Retrying / Cancel Requested -->
+        <div class="action-row" id="action-row-processing" style="{% if dataset.status == 'processing' or dataset.status == 'retrying' or dataset.status == 'cancel_requested' %}display:flex;{% else %}display:none;{% endif %} align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline" id="btn-cancel-processing" {% if dataset.status == 'cancel_requested' %}disabled{% endif %} style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem; font-weight: 600;">
+                <span class="spinner" id="cancel-spinner" style="display:{% if dataset.status == 'cancel_requested' %}inline-block{% else %}none{% endif %}; width:12px; height:12px;" aria-hidden="true"></span>
+                <span id="btn-cancel-processing-text">{% if dataset.status == 'cancel_requested' %}Canceling…{% else %}Cancel Processing{% endif %}</span>
+            </button>
+            <a href="/datasets/" class="btn btn-secondary">Back to Datasets</a>
+        </div>
+
+        <!-- Actions: Canceled -->
+        <div class="action-row" id="action-row-canceled" style="{% if dataset.status == 'canceled' %}display:flex;{% else %}display:none;{% endif %} align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" id="btn-resume-canceled" style="display:inline-flex; align-items:center; gap:0.5rem;">
+                <span class="spinner" id="resume-spinner" style="display:none;" aria-hidden="true"></span>
+                ↻ Resume Processing
+            </button>
+            {% if dataset.incidents.exists or dataset.processed_rows > 0 %}
+            <a href="/incidents/?dataset={{ dataset_id }}" class="btn btn-secondary" id="btn-view-canceled-incidents">
+                View Preserved Incidents →
+            </a>
+            {% else %}
+            <button type="button" class="btn btn-outline btn-discard-canceled" id="btn-discard-canceled" style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Cancel &amp; Discard
+            </button>
+            {% endif %}
+            <a href="/datasets/" class="btn btn-secondary">Back to Datasets</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.PSIF_DATASET_ID = "{{ dataset_id }}";
+    window.PSIF_INITIAL_STATUS = "{{ dataset.status }}";
+    window.PSIF_CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+<script src="{% static 'js/status.js' %}?v=2"></script>
+{% endblock %}

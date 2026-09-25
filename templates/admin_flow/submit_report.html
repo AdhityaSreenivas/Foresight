@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Submit Report — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Submit an incident report for real-time precursor intelligence analysis.{% endblock %}
+
+{% block admin_nav_submit %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 1rem;
+}
+.form-section-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.form-section-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+}
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+@media (max-width: 768px) {
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+.field-error {
+    color: var(--risk-critical, #dc2626);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'admin_flow:incidents' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to Incidents
+        </a>
+    </div>
+
+    <div class="page-header" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="badge" style="background: var(--brand); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; text-transform: uppercase;">Admin Flow</span>
+            </div>
+            <h1 class="page-title">Submit Incident Report</h1>
+            <p class="page-subtitle">Record an unsafe act, condition, or near miss to run real-time precursor detection and classification.</p>
+        </div>
+        <button type="button" class="btn btn-secondary" id="btn-prefill-scenario" style="font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            Pre-fill SIF Precursor Scenario
+        </button>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="card" style="background: rgba(156, 59, 50, 0.08); border-color: rgba(156, 59, 50, 0.35); margin-bottom: 2rem; padding: 1.5rem;">
+        <h3 style="color: var(--risk-critical); font-size: 1.05rem; font-weight: 700; margin: 0 0 0.5rem 0;">Submission Errors</h3>
+        <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-primary); font-size: 0.9rem;">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <form method="post" action="{% url 'admin_flow:submit' %}" novalidate id="admin-report-form">
+            {% csrf_token %}
+
+            <!-- Section 1: Report Identity -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    1. Report Identity
+                </h3>
+                <p class="form-section-subtitle">Operational classification and site details.</p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.report_type.id_for_label }}">Report Type *</label>
+                        {{ form.report_type }}
+                        {% if form.report_type.errors %}
+                        <div class="field-error">{{ form.report_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.incident_date.id_for_label }}">Date of Event *</label>
+                        {{ form.incident_date }}
+                        {% if form.incident_date.errors %}
+                        <div class="field-error">{{ form.incident_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.location.id_for_label }}">Location / Rig / Site</label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                        <div class="field-error">{{ form.location.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.department.id_for_label }}">Department / Asset</label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                        <div class="field-error">{{ form.department.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.job_task.id_for_label }}">Activity / Job Task</label>
+                        {{ form.job_task }}
+                        {% if form.job_task.errors %}
+                        <div class="field-error">{{ form.job_task.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.equipment_involved.id_for_label }}">Equipment Involved</label>
+                        {{ form.equipment_involved }}
+                        {% if form.equipment_involved.errors %}
+                        <div class="field-error">{{ form.equipment_involved.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Narrative -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    2. Event Narrative
+                </h3>
+                <p class="form-section-subtitle">Detailed narrative of the event, physical conditions, and observed actions.</p>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" for="{{ form.description.id_for_label }}">Description / Narrative *</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="field-error">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" for="{{ form.immediate_cause.id_for_label }}">Immediate Action Taken / Observed Cause</label>
+                    {{ form.immediate_cause }}
+                    {% if form.immediate_cause.errors %}
+                    <div class="field-error">{{ form.immediate_cause.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.witness_statement.id_for_label }}">Witness Statement (Optional)</label>
+                        {{ form.witness_statement }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.corrective_actions.id_for_label }}">Corrective Action Suggestion (Optional)</label>
+                        {{ form.corrective_actions }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Energy & Direct Controls -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    3. High-Energy & Direct Control Context
+                </h3>
+                <p class="form-section-subtitle">SIF Precursor detection inputs.</p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.high_energy_present.id_for_label }}">High-Energy Source Present?</label>
+                        {{ form.high_energy_present }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.energy_type.id_for_label }}">High-Energy Type</label>
+                        {{ form.energy_type }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.direct_control_present.id_for_label }}">Direct Control Present?</label>
+                        {{ form.direct_control_present }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.control_condition.id_for_label }}">Direct Control Status</label>
+                        {{ form.control_condition }}
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+                <a href="{% url 'admin_flow:incidents' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" name="action" value="submit_only" class="btn btn-secondary" id="btn-submit-only">
+                    Submit Report (Queue for Processing)
+                </button>
+                <button type="submit" name="action" value="submit_and_process" class="btn btn-primary" id="btn-submit-report">
+                    Submit &amp; Process Precursor Prediction
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const prefillBtn = document.getElementById("btn-prefill-scenario");
+    if (prefillBtn) {
+        prefillBtn.addEventListener("click", function() {
+            // Find fields by form controls
+            const reportType = document.getElementById("{{ form.report_type.id_for_label }}");
+            const dateField = document.getElementById("{{ form.incident_date.id_for_label }}");
+            const locField = document.getElementById("{{ form.location.id_for_label }}");
+            const deptField = document.getElementById("{{ form.department.id_for_label }}");
+            const taskField = document.getElementById("{{ form.job_task.id_for_label }}");
+            const equipField = document.getElementById("{{ form.equipment_involved.id_for_label }}");
+            const descField = document.getElementById("{{ form.description.id_for_label }}");
+            const causeField = document.getElementById("{{ form.immediate_cause.id_for_label }}");
+            const witnessField = document.getElementById("{{ form.witness_statement.id_for_label }}");
+            const actionsField = document.getElementById("{{ form.corrective_actions.id_for_label }}");
+            const energyField = document.getElementById("{{ form.high_energy_present.id_for_label }}");
+            const energyTypeField = document.getElementById("{{ form.energy_type.id_for_label }}");
+            const controlField = document.getElementById("{{ form.direct_control_present.id_for_label }}");
+            const controlCondField = document.getElementById("{{ form.control_condition.id_for_label }}");
+
+            if (reportType) reportType.value = "near_miss";
+            if (dateField) {
+                const today = new Date().toISOString().split("T")[0];
+                dateField.value = today;
+            }
+            if (locField) locField.value = "Compressor Area";
+            if (deptField) deptField.value = "Mechanical Maintenance / Gas Compressor Train";
+            if (taskField) taskField.value = "Pressure-Line Maintenance / Flange Breaking";
+            if (equipField) equipField.value = "Gas compressor discharge line and isolation valves";
+            if (descField) descField.value = "During maintenance on the gas compressor discharge line, the maintenance crew prepared to break containment at a flange after shutting the upstream isolation valve. The required zero-energy verification had not been completed and energy isolation was not verified before breaking flange. Residual pressure remained in the line. One technician was positioned directly in the release path adjacent to the flange while unbolting the connection. A sudden release of pressurized hydrocarbon gas occurred from the flange toward the technician. The technician was directly exposed to the release path before moving clear. The incident was identified as a near miss involving unverified energy isolation and direct worker exposure to the potential release path.";
+            if (causeField) causeField.value = "Work stopped immediately upon release. Line was re-isolated, residual pressure safely relieved, and isolation confirmed. Immediate precursor: failure to complete and independently confirm zero-energy verification before breaking containment.";
+            if (witnessField) witnessField.value = "Before the flange was loosened, the technician had not received confirmation that zero energy had been verified. A residual release was observed when the connection was opened.";
+            if (actionsField) actionsField.value = "Require documented zero-energy verification and independent confirmation of isolation before breaking containment on pressurized lines. Reinforce verification-before-touch requirements for maintenance activities.";
+            if (energyField) energyField.value = "yes";
+            if (energyTypeField) energyTypeField.value = "pressure";
+            if (controlField) controlField.value = "yes";
+            if (controlCondField) controlCondField.value = "unknown";
+        });
+    }
+});
+</script>
+{% endblock %}

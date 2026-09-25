@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIF Precursor Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#15171B;
+    --panel:#1E2126;
+    --panel-2:#242830;
+    --line:#343A44;
+    --line-soft:#2B2F37;
+    --text:#EDEEF2;
+    --sub:#9AA1AC;
+    --dim:#6B7280;
+    --amber:#F2A93B;
+    --red:#E0483C;
+    --teal:#4FA787;
+    --blue:#5B8DEF;
+    --radius:2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  h1,h2,h3,.label,.brand,.tab,.btn,.stat-label,th{
+    font-family:'Barlow Condensed', sans-serif;
+    letter-spacing:0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+
+  /* ===== Top bar ===== */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 32px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+  }
+  .brand .mark{
+    width:34px; height:34px;
+    background:var(--amber);
+    display:flex; align-items:center; justify-content:center;
+    color:#1B1E22; font-weight:700; font-size:18px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  .brand-text{display:flex; flex-direction:column; line-height:1.15;}
+  .brand-text .name{font-size:20px; font-weight:600;}
+  .brand-text .sub{font-size:12px; color:var(--sub); font-family:'Inter'; letter-spacing:0.02em;}
+  .topbar-right{display:flex; align-items:center; gap:24px; font-size:13px; color:var(--sub);}
+  .status-dot{width:8px; height:8px; border-radius:50%; background:var(--teal); display:inline-block; margin-right:6px; box-shadow:0 0 6px var(--teal);}
+
+  main{max-width:1200px; margin:0 auto; padding:40px 32px 80px;}
+
+  /* ===== Intake screen ===== */
+  #intake-screen .intro{margin-bottom:36px; max-width:640px;}
+  #intake-screen .intro h1{font-size:38px; font-weight:600; margin-bottom:10px;}
+  #intake-screen .intro p{color:var(--sub); font-size:15px;}
+
+  .intake-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .panel{
+    background:var(--panel);
+    padding:28px;
+  }
+  .panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;}
+  .panel-head h2{font-size:22px; font-weight:600;}
+  .panel-index{font-size:12px; color:var(--dim); font-family:'IBM Plex Mono';}
+  .panel-desc{color:var(--sub); font-size:13.5px; margin-bottom:22px;}
+
+  .dropzone{
+    border:1px dashed var(--line);
+    padding:32px 20px;
+    text-align:center;
+    color:var(--sub);
+    font-size:13.5px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    margin-bottom:14px;
+  }
+  .dropzone.drag{border-color:var(--amber); background:rgba(242,169,59,0.06); color:var(--text);}
+  .dropzone strong{color:var(--text); font-weight:500;}
+  .filetypes{font-size:11px; color:var(--dim); margin-top:6px; font-family:'IBM Plex Mono';}
+  #file-input{display:none;}
+  .file-list{list-style:none; margin-bottom:18px;}
+  .file-list li{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px;
+    background:var(--panel-2);
+    border:1px solid var(--line-soft);
+    font-size:13px;
+    margin-bottom:6px;
+  }
+  .file-list li .fname{display:flex; align-items:center; gap:8px;}
+  .file-list li .ftag{font-family:'IBM Plex Mono'; font-size:10px; color:var(--amber); border:1px solid var(--amber); padding:1px 5px;}
+  .file-list li button{background:none; border:none; color:var(--dim); cursor:pointer; font-size:15px; line-height:1;}
+  .file-list li button:hover{color:var(--red);}
+
+  textarea, input[type=text], select{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:10px 12px;
+    font-family:'Inter';
+    font-size:13.5px;
+    resize:vertical;
+  }
+  textarea:focus, input:focus, select:focus{outline:1px solid var(--amber); border-color:var(--amber);}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:11.5px; color:var(--sub); margin-bottom:6px; font-family:'Inter'; letter-spacing:0.01em;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 20px;
+    background:var(--amber);
+    color:#1B1E22;
+    border:none;
+    font-size:15px; font-weight:600;
+    cursor:pointer;
+    width:100%;
+    margin-top:6px;
+    transition:filter .12s ease;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:disabled{background:var(--line); color:var(--dim); cursor:not-allowed;}
+  .btn.secondary{background:none; border:1px solid var(--line); color:var(--sub); width:auto; padding:9px 16px; font-size:13px; font-weight:500; font-family:'Inter';}
+  .btn.secondary:hover{border-color:var(--sub); color:var(--text);}
+
+  .run-bar{
+    margin-top:24px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+  }
+  .run-bar .queued{font-size:13px; color:var(--sub);}
+  .run-bar .queued .mono{color:var(--text);}
+  #run-btn{width:auto; padding:13px 30px;}
+
+  /* ===== Loading ===== */
+  #loading-screen{display:none; padding:120px 0; text-align:center;}
+  .spin-line{
+    width:220px; height:2px; background:var(--line); margin:0 auto 24px; position:relative; overflow:hidden;
+  }
+  .spin-line::after{
+    content:''; position:absolute; left:-40%; width:40%; height:100%; background:var(--amber);
+    animation:slide 1s ease-in-out infinite;
+  }
+  @keyframes slide{0%{left:-40%;} 100%{left:100%;}}
+  #loading-screen .lstep{color:var(--sub); font-size:13px; font-family:'IBM Plex Mono'; margin-top:6px;}
+
+  /* ===== Dashboard ===== */
+  #dashboard{display:none;}
+  .dash-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:16px;}
+  .dash-head h1{font-size:32px; font-weight:600;}
+  .dash-head .meta{color:var(--sub); font-size:13px; margin-top:4px;}
+
+  .kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-bottom:1px;}
+  .kpi{background:var(--panel); padding:20px 22px;}
+  .kpi .stat-label{font-size:12px; color:var(--sub); font-family:'Inter'; letter-spacing:0.02em; margin-bottom:8px;}
+  .kpi .stat-val{font-size:34px; font-weight:600; font-family:'Barlow Condensed';}
+  .kpi .stat-val.mono-num{font-family:'IBM Plex Mono'; font-size:28px;}
+  .kpi.amber .stat-val{color:var(--amber);}
+  .kpi.red .stat-val{color:var(--red);}
+  .kpi .stat-sub{font-size:11.5px; color:var(--dim); margin-top:4px;}
+
+  .dash-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); border-top:none; margin-bottom:32px;}
+  .card{background:var(--panel); padding:24px;}
+  .card h3{font-size:18px; font-weight:600; margin-bottom:4px;}
+  .card .card-sub{color:var(--sub); font-size:12.5px; margin-bottom:16px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-weight:500; font-size:11px; color:var(--dim); padding:8px 6px; border-bottom:1px solid var(--line); text-transform:none; letter-spacing:0.02em;}
+  td{padding:10px 6px; border-bottom:1px solid var(--line-soft); vertical-align:middle;}
+  tr.zone-row{cursor:pointer;}
+  tr.zone-row:hover{background:var(--panel-2);}
+  .zone-name{font-weight:500;}
+  .zone-rule{color:var(--sub); font-size:11.5px;}
+  .density-bar{height:5px; background:var(--line-soft); position:relative; width:100%; margin-top:5px;}
+  .density-bar span{position:absolute; left:0; top:0; height:100%; background:var(--red);}
+  .risk-pill{
+    font-family:'IBM Plex Mono'; font-size:10.5px; padding:2px 7px; border:1px solid; display:inline-block;
+  }
+  .risk-pill.high{color:var(--red); border-color:var(--red);}
+  .risk-pill.med{color:var(--amber); border-color:var(--amber);}
+  .risk-pill.low{color:var(--teal); border-color:var(--teal);}
+
+  .tag-list{list-style:none; display:flex; flex-direction:column; gap:10px;}
+  .tag-list li{display:flex; align-items:center; justify-content:space-between; font-size:13px;}
+  .tag-list .tname{color:var(--text);}
+  .tag-list .tbar{flex:1; height:4px; background:var(--line-soft); margin:0 12px; position:relative;}
+  .tag-list .tbar span{position:absolute; left:0; top:0; height:100%; background:var(--amber);}
+  .tag-list .tval{font-family:'IBM Plex Mono'; font-size:12px; color:var(--sub); width:34px; text-align:right;}
+
+  .precursor-grid{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line);}
+  .precursor{background:var(--panel); padding:22px 24px; display:grid; grid-template-columns:200px 1fr 140px; gap:20px; align-items:center;}
+  .precursor .p-title{font-weight:500; font-size:14px;}
+  .precursor .p-tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
+  .precursor .p-tag{font-size:10.5px; font-family:'IBM Plex Mono'; color:var(--sub); border:1px solid var(--line); padding:2px 6px;}
+  .precursor .p-desc{font-size:13px; color:var(--sub); line-height:1.55;}
+  .precursor .p-count{text-align:right;}
+  .precursor .p-count .n{font-family:'IBM Plex Mono'; font-size:22px; color:var(--amber);}
+  .precursor .p-count .l{font-size:11px; color:var(--dim);}
+
+  .section-title{font-size:22px; font-weight:600; margin:0 0 4px;}
+  .section-sub{color:var(--sub); font-size:13px; margin-bottom:16px;}
+
+  /* ===== Report detail modal ===== */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(10,11,13,0.7);
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal{
+    background:var(--panel); border:1px solid var(--line); max-width:640px; width:100%;
+    max-height:85vh; overflow-y:auto;
+  }
+  .modal-head{padding:22px 26px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-start;}
+  .modal-head h3{font-size:20px; font-weight:600;}
+  .modal-head .modal-meta{color:var(--sub); font-size:12px; margin-top:4px; font-family:'IBM Plex Mono';}
+  .modal-close{background:none; border:none; color:var(--sub); font-size:22px; cursor:pointer; line-height:1;}
+  .modal-close:hover{color:var(--text);}
+  .modal-body{padding:22px 26px;}
+  .modal-body .verdict{display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+  .modal-body .verdict .risk-pill{font-size:12px; padding:4px 10px;}
+  .modal-body .conf{font-size:12.5px; color:var(--sub); font-family:'IBM Plex Mono';}
+  .report-text{
+    font-size:13.5px; line-height:1.7; background:var(--panel-2); padding:16px; border:1px solid var(--line-soft); margin-bottom:18px;
+  }
+  .report-text mark{background:rgba(224,72,60,0.22); color:var(--red); padding:0 2px; font-weight:500;}
+  .why-block h4{font-size:13px; font-weight:600; margin-bottom:8px; color:var(--sub); font-family:'Inter'; letter-spacing:0.01em; text-transform:none;}
+  .why-list{list-style:none; font-size:13px;}
+  .why-list li{padding:6px 0; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between;}
+  .why-list li:last-child{border-bottom:none;}
+  .why-list .wlabel{color:var(--text);}
+  .why-list .wval{font-family:'IBM Plex Mono'; color:var(--sub); font-size:12px;}
+
+  .chart-wrap{height:220px; margin-top:6px;}
+
+  footer{max-width:1200px; margin:0 auto; padding:0 32px 60px; color:var(--dim); font-size:11.5px;}
+
+  @media (max-width: 860px){
+    .intake-grid{grid-template-columns:1fr;}
+    .dash-grid{grid-template-columns:1fr;}
+    .kpi-row{grid-template-columns:1fr 1fr;}
+    .precursor{grid-template-columns:1fr; gap:10px;}
+    .precursor .p-count{text-align:left;}
+  }
+
+  /* ===== History Screen ===== */
+  #history-screen{display:none;}
+  .history-item{
+    background:var(--panel);
+    padding:20px 24px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .history-item:hover{
+    background:var(--panel-2);
+  }
+  .history-item-head{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:8px;
+  }
+  .history-item-meta{
+    font-size:12px; color:var(--sub); font-family:'IBM Plex Mono';
+  }
+  .history-item-snippet{
+    font-size:13.5px; color:var(--text); line-height:1.5; margin-top:6px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .modal-head{padding:22px 26px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-start; position:sticky; top:0; background:var(--panel); z-index:10;}
+
+</style>
+</head>
+<body>
+<div style="display:none;">{% csrf_token %}</div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">SIF</div>
+    <div class="brand-text">
+      <span class="name">Precursor Console</span>
+      <span class="sub" id="brand-sub">Safety Analytics Platform</span>
+    </div>
+  </div>
+  <div class="topbar-right" id="topbar-right" style="display:none;">
+    <span><span class="status-dot"></span>Model online</span>
+    <span class="mono" id="report-counter">0 reports indexed</span>
+    <button class="btn secondary" id="history-nav-btn" style="padding:6px 12px; font-size:12px;">Analysis History</button>
+    <button class="btn secondary" id="switch-workspace-btn" style="padding:6px 12px; font-size:12px;">Switch workspace</button>
+  </div>
+</div>
+
+<main>
+
+  <!-- ============ LOGIN / WORKSPACE SETUP ============ -->
+  <section id="login-screen">
+    <div class="intro" style="max-width:560px; margin:40px auto 0;">
+      <h1 style="font-size:32px;">Set up your workspace</h1>
+      <p>Any company or site can use this console. Sign in with your organization, then tell us which sites or facilities you operate — every report you add stays scoped to the site it happened at, never merged with another organization's data.</p>
+    </div>
+
+    <div class="panel" style="max-width:560px; margin:28px auto 0; border:1px solid var(--line);">
+      <div class="field">
+        <label for="l-company">Company / organization name</label>
+        <input type="text" id="l-company" placeholder="e.g. Meridian Logistics, Northfield Construction, Acme Manufacturing">
+      </div>
+      <div class="field">
+        <label for="l-user">Your name</label>
+        <input type="text" id="l-user" placeholder="e.g. Priya Shah, HSE Officer">
+      </div>
+      <div class="field">
+        <label>Sites / facilities you operate</label>
+        <div class="field-row" style="grid-template-columns:1fr auto;">
+          <input type="text" id="l-site-input" placeholder="e.g. Plant 2 — Chennai">
+          <button class="btn secondary" id="l-add-site" type="button" style="width:auto;">Add site</button>
+        </div>
+        <ul class="file-list" id="l-site-list" style="margin-top:10px;"></ul>
+      </div>
+      <button class="btn" id="l-continue" style="margin-top:10px;">Enter console</button>
+    </div>
+  </section>
+
+  <!-- ============ INTAKE SCREEN ============ -->
+  <section id="intake-screen" style="display:none;">
+    <div class="intro">
+      <h1>Feed it reports. It finds where someone could die.</h1>
+      <p>Upload a batch of unsafe-act, unsafe-condition, near-miss or incident reports, or log one by hand. The engine separates genuine fatal-potential precursors from routine low-severity noise and maps each to an IOGP Life-Saving Rule — kept separate, site by site.</p>
+    </div>
+
+    <div class="intake-grid">
+      <div class="panel">
+        <div class="panel-head"><h2>Upload reports</h2><span class="panel-index">01</span></div>
+        <p class="panel-desc">Batch-ingest from your safety platform export. PDF, CSV, DOCX and plain text accepted.</p>
+
+        <div class="field">
+          <label for="u-site">This batch belongs to</label>
+          <select id="u-site"></select>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+          <div><strong>Drop files here</strong> or click to browse</div>
+          <div class="filetypes">.PDF &nbsp;.CSV &nbsp;.DOCX &nbsp;.TXT — up to 20 files</div>
+        </div>
+        <input type="file" id="file-input" multiple accept=".pdf,.csv,.docx,.txt">
+        <ul class="file-list" id="file-list"></ul>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Log manually</h2><span class="panel-index">02</span></div>
+        <p class="panel-desc">Enter a single observation the way a field supervisor would describe it.</p>
+
+        <div class="field">
+          <label for="m-text">Report narrative</label>
+          <textarea id="m-text" rows="5" placeholder="e.g. Worker entered the tank for cleaning without confirming isolation of the inlet valve. Gas monitor was not worn. Supervisor was not informed before entry."></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="m-site">Site / facility</label>
+            <select id="m-site"></select>
+          </div>
+          <div class="field">
+            <label for="m-activity">Activity type</label>
+            <select id="m-activity">
+              <option>Confined space entry</option>
+              <option>Hot work</option>
+              <option>Lifting operation</option>
+              <option>Vehicle movement</option>
+              <option>Working at height</option>
+              <option>Energy isolation / LOTO</option>
+              <option>General housekeeping</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn secondary" id="add-manual" style="width:100%; justify-content:center;">Add to queue</button>
+      </div>
+    </div>
+
+    <div class="run-bar">
+      <div class="queued"><span class="mono" id="queue-count">0</span> reports queued for analysis</div>
+      <button class="btn" id="run-btn" disabled>Run analysis</button>
+    </div>
+  </section>
+
+  <!-- ============ LOADING ============ -->
+  <section id="loading-screen">
+    <div class="spin-line"></div>
+    <div class="lstep" id="loading-text">Embedding report text with RoBERTa…</div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="dashboard">
+    <div class="dash-head">
+      <div>
+        <h1>SIF Precursor Overview</h1>
+        <div class="meta"><span class="mono" id="dash-count">—</span> reports analyzed &middot; last run <span class="mono" id="dash-time">—</span></div>
+      </div>
+      <button class="btn secondary" id="new-run-btn">New analysis</button>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="stat-label">Reports analyzed</div>
+        <div class="stat-val mono-num" id="kpi-total">0</div>
+      </div>
+      <div class="kpi amber">
+        <div class="stat-label">Flagged SIF-potential</div>
+        <div class="stat-val mono-num" id="kpi-sif">0%</div>
+        <div class="stat-sub">of total volume</div>
+      </div>
+      <div class="kpi red">
+        <div class="stat-label">Sites above threshold</div>
+        <div class="stat-val mono-num" id="kpi-sites">0</div>
+        <div class="stat-sub">SIF density &gt; 30%</div>
+      </div>
+      <div class="kpi">
+        <div class="stat-label">Leading precursor</div>
+        <div class="stat-val" id="kpi-precursor" style="font-size:22px;">—</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card">
+        <h3>Hazardous zones, ranked</h3>
+        <p class="card-sub">By SIF-precursor density. Click a row to see driving reports.</p>
+        <table>
+          <thead>
+            <tr><th>Site</th><th>Dominant rule</th><th>Density</th><th>Risk</th></tr>
+          </thead>
+          <tbody id="zone-table"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Life-Saving Rule mapping</h3>
+        <p class="card-sub">Share of SIF-flagged reports per IOGP rule</p>
+        <ul class="tag-list" id="rule-list"></ul>
+      </div>
+    </div>
+
+    <div class="section-title">Recurring precursor patterns</div>
+    <p class="section-sub">Activity &middot; location &middot; barrier-failure combinations repeating across reports</p>
+    <div class="precursor-grid" id="precursor-grid"></div>
+
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section id="history-screen" style="display:none;">
+    <div class="dash-head">
+      <div>
+        <h1>Analysis History</h1>
+        <div class="meta"><span class="mono" id="history-count">0</span> persistent report records stored in PostgreSQL</div>
+      </div>
+      <button class="btn secondary" id="history-back-btn">Back to Console</button>
+    </div>
+
+    <div id="history-list" class="card" style="padding:0; background:var(--line); border:1px solid var(--line); display:grid; grid-template-columns:1fr; gap:1px;">
+      <div style="padding:24px; color:var(--sub); text-align:center;">Loading history from database…</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+SIF Precursor Console · classifications generated by the backend ML pipeline
+</footer>
+<!-- Report detail modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="modal-site">—</h3>
+        <div class="modal-meta" id="modal-meta">—</div>
+      </div>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="verdict">
+        <span class="risk-pill high" id="modal-pill">SIF-POTENTIAL</span>
+        <span class="conf" id="modal-conf">confidence 0.00</span>
+      </div>
+      <div class="report-text" id="modal-text">—</div>
+      <div class="why-block">
+        <h4>Why the model flagged this</h4>
+        <ul class="why-list" id="modal-why"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function getCookie(name) {
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(
+                    cookie.substring(name.length + 1)
+                );
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}
+
+/* ======================================================================
+   Workspace state — set at login. Nothing is seeded before a company
+   signs in; every report entered afterward is stamped with one of
+   *this* workspace's own sites, never another organization's.
+   ====================================================================== */
+let workspace = { company:'', user:'', sites:[] };
+let queue = [];
+let analyzed = [];
+
+/* ======================================================================
+   Login / workspace setup
+   ====================================================================== */
+const loginScreen = document.getElementById('login-screen');
+const intakeScreen = document.getElementById('intake-screen');
+const siteInput = document.getElementById('l-site-input');
+const siteListEl = document.getElementById('l-site-list');
+const continueBtn = document.getElementById('l-continue');
+let pendingSites = [];
+
+function renderPendingSites(){
+  siteListEl.innerHTML = '';
+  pendingSites.forEach((s, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="fname">${s}</span><button aria-label="remove">&times;</button>`;
+    li.querySelector('button').addEventListener('click', () => { pendingSites.splice(i,1); renderPendingSites(); });
+    siteListEl.appendChild(li);
+  });
+}
+document.getElementById('l-add-site').addEventListener('click', () => {
+  const v = siteInput.value.trim();
+  if(!v || pendingSites.includes(v)) return;
+  pendingSites.push(v);
+  siteInput.value = '';
+  renderPendingSites();
+});
+siteInput.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('l-add-site').click(); }});
+
+continueBtn.addEventListener('click', () => {
+  const company = document.getElementById('l-company').value.trim();
+  const user = document.getElementById('l-user').value.trim();
+  if(!company || pendingSites.length === 0){
+    continueBtn.textContent = pendingSites.length === 0 ? 'Add at least one site first' : 'Enter your company name first';
+    setTimeout(() => continueBtn.textContent = 'Enter console', 1800);
+    return;
+  }
+  workspace = { company, user, sites:[...pendingSites] };
+  document.getElementById('brand-sub').textContent = workspace.company;
+  document.getElementById('topbar-right').style.display = 'flex';
+  populateSiteSelects();
+  loginScreen.style.display = 'none';
+  intakeScreen.style.display = 'block';
+});
+
+document.getElementById('switch-workspace-btn').addEventListener('click', () => {
+  workspace = { company:'', user:'', sites:[] };
+  queue = []; analyzed = [];
+  pendingSites = []; renderPendingSites();
+  document.getElementById('l-company').value = '';
+  document.getElementById('l-user').value = '';
+  document.getElementById('topbar-right').style.display = 'none';
+  document.getElementById('brand-sub').textContent = 'Safety Analytics Platform';
+  document.getElementById('dashboard').style.display = 'none';
+  intakeScreen.style.display = 'none';
+  loginScreen.style.display = 'block';
+});
+
+function populateSiteSelects(){
+  const opts = workspace.sites.map(s => `<option>${s}</option>`).join('');
+  document.getElementById('m-site').innerHTML = opts;
+  document.getElementById('u-site').innerHTML = opts;
+}
+
+/* ======================================================================
+   DOM wiring
+   ====================================================================== */
+const fileList = document.getElementById('file-list');
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+const queueCount = document.getElementById('queue-count');
+const runBtn = document.getElementById('run-btn');
+const reportCounter = document.getElementById('report-counter');
+
+function refreshQueueUI(){
+  queueCount.textContent = queue.length;
+  runBtn.disabled = queue.length === 0;
+}
+refreshQueueUI();
+
+dropzone.addEventListener('click', () => fileInput.click());
+['dragover','dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+dropzone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+async function handleFiles(files){
+  const batchSite = document.getElementById('u-site').value || (workspace.sites.length ? workspace.sites[0] : 'Default Site');
+  for (const file of Array.from(files)) {
+    const ext = file.name.split('.').pop().toUpperCase();
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="fname">${file.name}<span class="ftag">${ext}</span></span><span class="fstatus" style="font-size:11px;color:var(--sub);margin-left:auto;margin-right:8px;">Uploading...</span><button aria-label="remove">&times;</button>`;
+    li.querySelector('button').addEventListener('click', () => {
+      li.remove();
+      queue = queue.filter(q => q._fileRef !== file);
+      refreshQueueUI();
+    });
+    fileList.appendChild(li);
+
+    try {
+      const formData = new FormData();
+      formData.append("files", file);
+
+      const csrfToken = getCookie("csrftoken") || document.querySelector('[name=csrfmiddlewaretoken]')?.value || "";
+      const response = await fetch("/upload-reports/", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed (${response.status})`);
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || "File processing failed.");
+      }
+
+      const statusEl = li.querySelector('.fstatus');
+      if (statusEl) {
+        statusEl.textContent = `${data.reports.length} report(s) extracted`;
+        statusEl.style.color = "var(--green, #22c55e)";
+      }
+
+      data.reports.forEach(report => {
+        queue.push({
+          text: report.text,
+          site: batchSite,
+          activity: "Imported",
+          filename: report.filename,
+          _fileRef: file
+        });
+      });
+      refreshQueueUI();
+    } catch (error) {
+      console.error("FILE UPLOAD ERROR:", error);
+      const statusEl = li.querySelector('.fstatus');
+      if (statusEl) {
+        statusEl.textContent = "Upload error";
+        statusEl.style.color = "var(--red, #ef4444)";
+      }
+      alert(`Could not process ${file.name}: ${error.message}`);
+    }
+  }
+}
+
+document.getElementById('add-manual').addEventListener('click', () => {
+  const text = document.getElementById('m-text').value.trim();
+  if(!text) return;
+  const site = document.getElementById('m-site').value;
+  const activity = document.getElementById('m-activity').value;
+  queue.push({text, site, activity});
+  document.getElementById('m-text').value = '';
+  refreshQueueUI();
+});
+
+runBtn.addEventListener('click', runAnalysis);
+document.getElementById('new-run-btn').addEventListener('click', () => {
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('intake-screen').style.display = 'block';
+  queue = [];
+  analyzed = [];
+  refreshQueueUI();
+});
+
+const loadingSteps = [
+  "Parsing uploaded documents (Demo/Mock mode)…",
+  "Extracting text patterns…",
+  "Evaluating Life-Saving Rule keywords…",
+  "Scoring barrier failures and consequences…",
+  "Generating SIF predictions…",
+];
+async function runAnalysis() {
+
+  if (queue.length === 0) {
+    return;
+  }
+
+  document.getElementById(
+    'intake-screen'
+  ).style.display = 'none';
+
+  const loadingScreen =
+    document.getElementById(
+      'loading-screen'
+    );
+
+  const loadingText =
+    document.getElementById(
+      'loading-text'
+    );
+
+  loadingScreen.style.display =
+    'block';
+
+  try {
+
+    loadingText.textContent =
+      "Sending reports to AI engine…";
+
+    const results =
+      await Promise.all(
+
+        queue.map(
+          async (q) => {
+
+            const response =
+              await fetch(
+                "/analyze/",
+                {
+                  method: "POST",
+
+                  headers: {
+                    "Content-Type":
+                      "application/x-www-form-urlencoded",
+
+                    "X-CSRFToken":
+                      getCookie("csrftoken") || (document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : "")
+                  },
+
+                  body:
+                    new URLSearchParams({
+                      report_text:
+                        q.text
+                    })
+                }
+              );
+
+            if (!response.ok) {
+
+              let errorMessage =
+                `Server returned ${response.status}`;
+
+              try {
+
+                const errorData =
+                  await response.json();
+
+                if (errorData.error) {
+                  errorMessage =
+                    errorData.error;
+                }
+
+              } catch (_) {}
+
+              throw new Error(
+                errorMessage
+              );
+            }
+
+            const data =
+              await response.json();
+
+            console.log(
+              "AI RESPONSE:",
+              data
+            );
+
+            return data;
+          }
+        )
+      );
+
+    // ==========================================
+    // PRESERVE ONE RESULT FOR EVERY REPORT
+    // ==========================================
+
+    analyzed =
+      queue.map(
+        (q, index) => {
+
+          const ai =
+            results[index];
+
+          return {
+
+            ...q,
+
+            classification:
+              ai.classification ||
+              "NON-SIF",
+
+            isSIF:
+              Boolean(
+                ai.is_sif
+              ),
+
+            confidence:
+              Number(
+                ai.confidence || 0
+              ),
+
+            sifProbability:
+              Number(
+                ai.sif_probability || 0
+              ),
+
+            nonSifProbability:
+              Number(
+                ai.non_sif_probability || 0
+              ),
+
+            rule:
+              ai.life_saving_rule ||
+              ai.rule ||
+              "Unclassified",
+
+            lsrProbability:
+              Number(
+                ai.lsr_probability || 0
+              ),
+
+            lsrSource:
+              ai.lsr_source ||
+              "ml",
+
+            activity:
+              ai.activity ||
+              "General Operations",
+
+            activityProbability:
+              Number(
+                ai.activity_probability || 0
+              ),
+
+            barrierFailures:
+              ai.barrier_failures ||
+              [],
+
+            precursors:
+              ai.precursors ||
+              [],
+
+            evidence:
+              ai.evidence ||
+              [],
+
+            riskLevel:
+              ai.risk_level ||
+              "LOW",
+
+            reason:
+              ai.reason ||
+              "",
+
+            potentialConsequence:
+              ai.potential_consequence ||
+              "",
+
+            recommendedMeasures:
+              ai.recommended_measures ||
+              []
+          };
+        }
+      );
+
+    console.log(
+      "FINAL ANALYSIS:",
+      analyzed
+    );
+
+    loadingText.textContent =
+      "AI analysis completed…";
+
+    loadingScreen.style.display =
+      'none';
+
+    renderDashboard();
+
+    document.getElementById(
+      'dashboard'
+    ).style.display =
+      'block';
+
+    reportCounter.textContent = `${analyzed.length} reports indexed`;
+    queue = [];
+    refreshQueueUI();
+
+  } catch (error) {
+
+    console.error(
+      "AI ANALYSIS ERROR:",
+      error
+    );
+
+    loadingScreen.style.display =
+      'none';
+
+    document.getElementById(
+      'intake-screen'
+    ).style.display =
+      'block';
+
+    alert(
+      "AI analysis failed.\n\n" +
+      error.message
+    );
+  }
+}
+/* ======================================================================
+   Dashboard rendering
+   ====================================================================== */
+let ruleChart = null;
+
+function renderDashboard(){
+  const total = analyzed.length;
+  const sifCount = analyzed.filter(r => r.isSIF).length;
+  const sifPct = total ? Math.round((sifCount/total)*100) : 0;
+
+  document.getElementById('dash-count').textContent = total;
+  document.getElementById('dash-time').textContent = new Date().toLocaleString('en-IN', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short'});
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-sif').textContent = sifPct + '%';
+
+  // zones
+  const zoneMap = {};
+  analyzed.forEach(r => {
+    zoneMap[r.site] = zoneMap[r.site] || {total:0, sif:0, rules:{}};
+    zoneMap[r.site].total++;
+    if(r.isSIF){
+      zoneMap[r.site].sif++;
+      zoneMap[r.site].rules[r.rule] = (zoneMap[r.site].rules[r.rule]||0)+1;
+    }
+  });
+  const zoneRows = Object.entries(zoneMap).map(([site,d]) => {
+    const density = d.total ? d.sif/d.total : 0;
+    const domRule = Object.entries(d.rules).sort((a,b)=>b[1]-a[1])[0];
+    return {site, density, domRule: domRule ? domRule[0] : '—'};
+  }).sort((a,b) => b.density - a.density);
+
+  document.getElementById('kpi-sites').textContent = zoneRows.filter(z => z.density > 0.3).length;
+
+  const zoneTable = document.getElementById('zone-table');
+  zoneTable.innerHTML = '';
+  zoneRows.forEach(z => {
+    const pct = Math.round(z.density*100);
+    const riskClass = pct >= 50 ? 'high' : pct >= 25 ? 'med' : 'low';
+    const riskLabel = pct >= 50 ? 'HIGH' : pct >= 25 ? 'MED' : 'LOW';
+    const tr = document.createElement('tr');
+    tr.className = 'zone-row';
+    tr.innerHTML = `
+      <td><div class="zone-name">${z.site}</div></td>
+      <td><div class="zone-rule">${z.domRule}</div></td>
+      <td style="width:110px;"><span class="mono">${pct}%</span><div class="density-bar"><span style="width:${pct}%"></span></div></td>
+      <td><span class="risk-pill ${riskClass}">${riskLabel}</span></td>
+    `;
+    tr.addEventListener('click', () => openZoneReport(z.site));
+    zoneTable.appendChild(tr);
+  });
+
+  // rule distribution
+  const ruleCounts = {};
+  analyzed.filter(r=>r.isSIF).forEach(r => { ruleCounts[r.rule] = (ruleCounts[r.rule]||0)+1; });
+  const ruleEntries = Object.entries(ruleCounts).sort((a,b)=>b[1]-a[1]);
+  const maxRule = ruleEntries.length ? ruleEntries[0][1] : 1;
+  const ruleList = document.getElementById('rule-list');
+  ruleList.innerHTML = '';
+  ruleEntries.forEach(([name,count]) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="tname">${name}</span><span class="tbar"><span style="width:${(count/maxRule)*100}%"></span></span><span class="tval">${count}</span>`;
+    ruleList.appendChild(li);
+  });
+    // Leading precursor KPI: prioritize specific precursor names, fallback to LSR or '—'
+  const precursorCounts = {};
+  analyzed.filter(r => r.isSIF).forEach(r => {
+    if (r.precursors && r.precursors.length) {
+      r.precursors.forEach(p => {
+        const pName = p.name || p.id;
+        if (pName) precursorCounts[pName] = (precursorCounts[pName] || 0) + 1;
+      });
+    } else if (r.rule && r.rule !== "Unclassified") {
+      precursorCounts[r.rule] = (precursorCounts[r.rule] || 0) + 1;
+    }
+  });
+  const precursorEntries = Object.entries(precursorCounts).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('kpi-precursor').textContent = precursorEntries[0] ? precursorEntries[0][0] : (ruleEntries[0] ? ruleEntries[0][0] : '—');
+
+  // precursor patterns (group by rule + activity)
+  const patternMap = {};
+  analyzed.filter(r=>r.isSIF).forEach(r => {
+    const key = r.rule + '::' + r.activity;
+    patternMap[key] = patternMap[key] || {rule:r.rule, activity:r.activity, count:0, sites:new Set(), failures:new Set()};
+    patternMap[key].count++;
+    patternMap[key].sites.add(r.site);
+    r.barrierFailures.forEach(f => patternMap[key].failures.add(f));
+  });
+  const patterns = Object.values(patternMap).sort((a,b)=>b.count-a.count).slice(0,5);
+  const pgrid = document.getElementById('precursor-grid');
+  pgrid.innerHTML = '';
+  patterns.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'precursor';
+    div.innerHTML = `
+      <div>
+        <div class="p-title">${p.rule}</div>
+        <div class="p-tags">${Array.from(p.sites).map(s=>`<span class="p-tag">${s}</span>`).join('')}</div>
+      </div>
+      <div class="p-desc">Recurring in <strong style="color:var(--text)">${p.activity.toLowerCase()}</strong> tasks${p.failures.size? ', with barrier gaps around ' + Array.from(p.failures).slice(0,2).join(' &amp; ') : ''}.</div>
+      <div class="p-count"><div class="n">${p.count}</div><div class="l">reports</div></div>
+    `;
+    pgrid.appendChild(div);
+  });
+  if(patterns.length === 0){
+    pgrid.innerHTML = '<div class="precursor"><div class="p-desc">No recurring SIF patterns detected in this batch.</div></div>';
+  }
+}
+
+/* ======================================================================
+   Report detail modal
+   ====================================================================== */
+
+/* ======================================================================
+   Unified Report Detail Modal & History
+   ====================================================================== */
+function openModalWithReport(r, titleOverride) {
+  if (!r) return;
+
+  const isSIF = Boolean(r.isSIF !== undefined ? r.isSIF : r.is_sif);
+  const reportId = r.id ? `#${r.id}` : '—';
+  const siteTitle = titleOverride || r.site || `Report ${reportId}`;
+  
+  const dateStr = r.created_at || (r.created_at_iso ? new Date(r.created_at_iso).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Recent');
+  const classification = r.classification || (isSIF ? 'SIF-POTENTIAL' : 'NON-SIF');
+  const confidenceNum = Number(r.confidence || 0);
+  const confidenceStr = (confidenceNum <= 1 ? (confidenceNum * 100) : confidenceNum).toFixed(1) + '%';
+  
+  const riskLevel = r.risk_level || r.riskLevel || (isSIF ? 'HIGH' : 'LOW');
+  const rule = r.life_saving_rule || r.rule || 'Unclassified';
+
+  const sifProbNum = Number(r.sif_probability !== undefined ? r.sif_probability : (r.sifProbability || 0));
+  const sifProbStr = (sifProbNum <= 1 ? (sifProbNum * 100) : sifProbNum).toFixed(1) + `% (${sifProbNum.toFixed(3)})`;
+
+  const nonSifProbNum = Number(r.non_sif_probability !== undefined ? r.non_sif_probability : (r.nonSifProbability || (1 - sifProbNum)));
+  const nonSifProbStr = (nonSifProbNum <= 1 ? (nonSifProbNum * 100) : nonSifProbNum).toFixed(1) + `% (${nonSifProbNum.toFixed(3)})`;
+
+  const reason = (r.reason && r.reason.trim()) ? r.reason.trim() : 'Not available';
+  const potentialConsequence = (r.potential_consequence && r.potential_consequence.trim()) ? r.potential_consequence.trim() : ((r.potentialConsequence && r.potentialConsequence.trim()) ? r.potentialConsequence.trim() : 'Not available');
+
+  // Precursors
+  let precursorsStr = 'None detected';
+  const rawPrecursors = r.precursors || [];
+  if (Array.isArray(rawPrecursors) && rawPrecursors.length > 0) {
+    const list = rawPrecursors.map(p => typeof p === 'string' ? p : (p.name || p.id || '')).filter(Boolean);
+    if (list.length > 0) precursorsStr = list.join(', ');
+  }
+
+  // Evidence
+  let evidenceStr = 'None detected';
+  const rawEvidence = r.evidence || [];
+  if (Array.isArray(rawEvidence) && rawEvidence.length > 0) {
+    const list = [];
+    rawEvidence.forEach(e => {
+      if (typeof e === 'string') {
+        list.push(e);
+      } else if (e && e.evidence && Array.isArray(e.evidence) && e.evidence.length > 0) {
+        list.push(`${e.precursor || 'Evidence'}: "${e.evidence.join('; ')}"`);
+      } else if (e && e.precursor) {
+        list.push(e.precursor);
+      }
+    });
+    if (list.length > 0) evidenceStr = list.join(' | ');
+  }
+
+  // Barrier Failures
+  let barrierFailuresStr = 'None detected';
+  const rawBarriers = r.barrier_failures || r.barrierFailures || [];
+  if (Array.isArray(rawBarriers) && rawBarriers.length > 0) {
+    const list = rawBarriers.map(b => typeof b === 'string' ? b : (b.name || b.title || '')).filter(Boolean);
+    if (list.length > 0) barrierFailuresStr = list.join(', ');
+  }
+
+  // Recommended Measures
+  let recommendedMeasuresStr = 'None detected';
+  const rawRecs = r.recommended_measures || r.recommendedMeasures || [];
+  if (Array.isArray(rawRecs) && rawRecs.length > 0) {
+    const list = rawRecs.map(m => typeof m === 'string' ? m : (m.title || m.name || '')).filter(Boolean);
+    if (list.length > 0) recommendedMeasuresStr = list.join('; ');
+  }
+
+  const originalReportText = r.report_text || r.text || '—';
+
+  // DOM Updates
+  document.getElementById('modal-site').textContent = siteTitle;
+  document.getElementById('modal-meta').textContent = `Report ${reportId} · ${dateStr} · ${rule}`;
+
+  const pill = document.getElementById('modal-pill');
+  pill.textContent = classification;
+  pill.className = 'risk-pill ' + (isSIF ? 'high' : 'low');
+
+  document.getElementById('modal-conf').textContent = `confidence ${confidenceStr}`;
+  document.getElementById('modal-text').textContent = originalReportText;
+
+  const why = document.getElementById('modal-why');
+  why.innerHTML = '';
+
+  const addRow = (label, value) => {
+    const li = document.createElement('li');
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'wlabel';
+    labelSpan.textContent = label;
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'wval';
+    valueSpan.textContent = value;
+    li.appendChild(labelSpan);
+    li.appendChild(valueSpan);
+    why.appendChild(li);
+  };
+
+  const lsrProbNum = Number(r.lsr_probability !== undefined ? r.lsr_probability : (r.lsrProbability || 0));
+  const lsrProbStr = lsrProbNum > 0 ? (lsrProbNum <= 1 ? (lsrProbNum * 100) : lsrProbNum).toFixed(1) + `% (${lsrProbNum.toFixed(3)})` : 'N/A';
+  const lsrSource = (r.lsr_source || r.lsrSource || 'ml').toUpperCase();
+
+  const activity = r.activity || 'General Operations';
+  const actProbNum = Number(r.activity_probability !== undefined ? r.activity_probability : (r.activityProbability || 0));
+  const actProbStr = actProbNum > 0 ? (actProbNum <= 1 ? (actProbNum * 100) : actProbNum).toFixed(1) + `% (${actProbNum.toFixed(3)})` : 'N/A';
+
+  // Required Order:
+  addRow('Report ID', reportId);
+  addRow('Saved Date / Time', dateStr);
+  addRow('Classification', classification);
+  addRow('Confidence', confidenceStr);
+  addRow('Risk Level', riskLevel);
+  addRow('Life-Saving Rule', rule);
+  addRow('LSR Probability', lsrProbStr);
+  addRow('LSR Source', lsrSource);
+  addRow('Activity', activity);
+  addRow('Activity Probability', actProbStr);
+  addRow('SIF Probability', sifProbStr);
+  addRow('NON-SIF Probability', nonSifProbStr);
+
+  addRow('Reason', reason);
+  addRow('Potential Consequence', potentialConsequence);
+  addRow('Detected SIF Precursors', precursorsStr);
+  addRow('Evidence', evidenceStr);
+  addRow('Barrier Failures', barrierFailuresStr);
+  addRow('Recommended Measures', recommendedMeasuresStr);
+
+  overlay.style.display = 'flex';
+}
+
+function openZoneReport(site) {
+  const reports = analyzed.filter(r => r.site === site);
+  const r = reports.find(report => report.isSIF) || reports[0];
+  if (!r) return;
+  openModalWithReport(r, site + ' — report');
+}
+
+const overlay = document.getElementById('overlay');
+document.getElementById('modal-close').addEventListener('click', () => overlay.style.display = 'none');
+overlay.addEventListener('click', e => { if(e.target === overlay) overlay.style.display = 'none'; });
+
+
+
+/* ======================================================================
+   Analysis History & Unified Modal
+   ====================================================================== */
+
+
+async function loadAndShowHistory() {
+  document.getElementById('intake-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'none';
+  
+  const historyScreen = document.getElementById('history-screen');
+  historyScreen.style.display = 'block';
+  
+  const historyList = document.getElementById('history-list');
+  historyList.innerHTML = '<div style="padding:24px; color:var(--sub); text-align:center;">Loading history from PostgreSQL database…</div>';
+  
+  try {
+    const res = await fetch('/history/');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Failed to load history');
+    
+    document.getElementById('history-count').textContent = data.reports.length;
+    
+    if (data.reports.length === 0) {
+      historyList.innerHTML = '<div style="padding:32px; color:var(--sub); text-align:center;">No analyzed safety reports found in database history.</div>';
+      return;
+    }
+    
+    historyList.innerHTML = '';
+    data.reports.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      const isSIF = Boolean(r.is_sif);
+      const riskClass = isSIF ? 'high' : 'low';
+      const dateStr = r.created_at || 'Recent';
+      
+      item.innerHTML = `
+        <div class="history-item-head">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="risk-pill ${riskClass}">${r.classification || 'NON-SIF'}</span>
+            <span class="history-item-meta">${dateStr}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;" class="history-item-meta">
+            <span>Risk: <strong>${r.risk_level || 'LOW'}</strong></span>
+            <span>Conf: <strong>${(r.confidence * 100).toFixed(1)}%</strong></span>
+          </div>
+        </div>
+        <div style="font-size:12.5px; color:var(--amber); margin-bottom:4px; font-weight:500;">
+          Rule: ${r.life_saving_rule || 'Unclassified'}
+        </div>
+        <div class="history-item-snippet">${r.report_text}</div>
+      `;
+      
+      item.addEventListener('click', () => openModalWithReport(r, `Report #${r.id}`));
+      historyList.appendChild(item);
+    });
+  } catch (err) {
+    console.error('History load error:', err);
+    historyList.innerHTML = `<div style="padding:24px; color:var(--red); text-align:center;">Error loading history: ${err.message}</div>`;
+  }
+}
+
+// Wire history buttons
+document.getElementById('history-nav-btn')?.addEventListener('click', loadAndShowHistory);
+document.getElementById('history-back-btn')?.addEventListener('click', () => {
+  document.getElementById('history-screen').style.display = 'none';
+  if (analyzed.length > 0) {
+    document.getElementById('dashboard').style.display = 'block';
+  } else {
+    document.getElementById('intake-screen').style.display = 'block';
+  }
+});
+
+</script>
+
+</body>
+</html>

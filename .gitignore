@@ -1,0 +1,41 @@
+# .gitignore for PSIF Platform
+.env
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+
+# Django
+media/
+staticfiles/
+*.sqlite3
+
+# ML artifacts (large model files)
+ml_engine/artifacts/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db

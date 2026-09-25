@@ -1,0 +1,17 @@
+{
+  "venvPath": ".",
+  "venv": "venv",
+  "extraPaths": [
+    ".",
+    "apps",
+    "ml_engine"
+  ],
+  "include": [
+    "apps",
+    "config",
+    "ml_engine",
+    "tests"
+  ],
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false
+}

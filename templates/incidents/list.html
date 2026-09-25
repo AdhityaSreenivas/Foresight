@@ -1,0 +1,757 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Incidents — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}List of all ingested workplace safety incidents.{% endblock %}
+
+{% block nav_incidents %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.narrative-cell { max-width: 350px; }
+.narrative-text {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary);
+    line-height: 1.5; font-size: 0.9rem;
+}
+
+.prediction-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0.15rem 0.5rem; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Pagination Redesign */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+}
+
+.pagination-info strong {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+.pagination-page-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+.pagination-controls-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.pagination-page-size {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+}
+
+.pagination-select {
+    height: 34px;
+    padding: 0 1.6rem 0 0.55rem;
+    font-size: 0.825rem;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text-primary);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+.pagination-select:hover, .pagination-select:focus {
+    border-color: var(--border-hover);
+    outline: none;
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 0.55rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.page-link:hover:not(.disabled):not(.active) {
+    background: var(--bg-alt);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+}
+
+.page-link:focus-visible {
+    outline: 2px solid var(--black);
+    outline-offset: 1px;
+}
+
+.page-link.active {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+    font-weight: 600;
+    cursor: default;
+    box-shadow: var(--shadow-md);
+}
+
+.page-link.disabled {
+    opacity: 0.35;
+    pointer-events: none;
+    box-shadow: none;
+    border-color: var(--border-light);
+    color: var(--text-muted);
+}
+
+.page-link.nav-btn {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 34px;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    user-select: none;
+}
+
+.pagination-jump {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+}
+
+.pagination-input {
+    width: 58px;
+    height: 34px;
+    padding: 0 0.35rem;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-primary);
+}
+.pagination-input:focus {
+    border-color: var(--border-hover);
+    outline: none;
+}
+
+.pagination-btn-go {
+    height: 34px;
+    padding: 0 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+@media (max-width: 860px) {
+    .pagination-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    .pagination-info {
+        justify-content: center;
+        text-align: center;
+    }
+    .pagination-controls-wrapper {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 580px) {
+    .page-link.nav-btn span.btn-text {
+        display: none;
+    }
+    .pagination-page-size, .pagination-jump {
+        font-size: 0.75rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header page-header-actions">
+        <div>
+            <h1 class="page-title">Incidents</h1>
+            <p class="page-subtitle" id="incident-count-display">Total Incidents: Loading...</p>
+            {% if current_rule %}
+            <div style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--cat-blue); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem;">
+                <span style="color: var(--cat-blue); font-weight: 600;">Barrier:</span>
+                <span style="font-weight: 700; color: var(--black);">{{ current_rule }}</span>
+                <a href="/incidents/" style="color: var(--text-secondary); text-decoration: none; font-size: 1.1rem; line-height: 1; margin-left: 0.25rem;" title="Clear barrier filter">&times;</a>
+            </div>
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'incidents:report' %}" class="btn btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.25rem;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Submit Report
+            </a>
+            <a href="#" id="btn-export" class="btn btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export CSV
+            </a>
+            {% if user.is_staff or user.role == 'admin' or user.role == 'safety_officer' %}
+            <a href="/datasets/upload/" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Upload Dataset
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Server-Side Filters -->
+    <div class="filter-bar" aria-label="Incident filters">
+        <div class="form-group" style="min-width: 200px;">
+            <label class="form-label" for="filter-dataset">Dataset Source</label>
+            <select id="filter-dataset" class="form-select">
+                <option value="">All Datasets</option>
+                {% for ds in datasets %}
+                <option value="{{ ds.id }}" {% if selected_dataset == ds.id|stringformat:"s" %}selected{% endif %}>
+                    {{ ds.name }} ({{ ds.processed_rows|default:0 }} rows)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="filter-status">Status</label>
+            <select id="filter-status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="reviewed_psif">Reviewed (PSIF)</option>
+                <option value="reviewed_non_psif">Reviewed (Non-PSIF)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="filter-department">Department</label>
+            <select id="filter-department" class="form-select">
+                <option value="">All Departments</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Operations">Operations</option>
+                <option value="Logistics">Logistics</option>
+                <option value="Engineering">Engineering</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="filter-risk">Prioritization Band</label>
+            <select class="form-select" id="filter-risk" name="risk_level">
+                <option value="">All Bands</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+        <div class="form-group" style="flex-grow: 2;">
+            <label class="form-label" for="search-input">Search Narrative</label>
+            <input type="text" id="search-input" class="form-control" placeholder="Keywords (e.g. fall, electrical)...">
+        </div>
+        <div class="form-group" style="min-width: auto; flex-grow: 0;">
+            <button id="btn-search" class="btn btn-primary" style="height: 46px; padding: 0 1.5rem;">Filter</button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="table" aria-label="List of incidents">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Prioritization Band</th>
+                    <th>PSIF Model Assessment</th>
+                    <th>Narrative</th>
+                    <th>Dataset</th>
+                    <th aria-label="Actions"></th>
+                </tr>
+            </thead>
+            <tbody id="incidents-tbody">
+                <tr><td colspan="8" style="text-align:center; padding:4rem; color: var(--text-secondary);">Loading incidents...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-container" id="pagination-container" aria-label="Incidents pagination">
+        <div class="pagination-info" id="pagination-info" aria-live="polite">
+            <!-- Range & total count summary rendered dynamically -->
+        </div>
+        <div class="pagination-controls-wrapper">
+            <div class="pagination-page-size">
+                <label for="page-size-select" class="pagination-label">Show:</label>
+                <select id="page-size-select" class="pagination-select" aria-label="Rows per page">
+                    <option value="25" selected>25 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100">100 / page</option>
+                </select>
+            </div>
+            <nav class="pagination-nav" aria-label="Pagination Navigation" id="pagination-nav">
+                <!-- First, Prev, Page numbers, Next, Last rendered dynamically -->
+            </nav>
+            <div class="pagination-jump" id="pagination-jump">
+                <label for="jump-page-input" class="pagination-label">Page:</label>
+                <input type="number" id="jump-page-input" class="pagination-input" min="1" placeholder="1" aria-label="Go to page number">
+                <button type="button" id="btn-jump-page" class="btn btn-secondary btn-small pagination-btn-go">Go</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.getElementById('incidents-tbody');
+    const infoContainer = document.getElementById('pagination-info');
+    const navContainer = document.getElementById('pagination-nav');
+    const pageSizeSelect = document.getElementById('page-size-select');
+    const jumpInput = document.getElementById('jump-page-input');
+    const btnJump = document.getElementById('btn-jump-page');
+    const countDisplay = document.getElementById('incident-count-display');
+    const btnSearch = document.getElementById('btn-search');
+    const filterDataset = document.getElementById('filter-dataset');
+    
+    // Pre-select dataset from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialDataset = urlParams.get('dataset');
+    if (initialDataset && filterDataset) {
+        filterDataset.value = initialDataset;
+    }
+    
+    let currentPage = 1;
+    let pageSize = 25;
+    let totalCount = 0;
+    let totalPages = 1;
+
+    function fetchIncidents(page = 1) {
+        currentPage = page;
+        const dept = document.getElementById('filter-department').value;
+        const risk = document.getElementById('filter-risk').value;
+        const status = document.getElementById('filter-status').value;
+        const search = document.getElementById('search-input').value;
+        const dataset = filterDataset ? filterDataset.value : '';
+
+        const params = new URLSearchParams({
+            page: currentPage,
+            page_size: pageSize
+        });
+        if (dept) params.append('department', dept);
+        if (risk) params.append('risk', risk);
+        if (status) params.append('status', status);
+        if (search) params.append('search', search);
+        if (dataset) params.append('dataset', dataset);
+        const rule = urlParams.get('rule');
+        if (rule) params.append('rule', rule);
+
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:4rem; color: var(--text-secondary);">Loading incidents...</td></tr>';
+        
+        fetch(`/api/incidents/?${params.toString()}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch incidents');
+                return res.json();
+            })
+            .then(data => {
+                totalCount = data.count || 0;
+                totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+                
+                // Guard against out-of-range page (e.g. if active filters reduce total pages)
+                if (currentPage > totalPages && totalCount > 0) {
+                    fetchIncidents(totalPages);
+                    return;
+                }
+
+                renderTable(data.results);
+                renderPagination(totalCount, data.next, data.previous);
+                countDisplay.textContent = `Total Incidents: ${totalCount.toLocaleString()}`;
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:4rem; color:var(--risk-critical);">Error loading incidents. Please try again.</td></tr>`;
+                renderPagination(0, null, null);
+            });
+    }
+
+    function renderTable(results) {
+        if (!results || results.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="padding: 0;">
+                        <div class="state-panel" style="border: none; padding: 5rem 2rem;">
+                            <div class="state-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </div>
+                            <h3 class="state-title">No incidents found</h3>
+                            <p class="state-text">No incidents match the current filters, or no data has been uploaded.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        results.forEach(inc => {
+            const tr = document.createElement('tr');
+            
+            // Date
+            const dateStr = inc.incident_date ? inc.incident_date : '<span class="text-muted">N/A</span>';
+            
+            // Status
+            let statusHtml = '<span class="badge" style="background: var(--bg-alt); color: var(--text-secondary); border: 1px solid var(--border-color);">Pending</span>';
+            if (inc.status === 'reviewed_psif') statusHtml = '<span class="badge badge-risk-critical" style="font-weight: 700;">PSIF (Human Adjudication)</span>';
+            if (inc.status === 'reviewed_non_psif') statusHtml = '<span class="badge badge-risk-low" style="font-weight: 700;">NOT PSIF (Human Adjudication)</span>';
+            
+            // Risk Badge
+            let riskHtml = '<span class="badge badge-status">UNKNOWN</span>';
+            if (inc.prediction && inc.prediction.risk_level) {
+                const rl = inc.prediction.risk_level.toLowerCase();
+                if (rl === 'critical') riskHtml = '<span class="badge badge-risk-critical">CRITICAL</span>';
+                else if (rl === 'high') riskHtml = '<span class="badge badge-risk-high">HIGH</span>';
+                else if (rl === 'medium') riskHtml = '<span class="badge badge-risk-medium">MEDIUM</span>';
+                else if (rl === 'low') riskHtml = '<span class="badge badge-risk-low">LOW</span>';
+            }
+
+            // Prediction status
+            let predHtml = '<span class="text-muted" style="font-size: 0.85rem;">Pending Analysis</span>';
+            if (inc.prediction) {
+                const score = inc.prediction.psif_score !== undefined ? inc.prediction.psif_score : inc.prediction.psif_probability;
+                const scoreFmt = parseFloat(score || 0).toFixed(3);
+                if (inc.prediction.is_sparse_input || inc.prediction.binary_classification === 'INSUFFICIENT INFORMATION') {
+                    predHtml = `
+                        <div style="color: #d97706; font-weight: 700; font-size: 0.85rem; margin-bottom:0.25rem; display:flex; align-items:center; gap:0.25rem;">
+                            INSUFFICIENT INFORMATION
+                        </div>
+                        <span class="prediction-pill" title="PSIF Model Score — not a calibrated probability" style="background: rgba(217, 119, 6, 0.1); color: #d97706; font-weight: 600;">${scoreFmt}</span>
+                    `;
+                } else if (inc.prediction.psif_predicted) {
+                    predHtml = `
+                        <div style="color: var(--risk-critical); font-weight: 700; font-size: 0.85rem; margin-bottom:0.25rem; display:flex; align-items:center; gap:0.25rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            PSIF
+                        </div>
+                        <span class="prediction-pill" title="PSIF Model Score — not a calibrated probability" style="background: rgba(156, 59, 50, 0.1); color: var(--risk-critical); font-weight: 600;">${scoreFmt}</span>
+                    `;
+                } else {
+                    predHtml = `
+                        <div style="color: var(--risk-low); font-weight: 600; font-size: 0.85rem; margin-bottom:0.25rem;">NOT PSIF</div>
+                        <span class="prediction-pill" title="PSIF Model Score — not a calibrated probability">${scoreFmt}</span>
+                    `;
+                }
+            }
+
+            // Narrative
+            const narrative = inc.composite_narrative || 'No description provided';
+
+            // Dataset name
+            const datasetName = inc.dataset_name || '<span class="text-muted">—</span>';
+
+            tr.innerHTML = `
+                <td style="white-space: nowrap;" class="tabular-nums">${dateStr}</td>
+                <td style="font-weight: 500; color: var(--black-soft);">${inc.department || '<span class="text-muted">N/A</span>'}</td>
+                <td>${statusHtml}</td>
+                <td>${riskHtml}</td>
+                <td>${predHtml}</td>
+                <td class="narrative-cell">
+                    <div class="narrative-text" title="${narrative}">${narrative}</div>
+                </td>
+                <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${inc.dataset_name || ''}">
+                    ${datasetName}
+                </td>
+                <td style="text-align: right; padding-right: 1.5rem; white-space: nowrap;">
+                    <a href="/incidents/${inc.id}/workspace/" class="btn btn-primary btn-small" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #3b82f6; color: #fff; text-decoration: none; margin-right: 0.25rem;">Investigate</a>
+                    <a href="/incidents/${inc.id}/" class="btn btn-secondary btn-small" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Details</a>
+                </td>
+
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function goToPage(targetPage) {
+        if (targetPage < 1 || targetPage > totalPages || targetPage === currentPage) return;
+        fetchIncidents(targetPage);
+        const tableWrapper = document.querySelector('.table-wrapper');
+        if (tableWrapper) {
+            tableWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function getWindowedPageNumbers(current, total) {
+        if (total <= 7) {
+            const pages = [];
+            for (let i = 1; i <= total; i++) pages.push(i);
+            return pages;
+        }
+
+        if (current <= 4) {
+            return [1, 2, 3, 4, 5, '...', total];
+        }
+
+        if (current >= total - 3) {
+            return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+        }
+
+        return [1, '...', current - 1, current, current + 1, '...', total];
+    }
+
+    function renderPagination(count, nextUrl, prevUrl) {
+        if (!infoContainer || !navContainer) return;
+
+        infoContainer.innerHTML = '';
+        navContainer.innerHTML = '';
+
+        if (count === 0) {
+            infoContainer.innerHTML = `<span>No incidents matching the active filter criteria.</span>`;
+            if (jumpInput) {
+                jumpInput.value = '';
+                jumpInput.disabled = true;
+            }
+            if (btnJump) btnJump.disabled = true;
+            return;
+        }
+
+        if (jumpInput) {
+            jumpInput.disabled = false;
+            jumpInput.max = totalPages;
+            jumpInput.placeholder = currentPage;
+            jumpInput.value = currentPage;
+        }
+        if (btnJump) btnJump.disabled = false;
+
+        // Calculate record window
+        const startRecord = (currentPage - 1) * pageSize + 1;
+        const endRecord = Math.min(currentPage * pageSize, count);
+
+        // Informative Summary
+        infoContainer.innerHTML = `
+            <span>Showing <strong>${startRecord.toLocaleString()}–${endRecord.toLocaleString()}</strong> of <strong>${count.toLocaleString()}</strong> incidents</span>
+            <span class="pagination-page-tag">Page <strong>${currentPage.toLocaleString()}</strong> of <strong>${totalPages.toLocaleString()}</strong></span>
+        `;
+
+        // 1. First Page Button
+        const firstBtn = document.createElement('button');
+        firstBtn.type = 'button';
+        firstBtn.className = `page-link nav-btn ${currentPage <= 1 ? 'disabled' : ''}`;
+        firstBtn.title = 'First Page';
+        firstBtn.setAttribute('aria-label', 'Go to first page');
+        firstBtn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+            <span class="btn-text">First</span>
+        `;
+        if (currentPage > 1) {
+            firstBtn.onclick = () => goToPage(1);
+        }
+        navContainer.appendChild(firstBtn);
+
+        // 2. Previous Page Button
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
+        prevBtn.className = `page-link nav-btn ${(!prevUrl || currentPage <= 1) ? 'disabled' : ''}`;
+        prevBtn.title = 'Previous Page';
+        prevBtn.setAttribute('aria-label', 'Go to previous page');
+        prevBtn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <span class="btn-text">Prev</span>
+        `;
+        if (prevUrl && currentPage > 1) {
+            prevBtn.onclick = () => goToPage(currentPage - 1);
+        }
+        navContainer.appendChild(prevBtn);
+
+        // 3. Numbered Pages & Ellipses
+        const pageNumbers = getWindowedPageNumbers(currentPage, totalPages);
+        pageNumbers.forEach(item => {
+            if (item === '...') {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'page-ellipsis';
+                ellipsis.textContent = '…';
+                navContainer.appendChild(ellipsis);
+            } else {
+                const pageBtn = document.createElement('button');
+                pageBtn.type = 'button';
+                pageBtn.className = `page-link ${item === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = item.toLocaleString();
+                pageBtn.title = `Page ${item}`;
+                pageBtn.setAttribute('aria-label', `Page ${item}`);
+                if (item === currentPage) {
+                    pageBtn.setAttribute('aria-current', 'page');
+                } else {
+                    pageBtn.onclick = () => goToPage(item);
+                }
+                navContainer.appendChild(pageBtn);
+            }
+        });
+
+        // 4. Next Page Button
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
+        nextBtn.className = `page-link nav-btn ${(!nextUrl || currentPage >= totalPages) ? 'disabled' : ''}`;
+        nextBtn.title = 'Next Page';
+        nextBtn.setAttribute('aria-label', 'Go to next page');
+        nextBtn.innerHTML = `
+            <span class="btn-text">Next</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        `;
+        if (nextUrl && currentPage < totalPages) {
+            nextBtn.onclick = () => goToPage(currentPage + 1);
+        }
+        navContainer.appendChild(nextBtn);
+
+        // 5. Last Page Button
+        const lastBtn = document.createElement('button');
+        lastBtn.type = 'button';
+        lastBtn.className = `page-link nav-btn ${currentPage >= totalPages ? 'disabled' : ''}`;
+        lastBtn.title = 'Last Page';
+        lastBtn.setAttribute('aria-label', 'Go to last page');
+        lastBtn.innerHTML = `
+            <span class="btn-text">Last</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+        `;
+        if (currentPage < totalPages) {
+            lastBtn.onclick = () => goToPage(totalPages);
+        }
+        navContainer.appendChild(lastBtn);
+    }
+
+    function handleJumpToPage() {
+        if (!jumpInput) return;
+        const val = parseInt(jumpInput.value, 10);
+        if (isNaN(val)) return;
+        const clamped = Math.max(1, Math.min(val, totalPages));
+        goToPage(clamped);
+    }
+
+    // Interactive event listeners
+    if (btnJump) {
+        btnJump.addEventListener('click', handleJumpToPage);
+    }
+    if (jumpInput) {
+        jumpInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleJumpToPage();
+            }
+        });
+    }
+
+    if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', () => {
+            pageSize = parseInt(pageSizeSelect.value, 10) || 25;
+            fetchIncidents(1);
+        });
+    }
+
+    // Filter changes
+    btnSearch.addEventListener('click', () => { fetchIncidents(1); });
+    document.getElementById('search-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') fetchIncidents(1);
+    });
+    document.getElementById('filter-department').addEventListener('change', () => fetchIncidents(1));
+    document.getElementById('filter-risk').addEventListener('change', () => fetchIncidents(1));
+    document.getElementById('filter-status').addEventListener('change', () => fetchIncidents(1));
+    if (filterDataset) {
+        filterDataset.addEventListener('change', () => {
+            const url = new URL(window.location);
+            if (filterDataset.value) {
+                url.searchParams.set('dataset', filterDataset.value);
+            } else {
+                url.searchParams.delete('dataset');
+            }
+            window.history.replaceState({}, '', url);
+            fetchIncidents(1);
+        });
+    }
+
+    const btnExport = document.getElementById('btn-export');
+    if (btnExport) {
+        btnExport.addEventListener('click', (e) => {
+            e.preventDefault();
+            const dept = document.getElementById('filter-department').value;
+            const risk = document.getElementById('filter-risk').value;
+            const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('search-input').value;
+            const dataset = filterDataset ? filterDataset.value : '';
+
+            const params = new URLSearchParams();
+            if (dept) params.append('department', dept);
+            if (risk) params.append('risk', risk);
+            if (status) params.append('status', status);
+            if (search) params.append('search', search);
+            if (dataset) params.append('dataset', dataset);
+            const rule = urlParams.get('rule');
+            if (rule) params.append('rule', rule);
+            
+            window.location.href = `/incidents/export/?${params.toString()}`;
+        });
+    }
+
+    // Initial load
+    fetchIncidents(1);
+});
+</script>
+{% endblock %}

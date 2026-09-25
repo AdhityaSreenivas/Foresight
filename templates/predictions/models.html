@@ -1,0 +1,1482 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Model Management — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Manage machine learning model versions, evaluate candidate models, and track training provenance.{% endblock %}
+
+{% block nav_models %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header page-header-actions" style="margin-bottom: 2.5rem;">
+        <div>
+            <h1 class="page-title">Model Management</h1>
+            <p class="page-subtitle">View active and candidate model versions, verify training provenance, and manage model activation.</p>
+        </div>
+        {% if user.can_retrain %}
+        <button class="btn btn-primary" id="btn-retrain">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.32-9.26l-1.02.66" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Retrain Model
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Alert Messages -->
+    <div class="message message-error" id="retrain-error" style="display:none;" role="alert"></div>
+    <div class="message message-success" id="retrain-success" style="display:none;" role="alert"></div>
+
+    <style>
+    @keyframes progress-shimmer {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    @keyframes pulse-ring {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.35); opacity: 0.4; }
+    }
+    .progress-pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        display: inline-block;
+        animation: pulse-ring 1.4s ease-in-out infinite;
+    }
+    .progress-bar-fill-animated {
+        background: linear-gradient(90deg, #2563EB, #6366F1, #0D9488, #16A34A);
+        background-size: 300% 100%;
+        animation: progress-shimmer 3s ease infinite;
+        box-shadow: 0 0 12px rgba(37, 99, 235, 0.35);
+    }
+    .progress-bar-fill-ready {
+        background: #16A34A !important;
+        animation: none !important;
+        box-shadow: 0 0 10px rgba(22, 163, 74, 0.4) !important;
+    }
+    .progress-bar-fill-failed {
+        background: #DC2626 !important;
+        animation: none !important;
+        box-shadow: 0 0 10px rgba(220, 38, 38, 0.4) !important;
+    }
+    </style>
+
+    <!-- Dedicated Retraining Progress Card -->
+    <div id="retraining-progress-card" class="card" style="display: none; margin-bottom: 2rem; border-left: 4px solid var(--cat-blue); background: var(--surface); box-shadow: var(--shadow-md); position: relative; overflow: hidden;" role="region" aria-live="polite" aria-label="Retraining Progress Tracker">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                    <span class="badge badge-running" id="progress-status-badge" style="display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 600;">
+                        <span class="progress-pulse-dot"></span>
+                        <span id="progress-status-text">TRAINING IN PROGRESS</span>
+                    </span>
+                    <span class="badge badge-neutral" id="progress-model-version" style="font-family: var(--font-mono); font-weight: 600;">v_...</span>
+                    <span class="badge badge-neutral" id="progress-source-badge">SYNTHETIC</span>
+                </div>
+                <h3 style="margin: 0; font-size: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;" id="progress-title">
+                    Candidate Model Retraining Pipeline
+                </h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div id="progress-timer-container" style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.35rem 0.75rem; font-size: 0.82rem; font-family: var(--font-mono); color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span id="progress-timer">Elapsed: 00:00</span>
+                </div>
+                <button type="button" id="btn-terminate-training" class="btn" style="display: none; padding: 0.3rem 0.75rem; font-size: 0.8rem; background: #DC2626; border-color: #DC2626; color: #fff; font-weight: 600; gap: 0.4rem;" aria-label="Terminate model training">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                    Terminate Training
+                </button>
+                <button type="button" id="progress-dismiss-btn" class="btn btn-secondary" style="display: none; padding: 0.3rem 0.65rem; font-size: 0.8rem;">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+
+        <!-- Stage and Percentage Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.65rem; gap: 1rem;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.2rem;">
+                    Current Pipeline Execution Stage
+                </div>
+                <div id="progress-stage-text" style="font-size: 0.95rem; font-weight: 500; color: var(--text-primary); line-height: 1.4; word-break: break-word;">
+                    Initializing pipeline...
+                </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+                <div id="progress-pct-text" class="tabular-nums" style="font-size: 1.85rem; font-weight: 800; font-family: var(--font-mono); color: var(--cat-blue); line-height: 1;">
+                    0%
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar Track -->
+        <div class="progress-bar-track" style="width: 100%; height: 14px; background: rgba(0, 0, 0, 0.08); border-radius: 9999px; overflow: hidden; position: relative; margin-bottom: 0.85rem; border: 1px solid var(--border-light);">
+            <div id="progress-bar-fill" style="width: 0%; height: 100%; border-radius: 9999px; transition: width 0.4s ease-in-out, background 0.3s ease; position: relative;" class="progress-bar-fill-animated">
+            </div>
+        </div>
+
+        <!-- Real-time Work Units & Timing Metrics Bar -->
+        <div id="progress-metrics-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; font-size: 0.84rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.6rem 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.45rem;" id="progress-units-container">
+                <span style="color: var(--text-secondary); font-weight: 500;">Work Units:</span>
+                <strong style="color: var(--text-primary); font-family: var(--font-mono);" id="progress-units-text">—</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.25rem; font-family: var(--font-mono); font-size: 0.82rem;">
+                <div>
+                    <span style="color: var(--text-secondary);">Elapsed:</span>
+                    <strong style="color: var(--text-primary);" id="progress-elapsed-text">0s</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Remaining:</span>
+                    <strong style="color: var(--cat-blue);" id="progress-remaining-text">Estimating remaining time…</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Est. Total:</span>
+                    <strong style="color: var(--text-primary);" id="progress-total-text">—</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5-Step Pipeline Stepper -->
+        <div id="progress-stepper" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light);">
+            <div class="progress-step" id="step-1" style="text-align: center; font-size: 0.75rem; color: var(--text-secondary);">
+                <div class="step-indicator" style="width: 22px; height: 22px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border); margin: 0 auto 0.35rem auto; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; transition: all 0.3s ease;">1</div>
+                <div class="step-label">Ingestion &amp; Audit</div>
+            </div>
+            <div class="progress-step" id="step-2" style="text-align: center; font-size: 0.75rem; color: var(--text-secondary);">
+                <div class="step-indicator" style="width: 22px; height: 22px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border); margin: 0 auto 0.35rem auto; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; transition: all 0.3s ease;">2</div>
+                <div class="step-label">Stratified Split</div>
+            </div>
+            <div class="progress-step" id="step-3" style="text-align: center; font-size: 0.75rem; color: var(--text-secondary);">
+                <div class="step-indicator" style="width: 22px; height: 22px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border); margin: 0 auto 0.35rem auto; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; transition: all 0.3s ease;">3</div>
+                <div class="step-label">DistilBERT Embeddings</div>
+            </div>
+            <div class="progress-step" id="step-4" style="text-align: center; font-size: 0.75rem; color: var(--text-secondary);">
+                <div class="step-indicator" style="width: 22px; height: 22px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border); margin: 0 auto 0.35rem auto; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; transition: all 0.3s ease;">4</div>
+                <div class="step-label">XGBoost Ensemble</div>
+            </div>
+            <div class="progress-step" id="step-5" style="text-align: center; font-size: 0.75rem; color: var(--text-secondary);">
+                <div class="step-indicator" style="width: 22px; height: 22px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border); margin: 0 auto 0.35rem auto; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; transition: all 0.3s ease;">5</div>
+                <div class="step-label">Evaluation &amp; Gates</div>
+            </div>
+        </div>
+
+        <!-- Failure Details Container (Hidden unless FAILED) -->
+        <div id="progress-error-container" style="display: none; margin-top: 1.25rem; padding: 0.85rem 1rem; background: rgba(239, 68, 68, 0.08); border: 1px solid var(--risk-critical); border-radius: var(--radius-sm);">
+            <div style="font-weight: 600; color: var(--risk-critical); font-size: 0.9rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Pipeline Failure Details:
+            </div>
+            <div id="progress-error-text" style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-primary); white-space: pre-wrap; word-break: break-all;"></div>
+        </div>
+
+        <!-- Completion Actions Container (Hidden unless READY) -->
+        <div id="progress-success-container" style="display: none; margin-top: 1.25rem; padding: 0.85rem 1rem; background: rgba(34, 197, 94, 0.08); border: 1px solid var(--risk-low); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <strong style="color: var(--risk-low); font-size: 0.92rem;">Candidate Model Ready for Evaluation!</strong>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">
+                    Model trained and verified against safety gate protocols. Saved in inactive READY status.
+                </div>
+            </div>
+            <a href="#candidate-models-section" class="btn btn-primary" style="background: var(--risk-low); border-color: var(--risk-low); color: var(--white); font-weight: 600; font-size: 0.85rem;">
+                View Candidate Evaluation &darr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Architecture & Safety Gate Overview -->
+    <div class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--cat-blue); background: var(--surface);">
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+            <div style="color: var(--cat-blue); flex-shrink: 0; margin-top: 2px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </div>
+            <div>
+                <strong style="color: var(--text-primary); font-size: 1rem; font-family: var(--font-heading); letter-spacing: 0.02em;">Controlled Promotion &amp; Training Provenance Architecture:</strong>
+                <p style="color: var(--text-secondary); margin: 0.35rem 0 0.5rem 0; font-size: 0.9rem; line-height: 1.5;">
+                    Retraining dynamically gathers all currently eligible labeled incidents in PostgreSQL. Genuine human review decisions on synthetic incidents provide human-approved training targets; unreviewed synthetic records provide benchmark targets. Synthetic simulation reviews, unreviewed reports, and records with insufficient evidence are strictly excluded from supervised targets. Newly trained models are saved in <strong>READY (CANDIDATE)</strong> status and require explicit administrative safety gate activation before serving predictions.
+                </p>
+                <div style="font-size: 0.82rem; color: #b45309; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); padding: 0.4rem 0.65rem; margin-top: 0.4rem; font-weight: 500;">
+                    ⚠️ <em>Human approval of synthetic incidents indicates human review of generated examples; it is not equivalent to validation against real-world OIL HSE records.</em>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Candidate Models Section (Dynamically Rendered for Each Ready Candidate) -->
+    <div id="candidate-models-section" style="display: none; margin-bottom: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <span class="badge badge-ready">EVALUATED CANDIDATES</span>
+                    <span class="badge badge-neutral" id="candidate-count-badge">0 Candidates</span>
+                </div>
+                <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary); font-family: var(--font-heading); letter-spacing: 0.01em;">
+                    Candidate Model Evaluation &amp; Provenance
+                </h2>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem; color: var(--text-secondary);">
+                    Controlled experimental candidates evaluated under strict provenance and safety gate protocols. Candidates remain inactive until explicit administrative activation.
+                </p>
+            </div>
+        </div>
+        <div id="candidate-cards-container" style="display: flex; flex-direction: column; gap: 1.75rem;">
+            <!-- Rendered dynamically by JS for each candidate -->
+        </div>
+    </div>
+
+    <!-- Current Active Model Overview -->
+    <div id="active-model-card" class="card" style="margin-bottom: 2.5rem; border-left: 4px solid var(--risk-low);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                    <span class="badge badge-active">CURRENT ACTIVE MODEL</span>
+                    <span class="badge badge-neutral" id="active-model-version">Loading...</span>
+                </div>
+                <h3 style="margin: 0; color: var(--text-primary); font-size: 1.35rem;">Active Inference Predictor</h3>
+            </div>
+            <div id="active-model-meta" style="text-align: right; font-size: 0.85rem; color: var(--text-secondary);">
+                <!-- Trained timestamp -->
+            </div>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; margin-bottom: 1.25rem;">
+            Foresight uses a fused DistilBERT + XGBoost model configured with an F2-optimized threshold to prioritize high-recall detection of <strong>Potential Serious Injury and Fatality (PSIF)</strong> precursors.
+        </p>
+        <div id="active-metrics-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem;">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+
+    <!-- Models Inventory & Comparison Table -->
+    <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 2.5rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-light); background: var(--surface); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">Model Version Catalog &amp; Provenance History</h3>
+                <span style="font-size: 0.82rem; color: var(--text-secondary);">All registered model checkpoints, authoritative validation bases, and dataset hashes</span>
+            </div>
+            <span class="badge badge-neutral" id="total-models-count-badge">Loading...</span>
+        </div>
+        <div class="table-wrapper" style="border: none; border-radius: 0; overflow-x: auto;">
+            <table class="table" id="models-table" aria-label="List of models">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 1.5rem;">Status</th>
+                        <th>Version &amp; ID</th>
+                        <th>Training Source</th>
+                        <th>Validation Basis</th>
+                        <th>Dataset &amp; Hash</th>
+                        <th>Provenance Counts</th>
+                        <th>Quality Gate</th>
+                        <th style="text-align: right;">Recall</th>
+                        <th style="text-align: right;">F2</th>
+                        <th style="text-align: right;">ROC-AUC</th>
+                        <th style="text-align: center;">Threshold</th>
+                        <th style="padding-right: 1.5rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="models-body">
+                    <tr>
+                        <td colspan="12" style="text-align: center; padding: 4rem 2rem; color: var(--text-secondary);">
+                            <div class="state-icon" style="margin-bottom: 0.5rem;">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </div>
+                            <div>Loading model catalog...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Candidate Activation Confirmation Modal -->
+<div class="modal-backdrop" id="activate-modal" role="dialog" aria-modal="true" aria-labelledby="activate-modal-title">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title" id="activate-modal-title">Confirm Candidate Model Activation</h3>
+            <button type="button" class="modal-close-btn" id="modal-close-x" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 1rem;">
+                Activating this candidate model will execute the <strong>9-point safety gate validation</strong> and atomically replace the active model used for all future predictions.
+            </p>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                    <span style="color: var(--text-secondary);">Current Active Model:</span>
+                    <strong style="color: var(--text-primary); font-family: var(--font-mono);" id="modal-active-version-text">—</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                    <span style="color: var(--text-secondary);">New Active Model:</span>
+                    <strong style="color: var(--risk-low); font-family: var(--font-mono);" id="modal-candidate-version-text">—</strong>
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                <strong>Notice:</strong> This administrative action updates the active predictor. It does not replace formal HSE domain expert human ground truth validation.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="modal-confirm-btn" style="background: var(--risk-low); border-color: var(--risk-low);">
+                Confirm &amp; Activate Candidate
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Retrain Source Configuration Modal -->
+<div class="modal-backdrop" id="retrain-modal" role="dialog" aria-modal="true" aria-labelledby="retrain-modal-title">
+    <div class="modal-dialog" style="max-width: 620px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="retrain-modal-title">Configure Candidate Model Retraining</h3>
+            <button type="button" class="modal-close-btn" id="retrain-modal-close-x" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 1.25rem; font-size: 0.9rem; color: var(--text-secondary);">
+                Select the training data source for the new candidate model. Newly trained candidate models are saved in <strong>READY (CANDIDATE)</strong> status and remain inactive until administrative activation.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.25rem;">
+                <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--bg);" class="training-source-option" id="source-opt-synthetic">
+                    <input type="radio" name="training_source" id="radio-source-synthetic" value="SYNTHETIC" checked style="margin-top: 4px;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                            Synthetic Dataset (Benchmark / Pretraining)
+                            <span class="badge badge-running" style="font-size: 0.7rem;">Development Only</span>
+                        </div>
+                        <div id="desc-source-synthetic" style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">
+                            Trains on application synthetic benchmark records across imported datasets (<span id="synthetic-records-count">{{ training_sources.synthetic.formatted_count|default:"550,642" }}</span> eligible records). Labels are artificial/generated, not real-world human ground truth.
+                        </div>
+                    </div>
+                </label>
+
+                <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--bg);" class="training-source-option" id="source-opt-human-approved">
+                    <input type="radio" name="training_source" id="radio-source-human" value="HUMAN_APPROVED_SYNTHETIC" style="margin-top: 4px;" {% if training_sources and not training_sources.human_approved_synthetic.is_eligible %}disabled{% endif %}>
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                            Human-Approved Synthetic (Adjudicated Synthetic Records)
+                            <span class="badge badge-active" style="font-size: 0.7rem;">Human Adjudicated</span>
+                        </div>
+                        <div id="desc-source-human-approved" style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">
+                            Strictly uses synthetic records reviewed and approved by a genuine human reviewer (currently <span id="human-approved-records-count">{{ training_sources.human_approved_synthetic.formatted_count|default:"30" }}</span> records; <span id="human-approved-status-text">{% if training_sources and training_sources.human_approved_synthetic.is_eligible %}meets &ge;20 requirement{% else %}requires &ge;20{% endif %}</span>).
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Provenance & Validation Disclaimer Callout -->
+            <div id="retrain-non-human-warning" style="padding: 0.85rem 1rem; background: rgba(234, 179, 8, 0.1); border: 1px solid var(--risk-medium); border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+                <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
+                    <span>⚠️</span> Provenance &amp; Validation Notice
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.4;">
+                    Human approval of synthetic incidents indicates human review of generated examples; it is not equivalent to validation against real-world OIL HSE records.
+                </div>
+            </div>
+
+            <!-- Optional Sample Limit -->
+            <div style="margin-bottom: 0.5rem;">
+                <label for="retrain-sample-limit" style="display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-primary); margin-bottom: 0.35rem;">
+                    Sample Limit (Optional):
+                </label>
+                <input type="number" id="retrain-sample-limit" class="form-input" placeholder="e.g. 500 for rapid testing, or leave blank for full dataset" min="20" style="width: 100%; font-size: 0.85rem;">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="retrain-modal-cancel-btn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="retrain-modal-confirm-btn">
+                Start Retraining Candidate
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const tableBody = document.getElementById('models-body');
+    const btnRetrain = document.getElementById('btn-retrain');
+    const errorMsg = document.getElementById('retrain-error');
+    const successMsg = document.getElementById('retrain-success');
+    
+    // Candidate & Active Elements
+    const candidateSection = document.getElementById('candidate-models-section');
+    const candidateCardsContainer = document.getElementById('candidate-cards-container');
+    const candidateCountBadge = document.getElementById('candidate-count-badge');
+    const totalModelsCountBadge = document.getElementById('total-models-count-badge');
+
+    // Active Model Elements
+    const activeVersionLabel = document.getElementById('active-model-version');
+    const activeMeta = document.getElementById('active-model-meta');
+    const activeMetricsSummary = document.getElementById('active-metrics-summary');
+
+    // Activation Modal Elements
+    const activateModal = document.getElementById('activate-modal');
+    const modalCloseX = document.getElementById('modal-close-x');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    const modalActiveVer = document.getElementById('modal-active-version-text');
+    const modalCandidateVer = document.getElementById('modal-candidate-version-text');
+
+    // Retrain Modal Elements
+    const retrainModal = document.getElementById('retrain-modal');
+    const retrainModalCloseX = document.getElementById('retrain-modal-close-x');
+    const retrainModalCancelBtn = document.getElementById('retrain-modal-cancel-btn');
+    const retrainModalConfirmBtn = document.getElementById('retrain-modal-confirm-btn');
+    const retrainNonHumanWarning = document.getElementById('retrain-non-human-warning');
+    const retrainSampleLimit = document.getElementById('retrain-sample-limit');
+    const retrainRadioInputs = document.querySelectorAll('input[name="training_source"]');
+
+    let pollingInterval = null;
+    let pendingCandidateId = null;
+    let currentActiveModel = null;
+    let currentTrackingModelVersion = null;
+    let currentTrackingModelId = null;
+    let retrainStartTime = null;
+    let retrainTimerInterval = null;
+
+    function formatSecondsJs(seconds, isEstimate = false) {
+        if (seconds === null || seconds === undefined || isNaN(seconds)) return '';
+        const totalSec = Math.max(0, Math.round(seconds));
+        const prefix = isEstimate ? '~' : '';
+        if (totalSec < 60) return `${prefix}${totalSec}s`;
+        const mins = Math.floor(totalSec / 60);
+        const rem = totalSec % 60;
+        if (mins < 60) {
+            return rem > 0 ? `${prefix}${mins}m ${String(rem).padStart(2, '0')}s` : `${prefix}${mins}m`;
+        }
+        const hrs = Math.floor(mins / 60);
+        const remMins = mins % 60;
+        return remMins > 0 ? `${prefix}${hrs}h ${remMins}m` : `${prefix}${hrs}h`;
+    }
+
+    function formatElapsed(ms) {
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        return formatSecondsJs(totalSeconds, false);
+    }
+
+    function updateProgressTimer() {
+        if (!retrainStartTime) return;
+        const elapsedSec = Math.max(0, Math.floor((Date.now() - retrainStartTime) / 1000));
+        const formatted = formatSecondsJs(elapsedSec, false);
+        const timerEl = document.getElementById('progress-timer');
+        if (timerEl) {
+            timerEl.textContent = `Elapsed: ${formatted}`;
+        }
+        const elapsedEl = document.getElementById('progress-elapsed-text');
+        if (elapsedEl) {
+            elapsedEl.textContent = formatted;
+        }
+    }
+
+    function startRetrainTimer(startDate) {
+        retrainStartTime = startDate ? new Date(startDate).getTime() : Date.now();
+        if (retrainTimerInterval) clearInterval(retrainTimerInterval);
+        updateProgressTimer();
+        retrainTimerInterval = setInterval(updateProgressTimer, 1000);
+    }
+
+    function stopRetrainTimer() {
+        if (retrainTimerInterval) {
+            clearInterval(retrainTimerInterval);
+            retrainTimerInterval = null;
+        }
+    }
+
+    function updateProgressStepper(pct) {
+        const steps = [
+            { id: 'step-1', min: 1, done: 16 },
+            { id: 'step-2', min: 16, done: 20 },
+            { id: 'step-3', min: 20, done: 65 },
+            { id: 'step-4', min: 65, done: 90 },
+            { id: 'step-5', min: 90, done: 100 },
+        ];
+        steps.forEach((s, idx) => {
+            const el = document.getElementById(s.id);
+            if (!el) return;
+            const ind = el.querySelector('.step-indicator');
+            const lbl = el.querySelector('.step-label');
+            if (pct >= s.done) {
+                if (ind) {
+                    ind.style.background = 'var(--risk-low)';
+                    ind.style.borderColor = 'var(--risk-low)';
+                    ind.style.color = '#ffffff';
+                    ind.innerHTML = '✓';
+                }
+                if (lbl) {
+                    lbl.style.color = 'var(--text-primary)';
+                    lbl.style.fontWeight = '600';
+                }
+            } else if (pct >= s.min) {
+                if (ind) {
+                    ind.style.background = 'var(--cat-blue)';
+                    ind.style.borderColor = 'var(--cat-blue)';
+                    ind.style.color = '#ffffff';
+                    ind.innerHTML = `${idx + 1}`;
+                }
+                if (lbl) {
+                    lbl.style.color = 'var(--cat-blue)';
+                    lbl.style.fontWeight = '700';
+                }
+            } else {
+                if (ind) {
+                    ind.style.background = 'var(--bg)';
+                    ind.style.borderColor = 'var(--border)';
+                    ind.style.color = 'var(--text-secondary)';
+                    ind.innerHTML = `${idx + 1}`;
+                }
+                if (lbl) {
+                    lbl.style.color = 'var(--text-secondary)';
+                    lbl.style.fontWeight = '400';
+                }
+            }
+        });
+    }
+
+    function renderRetrainingProgress(modelData) {
+        const card = document.getElementById('retraining-progress-card');
+        if (!card) return;
+
+        card.style.display = 'block';
+
+        const statusBadge = document.getElementById('progress-status-badge');
+        const versionBadge = document.getElementById('progress-model-version');
+        const sourceBadge = document.getElementById('progress-source-badge');
+        const stageText = document.getElementById('progress-stage-text');
+        const pctText = document.getElementById('progress-pct-text');
+        const fillEl = document.getElementById('progress-bar-fill');
+        const errorContainer = document.getElementById('progress-error-container');
+        const errorText = document.getElementById('progress-error-text');
+        const successContainer = document.getElementById('progress-success-container');
+        const dismissBtn = document.getElementById('progress-dismiss-btn');
+
+        const unitsText = document.getElementById('progress-units-text');
+        const elapsedText = document.getElementById('progress-elapsed-text');
+        const remainingText = document.getElementById('progress-remaining-text');
+        const totalText = document.getElementById('progress-total-text');
+
+        const m = modelData || {};
+        const metrics = m.metrics || {};
+        const status = m.status || metrics.training_status || 'PENDING';
+        const rawPct = metrics.progress_pct !== undefined ? metrics.progress_pct : (status === 'RUNNING' ? 10 : 2);
+        const pct = Math.min(100, Math.max(0, rawPct));
+        const stage = metrics.current_stage || (status === 'RUNNING' ? 'Running ML retraining pipeline...' : 'Enqueued in Celery task queue, waiting for worker...');
+        const source = metrics.training_source || m.training_source || 'SYNTHETIC';
+        const versionLabel = m.version_label || 'Candidate';
+
+        if (versionBadge) versionBadge.textContent = versionLabel;
+        if (sourceBadge) sourceBadge.textContent = source;
+
+        // Render live units if provided
+        if (unitsText) {
+            if (metrics.processed_units !== undefined && metrics.total_units !== undefined && metrics.total_units > 0) {
+                unitsText.textContent = `${Number(metrics.processed_units).toLocaleString()} / ${Number(metrics.total_units).toLocaleString()} samples`;
+            } else if (metrics.total_units) {
+                unitsText.textContent = `${Number(metrics.total_units).toLocaleString()} total samples`;
+            } else {
+                unitsText.textContent = '—';
+            }
+        }
+
+        if (status === 'FAILED') {
+            stopRetrainTimer();
+            card.style.borderLeftColor = 'var(--risk-critical)';
+            const failDur = metrics.formatted_duration || (metrics.training_duration_seconds ? ('Failed after ' + formatSecondsJs(metrics.training_duration_seconds)) : 'Failed');
+            const timerEl = document.getElementById('progress-timer');
+            if (timerEl) timerEl.textContent = failDur;
+            if (elapsedText) elapsedText.textContent = failDur;
+            if (remainingText) remainingText.textContent = '—';
+            if (totalText) totalText.textContent = '—';
+
+            if (statusBadge) {
+                statusBadge.className = 'badge badge-failed';
+                statusBadge.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;"></span> RETRAINING FAILED`;
+            }
+            if (pctText) {
+                pctText.textContent = `${pct}%`;
+                pctText.style.color = 'var(--risk-critical)';
+            }
+            if (stageText) {
+                stageText.textContent = stage;
+                stageText.style.color = 'var(--risk-critical)';
+            }
+            if (fillEl) {
+                fillEl.className = 'progress-bar-fill-failed';
+                fillEl.style.width = '100%';
+            }
+            if (errorContainer && errorText) {
+                errorContainer.style.display = 'block';
+                errorText.textContent = metrics.training_error || stage || 'Unknown retraining error occurred.';
+            }
+            if (successContainer) successContainer.style.display = 'none';
+            if (dismissBtn) dismissBtn.style.display = 'inline-block';
+            const termBtn = document.getElementById('btn-terminate-training');
+            if (termBtn) termBtn.style.display = 'none';
+        } else if (status === 'READY') {
+            stopRetrainTimer();
+            card.style.borderLeftColor = 'var(--risk-low)';
+            const durText = metrics.formatted_duration || (metrics.training_duration_seconds ? ('Completed in ' + formatSecondsJs(metrics.training_duration_seconds)) : 'Completed');
+            const timerEl = document.getElementById('progress-timer');
+            if (timerEl) timerEl.textContent = durText;
+            if (elapsedText) elapsedText.textContent = durText;
+            if (remainingText) remainingText.textContent = '0s';
+            if (totalText) totalText.textContent = metrics.formatted_total || durText.replace('Completed in ', '');
+
+            if (statusBadge) {
+                statusBadge.className = 'badge badge-active';
+                statusBadge.innerHTML = `✓ TRAINING COMPLETED`;
+            }
+            if (pctText) {
+                pctText.textContent = `100%`;
+                pctText.style.color = 'var(--risk-low)';
+            }
+            if (stageText) {
+                stageText.textContent = stage || 'Retraining complete — candidate model ready for review.';
+                stageText.style.color = 'var(--text-primary)';
+            }
+            if (fillEl) {
+                fillEl.className = 'progress-bar-fill-ready';
+                fillEl.style.width = '100%';
+            }
+            updateProgressStepper(100);
+            if (errorContainer) errorContainer.style.display = 'none';
+            if (successContainer) successContainer.style.display = 'flex';
+            if (dismissBtn) dismissBtn.style.display = 'inline-block';
+            const termBtn2 = document.getElementById('btn-terminate-training');
+            if (termBtn2) termBtn2.style.display = 'none';
+        } else if (status === 'RUNNING') {
+            card.style.borderLeftColor = 'var(--cat-blue)';
+            if (elapsedText && metrics.formatted_elapsed) {
+                elapsedText.textContent = metrics.formatted_elapsed;
+            }
+            if (remainingText) {
+                remainingText.textContent = metrics.formatted_remaining || 'Estimating remaining time…';
+            }
+            if (totalText) {
+                totalText.textContent = metrics.formatted_total || '—';
+            }
+
+            if (statusBadge) {
+                statusBadge.className = 'badge badge-running';
+                statusBadge.innerHTML = `<span class="progress-pulse-dot"></span> TRAINING IN PROGRESS`;
+            }
+            if (pctText) {
+                pctText.textContent = `${pct}%`;
+                pctText.style.color = 'var(--cat-blue)';
+            }
+            if (stageText) {
+                stageText.textContent = stage;
+                stageText.style.color = 'var(--text-primary)';
+            }
+            if (fillEl) {
+                fillEl.className = 'progress-bar-fill-animated';
+                fillEl.style.width = `${Math.max(pct, 5)}%`;
+            }
+            updateProgressStepper(pct);
+            if (errorContainer) errorContainer.style.display = 'none';
+            if (successContainer) successContainer.style.display = 'none';
+            if (dismissBtn) dismissBtn.style.display = 'none';
+            const termBtn3 = document.getElementById('btn-terminate-training');
+            if (termBtn3) termBtn3.style.display = 'inline-flex';
+        } else {
+            // PENDING / QUEUED
+            card.style.borderLeftColor = 'var(--border)';
+            if (elapsedText && metrics.formatted_elapsed) {
+                elapsedText.textContent = metrics.formatted_elapsed;
+            }
+            if (remainingText) {
+                remainingText.textContent = metrics.formatted_remaining || 'Estimating remaining time…';
+            }
+            if (totalText) {
+                totalText.textContent = metrics.formatted_total || '—';
+            }
+
+            if (statusBadge) {
+                statusBadge.className = 'badge badge-neutral';
+                statusBadge.innerHTML = `<span class="progress-pulse-dot" style="background:#b45309;"></span> QUEUED IN CELERY`;
+            }
+            if (pctText) {
+                pctText.textContent = `${Math.max(pct, 1)}%`;
+                pctText.style.color = 'var(--text-secondary)';
+            }
+            if (stageText) {
+                stageText.textContent = stage;
+                stageText.style.color = 'var(--text-primary)';
+            }
+            if (fillEl) {
+                fillEl.className = 'progress-bar-fill-animated';
+                fillEl.style.width = `${Math.max(pct, 2)}%`;
+            }
+            updateProgressStepper(pct);
+            if (errorContainer) errorContainer.style.display = 'none';
+            if (successContainer) successContainer.style.display = 'none';
+            if (dismissBtn) dismissBtn.style.display = 'none';
+            const termBtn4 = document.getElementById('btn-terminate-training');
+            if (termBtn4) termBtn4.style.display = 'inline-flex';
+        }
+    }
+
+    const progressDismissBtn = document.getElementById('progress-dismiss-btn');
+    if (progressDismissBtn) {
+        progressDismissBtn.addEventListener('click', () => {
+            const card = document.getElementById('retraining-progress-card');
+            if (card) card.style.display = 'none';
+        });
+    }
+
+    // Terminate Training button — calls DELETE /api/models/<id>/cancel/
+    const btnTerminate = document.getElementById('btn-terminate-training');
+    if (btnTerminate) {
+        btnTerminate.addEventListener('click', async () => {
+            if (!currentTrackingModelId) {
+                alert('No active training run to terminate.');
+                return;
+            }
+            const versionLabel = currentTrackingModelVersion || currentTrackingModelId;
+            const confirmed = window.confirm(
+                `⚠️ Terminate training run "${versionLabel}"?\n\n` +
+                `This will:\n` +
+                `• Stop the Celery training process immediately\n` +
+                `• Delete all partial model artifacts on disk\n` +
+                `• Mark this candidate as FAILED\n\n` +
+                `The currently active model will NOT be affected.\n\n` +
+                `Click OK to terminate.`
+            );
+            if (!confirmed) return;
+
+            btnTerminate.disabled = true;
+            btnTerminate.textContent = 'Terminating…';
+
+            try {
+                const resp = await fetch(`/api/models/${currentTrackingModelId}/cancel/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok) {
+                    // Stop polling
+                    if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+                    stopRetrainTimer();
+                    // Hide terminate, show dismiss
+                    btnTerminate.style.display = 'none';
+                    const dismissB = document.getElementById('progress-dismiss-btn');
+                    if (dismissB) dismissB.style.display = 'inline-block';
+                    // Update status badge
+                    const statusBadge = document.getElementById('progress-status-badge');
+                    if (statusBadge) {
+                        statusBadge.className = 'badge badge-failed';
+                        statusBadge.innerHTML = '✕ CANCELLED';
+                    }
+                    const stageText = document.getElementById('progress-stage-text');
+                    if (stageText) {
+                        stageText.textContent = data.message || 'Training cancelled by administrator.';
+                        stageText.style.color = 'var(--risk-critical)';
+                    }
+                    const fillEl = document.getElementById('progress-bar-fill');
+                    if (fillEl) {
+                        fillEl.className = 'progress-bar-fill-failed';
+                        fillEl.style.width = '100%';
+                    }
+                    const card = document.getElementById('retraining-progress-card');
+                    if (card) card.style.borderLeftColor = 'var(--risk-critical)';
+                    // Refresh the models table
+                    await loadModels();
+                } else {
+                    alert(`Failed to cancel training: ${data.error || data.detail || resp.statusText}`);
+                    btnTerminate.disabled = false;
+                    btnTerminate.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Terminate Training';
+                }
+            } catch (err) {
+                alert(`Network error: ${err.message}`);
+                btnTerminate.disabled = false;
+                btnTerminate.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Terminate Training';
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function formatMetric(val, decimals = 3) {
+        if (val === null || val === undefined || isNaN(val)) return '—';
+        return parseFloat(val).toFixed(decimals);
+    }
+
+    function formatDelta(candidateVal, activeVal, decimals = 3, invert = false) {
+        if (candidateVal === null || activeVal === null || candidateVal === undefined || activeVal === undefined) {
+            return '<span style="color: var(--text-secondary); font-size: 0.75rem;">—</span>';
+        }
+        const delta = parseFloat(candidateVal) - parseFloat(activeVal);
+        if (Math.abs(delta) < 0.0005) {
+            return `<span style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 500;">±0.000</span>`;
+        }
+        const sign = delta > 0 ? '+' : '';
+        const isBetter = invert ? (delta < 0) : (delta > 0);
+        const color = isBetter ? 'var(--risk-low)' : 'var(--risk-critical)';
+        return `<span style="color: ${color}; font-size: 0.75rem; font-weight: 600;">${sign}${delta.toFixed(decimals)}</span>`;
+    }
+
+    // Modal Operations
+    window.openActivationModal = function(candidateId, candidateVer) {
+        pendingCandidateId = candidateId;
+        modalActiveVer.textContent = currentActiveModel ? currentActiveModel.version_label : 'None';
+        modalCandidateVer.textContent = candidateVer || 'Candidate';
+        if (activateModal) activateModal.classList.add('open');
+    };
+
+    function closeModal() {
+        if (activateModal) activateModal.classList.remove('open');
+    }
+
+    if (modalCloseX) modalCloseX.addEventListener('click', closeModal);
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeModal);
+    if (activateModal) {
+        activateModal.addEventListener('click', (e) => {
+            if (e.target === activateModal) closeModal();
+        });
+    }
+
+    // Toggle non-human warning in retrain modal based on selected radio
+    retrainRadioInputs.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value === 'HUMAN') {
+                retrainNonHumanWarning.style.display = 'none';
+            } else {
+                retrainNonHumanWarning.style.display = 'block';
+            }
+        });
+    });
+
+    async function fetchTrainingSources(forceRefresh = false) {
+        try {
+            const url = forceRefresh ? '/api/models/training-sources/?refresh=true' : '/api/models/training-sources/';
+            const res = await fetch(url, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            // 1. Update Synthetic count
+            const synthCountEl = document.getElementById('synthetic-records-count');
+            if (synthCountEl && data.synthetic) {
+                synthCountEl.textContent = data.synthetic.formatted_count || Number(data.synthetic.count).toLocaleString();
+            }
+
+            // 2. Update Human Approved count & requirements status
+            const humanCountEl = document.getElementById('human-approved-records-count');
+            const humanStatusEl = document.getElementById('human-approved-status-text');
+            const humanRadio = document.getElementById('radio-source-human');
+            const humanLabel = document.getElementById('source-opt-human-approved');
+
+            if (data.human_approved_synthetic) {
+                const count = data.human_approved_synthetic.count || 0;
+                const formatted = data.human_approved_synthetic.formatted_count || Number(count).toLocaleString();
+                const isEligible = data.human_approved_synthetic.is_eligible !== undefined ? data.human_approved_synthetic.is_eligible : (count >= 20);
+
+                if (humanCountEl) {
+                    humanCountEl.textContent = formatted;
+                }
+                if (humanStatusEl) {
+                    humanStatusEl.innerHTML = isEligible ? 'meets &ge;20 requirement' : 'requires &ge;20';
+                }
+                if (humanRadio) {
+                    humanRadio.disabled = !isEligible;
+                }
+                if (humanLabel) {
+                    humanLabel.style.opacity = isEligible ? '1' : '0.6';
+                    humanLabel.style.cursor = isEligible ? 'pointer' : 'not-allowed';
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to fetch training sources overview:', err);
+        }
+    }
+
+    function openRetrainModal() {
+        fetchTrainingSources(true);
+        if (retrainModal) retrainModal.classList.add('open');
+    }
+
+    function closeRetrainModal() {
+        if (retrainModal) retrainModal.classList.remove('open');
+    }
+
+    if (btnRetrain) btnRetrain.addEventListener('click', openRetrainModal);
+    if (retrainModalCloseX) retrainModalCloseX.addEventListener('click', closeRetrainModal);
+    if (retrainModalCancelBtn) retrainModalCancelBtn.addEventListener('click', closeRetrainModal);
+    if (retrainModal) {
+        retrainModal.addEventListener('click', (e) => {
+            if (e.target === retrainModal) closeRetrainModal();
+        });
+    }
+
+    function extractModelData(model) {
+        const m = (model && model.metrics) || {};
+        const testM = Object.assign({}, m.metrics_final_test || m.metrics_fused_test || {});
+        if (testM.false_negatives === undefined && testM.confusion_matrix && Array.isArray(testM.confusion_matrix) && testM.confusion_matrix[1]) {
+            testM.false_negatives = testM.confusion_matrix[1][0];
+        }
+        const audit = m.label_audit || {};
+        const prov = audit.provenance_counts || {};
+        const comp = m.provenance_composition || {};
+
+        let trainingSource = (m.training_source || comp.training_source || 'SYNTHETIC').toUpperCase();
+        if (trainingSource === 'HEURISTIC') {
+            trainingSource = 'SYNTHETIC';
+        }
+        
+        let validationBasis = m.validation_basis;
+        if (!validationBasis || validationBasis.includes('HEURISTIC')) {
+            if (trainingSource === 'HUMAN' || trainingSource === 'HUMAN_APPROVED_SYNTHETIC') {
+                validationBasis = 'HUMAN-APPROVED SYNTHETIC EVALUATION';
+            } else if (trainingSource === 'MIXED' || trainingSource === 'MIXED_SYNTHETIC') {
+                validationBasis = 'MIXED SYNTHETIC EVALUATION';
+            } else {
+                validationBasis = 'SYNTHETIC BENCHMARK EVALUATION';
+            }
+        }
+
+        const humanCount = comp.human_approved_synthetic_count !== undefined ? comp.human_approved_synthetic_count : (comp.human_count !== undefined ? comp.human_count : ((prov.human_approved_synthetic || prov.real_human_psif || 0) + (prov.real_human_not_psif || 0)));
+        const syntheticCount = comp.synthetic_count !== undefined ? comp.synthetic_count : ((prov.synthetic || prov.synthetic_evaluation || 0) + (prov.heuristic_psif || 0) + (prov.heuristic_not_psif || 0));
+        const realExternalCount = comp.real_external_count !== undefined ? comp.real_external_count : (prov.real_external || 0);
+        const unknownCount = comp.unknown_excluded !== undefined ? comp.unknown_excluded : (prov.unknown_unlabelled || 0);
+        const eligibleTotal = comp.total_eligible !== undefined ? comp.total_eligible : (audit.training_eligible || m.total_labeled_rows || m.train_row_count || (humanCount + syntheticCount));
+
+        const qualityValid = eligibleTotal;
+        const qualityCritical = comp.critical_excluded !== undefined ? comp.critical_excluded : 0;
+        const qualityInsufficient = comp.insufficient_info_excluded !== undefined ? comp.insufficient_info_excluded : (prov.real_human_insufficient_information || 0);
+
+        const datasetHash = m.dataset_hash || '—';
+        const snapshotPath = model.training_snapshot_path || m.training_snapshot_path || '—';
+        const snapshotBasename = snapshotPath !== '—' ? snapshotPath.split('/').pop() : '—';
+
+        return {
+            trainingSource,
+            validationBasis,
+            humanCount,
+            syntheticCount,
+            realExternalCount,
+            unknownCount,
+            eligibleTotal,
+            qualityValid,
+            qualityCritical,
+            qualityInsufficient,
+            datasetHash,
+            snapshotPath,
+            snapshotBasename,
+            testMetrics: testM,
+            threshold: m.selected_threshold || m.optimal_threshold || 0.5,
+            disclaimer: m.disclaimer || null,
+        };
+    }
+
+    async function loadModels() {
+        try {
+            const res = await fetch('/api/models/');
+            if (!res.ok) throw new Error('Failed to fetch model catalog');
+            const models = await res.json();
+            
+            tableBody.innerHTML = '';
+            
+            if (!models || models.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 4rem 2rem; color: var(--text-secondary);">No models registered in database.</td></tr>`;
+                return;
+            }
+
+            let hasRunningOrPending = false;
+            let activeModel = null;
+            const candidateModels = [];
+            let trackedCandidate = null;
+
+            models.forEach(m => {
+                const st = m.status || (m.metrics && m.metrics.training_status);
+                if (m.is_active) {
+                    activeModel = m;
+                } else if (st === 'READY') {
+                    candidateModels.push(m);
+                }
+                if (st === 'RUNNING' || st === 'PENDING') {
+                    hasRunningOrPending = true;
+                    if (!trackedCandidate) {
+                        trackedCandidate = m;
+                    }
+                }
+                if (currentTrackingModelVersion && m.version_label === currentTrackingModelVersion) {
+                    trackedCandidate = m;
+                }
+            });
+
+            // Update Live Retraining Progress Card
+            if (trackedCandidate) {
+                renderRetrainingProgress(trackedCandidate);
+                const candStatus = trackedCandidate.status || (trackedCandidate.metrics && trackedCandidate.metrics.training_status);
+                if (candStatus === 'RUNNING' || candStatus === 'PENDING') {
+                    if (!retrainStartTime) {
+                        const startIso = (trackedCandidate.metrics && (trackedCandidate.metrics.started_at || trackedCandidate.metrics.enqueued_at)) || trackedCandidate.trained_at;
+                        startRetrainTimer(startIso ? new Date(startIso) : new Date());
+                    }
+                } else {
+                    stopRetrainTimer();
+                    currentTrackingModelVersion = null;
+                }
+            } else if (currentTrackingModelVersion) {
+                renderRetrainingProgress({
+                    version_label: currentTrackingModelVersion,
+                    status: 'PENDING',
+                    metrics: {
+                        progress_pct: 1,
+                        current_stage: 'Enqueued in Celery task queue, awaiting worker dispatch...',
+                        training_source: 'SYNTHETIC'
+                    }
+                });
+            }
+
+            currentActiveModel = activeModel;
+            if (totalModelsCountBadge) {
+                totalModelsCountBadge.textContent = `${models.length} Total Checkpoint${models.length === 1 ? '' : 's'}`;
+            }
+
+            // 1. Render Current Active Model Card
+            if (activeModel) {
+                const actData = extractModelData(activeModel);
+                activeVersionLabel.textContent = activeModel.version_label || 'Active Baseline';
+                const trainedDate = activeModel.trained_at ? new Date(activeModel.trained_at).toLocaleString() : 'Baseline';
+                activeMeta.innerHTML = `<div>Trained: <strong style="color:var(--text-primary);">${trainedDate}</strong></div><div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">${activeModel.id}</div>`;
+                
+                activeMetricsSummary.innerHTML = `
+                    <div style="background: var(--bg); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Recall (Precursors)</div>
+                        <div class="tabular-nums" style="font-size: 1.35rem; font-weight: 700; color: var(--risk-low);">${formatMetric(actData.testMetrics.recall)}</div>
+                    </div>
+                    <div style="background: var(--bg); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">F2 Score</div>
+                        <div class="tabular-nums" style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">${formatMetric(actData.testMetrics.f2)}</div>
+                    </div>
+                    <div style="background: var(--bg); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">ROC-AUC</div>
+                        <div class="tabular-nums" style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">${formatMetric(actData.testMetrics.roc_auc)}</div>
+                    </div>
+                    <div style="background: var(--bg); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Operating Threshold</div>
+                        <div class="tabular-nums" style="font-size: 1.35rem; font-weight: 700; color: var(--cat-blue);">${formatMetric(actData.threshold, 2)}</div>
+                    </div>
+                `;
+            }
+
+            // 2. Render All Evaluated Candidate Models
+            if (candidateModels.length > 0 && candidateSection && candidateCardsContainer) {
+                candidateSection.style.display = 'block';
+                candidateCountBadge.textContent = `${candidateModels.length} Candidate${candidateModels.length === 1 ? '' : 's'} Evaluated`;
+                candidateCardsContainer.innerHTML = '';
+
+                const actData = activeModel ? extractModelData(activeModel) : null;
+
+                candidateModels.forEach(candidate => {
+                    const cData = extractModelData(candidate);
+                    const trainedDate = candidate.trained_at ? new Date(candidate.trained_at).toLocaleString() : 'Recently';
+                    
+                    let basisBadgeClass = 'badge badge-running';
+                    let basisDesc = cData.disclaimer || 'Evaluation metrics computed on synthetic benchmark dataset. Human approval of synthetic incidents indicates human review of generated examples; it is not equivalent to validation against real-world OIL HSE records.';
+                    if (cData.validationBasis.includes('HUMAN')) {
+                        basisBadgeClass = 'badge badge-active';
+                        basisDesc = 'Evaluation benchmark is grounded in human-approved synthetic incident reviews.';
+                    } else if (cData.validationBasis.includes('MIXED')) {
+                        basisBadgeClass = 'badge badge-neutral';
+                        basisDesc = cData.disclaimer || 'Evaluation metrics computed across mixed synthetic sources.';
+                    }
+
+                    const metricsToCompare = [
+                        { label: 'Recall (Precursors)', cand: cData.testMetrics.recall, act: actData ? actData.testMetrics.recall : null, dec: 3 },
+                        { label: 'Precision', cand: cData.testMetrics.precision, act: actData ? actData.testMetrics.precision : null, dec: 3 },
+                        { label: 'F1 Score', cand: cData.testMetrics.f1, act: actData ? actData.testMetrics.f1 : null, dec: 3 },
+                        { label: 'F2 (High-Recall)', cand: cData.testMetrics.f2, act: actData ? actData.testMetrics.f2 : null, dec: 3 },
+                        { label: 'ROC-AUC', cand: cData.testMetrics.roc_auc, act: actData ? actData.testMetrics.roc_auc : null, dec: 3 },
+                        { label: 'PR-AUC', cand: cData.testMetrics.pr_auc, act: actData ? actData.testMetrics.pr_auc : null, dec: 3 },
+                        { label: 'Operating Threshold', cand: cData.threshold, act: actData ? actData.threshold : null, dec: 2 },
+                        { label: 'False Negatives', cand: cData.testMetrics.false_negatives, act: actData ? actData.testMetrics.false_negatives : null, dec: 0, invert: true }
+                    ];
+
+                    const comparisonHtml = metricsToCompare.map(item => {
+                        const cVal = formatMetric(item.cand, item.dec);
+                        const aVal = formatMetric(item.act, item.dec);
+                        const deltaHtml = formatDelta(item.cand, item.act, item.dec, item.invert);
+
+                        return `
+                            <div style="background: var(--bg); padding: 0.75rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <span style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">${item.label}</span>
+                                    ${deltaHtml}
+                                </div>
+                                <div class="tabular-nums" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-top: 0.2rem;">
+                                    ${cVal}
+                                </div>
+                                <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                                    Active: <span class="tabular-nums" style="font-weight: 500; color: var(--text-primary);">${aVal}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    const shortHash = cData.datasetHash !== '—' ? cData.datasetHash.substring(0, 16) + '…' : '—';
+
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'card';
+                    cardEl.style.cssText = 'border-left: 4px solid var(--risk-medium); background: var(--surface); padding: 1.5rem;';
+                    cardEl.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
+                                    <span class="badge badge-ready">READY (CANDIDATE)</span>
+                                    <span class="badge badge-neutral">INACTIVE</span>
+                                    <span class="badge badge-neutral" style="font-weight: 600;">SOURCE: ${cData.trainingSource}</span>
+                                    <span class="${basisBadgeClass}">${cData.validationBasis}</span>
+                                </div>
+                                <h3 style="margin: 0; font-size: 1.4rem; color: var(--text-primary); font-family: var(--font-mono);">${candidate.version_label}</h3>
+                                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                    ID: <span style="font-family: var(--font-mono);">${candidate.id}</span> · Trained: <strong>${trainedDate}</strong>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary" onclick="window.openActivationModal('${candidate.id}', '${candidate.version_label}')" style="background: var(--risk-low); border-color: var(--risk-low); color: var(--white); font-weight: 600; font-size: 0.85rem;">
+                                    Activate Candidate
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Provenance & Quality Gate Summary Grid -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.85rem; margin-bottom: 1.25rem;">
+                            <div style="background: var(--bg); padding: 0.75rem 0.9rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                                <div style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Dataset &amp; Snapshot</div>
+                                <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-primary); margin-top: 0.25rem; word-break: break-all;" title="${cData.snapshotPath}">
+                                    ${cData.snapshotBasename}
+                                </div>
+                                <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--cat-blue); margin-top: 0.2rem;" title="SHA-256: ${cData.datasetHash}">
+                                    SHA-256: ${shortHash}
+                                </div>
+                            </div>
+
+                            <div style="background: var(--bg); padding: 0.75rem 0.9rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                                <div style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Total Training Records</div>
+                                <div class="tabular-nums" style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-top: 0.2rem;">
+                                    ${cData.eligibleTotal.toLocaleString()} <span style="font-size: 0.75rem; font-weight: 400; color: var(--text-secondary);">eligible rows</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                                    Training Source: <strong>${cData.trainingSource}</strong>
+                                </div>
+                            </div>
+
+                            <div style="background: var(--bg); padding: 0.75rem 0.9rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                                <div style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Provenance Breakdown</div>
+                                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.3rem;">
+                                    <span class="badge ${cData.humanCount > 0 ? 'badge-active' : 'badge-neutral'}" style="font-size: 0.68rem;" title="Human-Approved Synthetic Records">Human-Appr: ${cData.humanCount.toLocaleString()}</span>
+                                    <span class="badge ${cData.syntheticCount > 0 ? 'badge-running' : 'badge-neutral'}" style="font-size: 0.68rem;" title="Synthetic Dataset Benchmark">Synth: ${cData.syntheticCount.toLocaleString()}</span>
+                                    <span class="badge badge-neutral" style="font-size: 0.68rem;" title="Real External (OSHA) / Excluded">Ext/Unk: ${(cData.unknownCount + cData.realExternalCount).toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            <div style="background: var(--bg); padding: 0.75rem 0.9rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                                <div style="font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Quality Gate Audit</div>
+                                <div style="font-size: 0.85rem; color: var(--text-primary); margin-top: 0.25rem;">
+                                    <span style="color: var(--risk-low); font-weight: 600;">${cData.qualityValid.toLocaleString()} Valid</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                                    Critical: ${cData.qualityCritical} · Insuff: ${cData.qualityInsufficient}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basis Description / Integrity Callout -->
+                        <div style="padding: 0.75rem 0.9rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.84rem; color: var(--text-primary); font-weight: 500;">
+                                <strong>Validation Basis:</strong> ${basisDesc}
+                            </div>
+                        </div>
+
+                        <!-- Metric Comparison Grid -->
+                        <div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.65rem;">
+                                Performance Comparison (Active Baseline vs Candidate)
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem;">
+                                ${comparisonHtml}
+                            </div>
+                        </div>
+                    `;
+                    candidateCardsContainer.appendChild(cardEl);
+                });
+            } else if (candidateSection) {
+                candidateSection.style.display = 'none';
+            }
+
+            // 3. Render Catalog Table Rows
+            models.forEach(model => {
+                const tr = document.createElement('tr');
+                const st = model.status || (model.metrics && model.metrics.training_status) || (model.is_active ? 'ACTIVE' : 'READY');
+                const mData = extractModelData(model);
+                
+                let statusBadge = '';
+                if (model.is_active) {
+                    statusBadge = `<span class="badge badge-active">ACTIVE</span>`;
+                } else if (st === 'RUNNING') {
+                    statusBadge = `<span class="badge badge-running">TRAINING...</span>`;
+                } else if (st === 'PENDING') {
+                    statusBadge = `<span class="badge badge-neutral">QUEUED</span>`;
+                } else if (st === 'FAILED') {
+                    const err = (model.metrics && model.metrics.training_error) ? model.metrics.training_error : 'Failed';
+                    statusBadge = `<span class="badge badge-failed" title="${err}">FAILED</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-ready">READY</span>`;
+                }
+
+                let basisBadgeClass = 'badge badge-running';
+                if (mData.validationBasis.includes('HUMAN')) {
+                    basisBadgeClass = 'badge badge-active';
+                } else if (mData.validationBasis.includes('MIXED')) {
+                    basisBadgeClass = 'badge badge-neutral';
+                }
+
+                const recall = formatMetric(mData.testMetrics.recall);
+                const f2 = formatMetric(mData.testMetrics.f2);
+                const roc = formatMetric(mData.testMetrics.roc_auc);
+                const thresh = formatMetric(mData.threshold, 2);
+
+                const trainedDate = model.trained_at ? new Date(model.trained_at).toLocaleString() : 'Baseline';
+                const shortId = model.id ? String(model.id).slice(0, 8) + '…' : '—';
+                const shortHash = mData.datasetHash !== '—' ? mData.datasetHash.slice(0, 10) + '…' : '—';
+
+                let actionHtml = '—';
+                if (model.is_active) {
+                    actionHtml = `<span class="badge badge-active" style="font-size: 0.7rem;">IN USE</span>`;
+                } else if (st === 'READY') {
+                    actionHtml = `<button class="btn btn-secondary" onclick="window.openActivationModal('${model.id}', '${model.version_label}')" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; font-weight: 600;">Activate</button>`;
+                }
+
+                // Duration / Timing display
+                let durationDisplay = 'Duration unavailable';
+                const metrics = model.metrics || {};
+                if (st === 'RUNNING') {
+                    const elap = metrics.formatted_elapsed || 'Running';
+                    const rem = metrics.formatted_remaining || 'Estimating…';
+                    durationDisplay = `<span style="color:var(--cat-blue);font-weight:600;">${elap}</span> · <span style="color:var(--text-secondary);">${rem}</span>`;
+                } else if (metrics.formatted_duration) {
+                    durationDisplay = metrics.formatted_duration;
+                } else if (metrics.training_duration_seconds) {
+                    durationDisplay = `Completed in ${formatSecondsJs(metrics.training_duration_seconds)}`;
+                } else {
+                    durationDisplay = `<span style="color:var(--text-secondary);font-style:italic;">Duration unavailable</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td style="padding-left: 1.5rem;">${statusBadge}</td>
+                    <td>
+                        <strong style="color: var(--text-primary); font-family: var(--font-mono); font-size: 0.9rem;">${model.version_label || '—'}</strong>
+                        <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary);" title="${model.id}">${shortId}</div>
+                        <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 3px; font-family: var(--font-mono);">${durationDisplay}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-neutral" style="font-size: 0.72rem; font-weight: 600;">${mData.trainingSource}</span>
+                    </td>
+                    <td>
+                        <span class="${basisBadgeClass}" style="font-size: 0.72rem;">${mData.validationBasis}</span>
+                    </td>
+                    <td>
+                        <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-primary);" title="${mData.snapshotPath}">${mData.snapshotBasename}</div>
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--cat-blue);" title="SHA-256: ${mData.datasetHash}">${shortHash}</div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap;">
+                            <span class="tabular-nums" style="color: var(--text-primary); font-weight: 600;">${mData.eligibleTotal.toLocaleString()}</span> total
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); white-space: nowrap;">
+                            H-Appr:${mData.humanCount} | Synth:${mData.syntheticCount}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.75rem; color: var(--risk-low); font-weight: 500;">
+                            ${mData.qualityValid.toLocaleString()} valid
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                            crit:${mData.qualityCritical}
+                        </div>
+                    </td>
+                    <td style="text-align: right;" class="tabular-nums">
+                        <strong style="color: var(--text-primary);">${recall}</strong>
+                    </td>
+                    <td style="text-align: right;" class="tabular-nums">
+                        <span style="color: var(--text-primary);">${f2}</span>
+                    </td>
+                    <td style="text-align: right;" class="tabular-nums">
+                        <span style="color: var(--text-primary);">${roc}</span>
+                    </td>
+                    <td style="text-align: center;" class="tabular-nums">
+                        <span class="badge badge-neutral" style="font-size: 0.72rem;">${thresh}</span>
+                    </td>
+                    <td style="padding-right: 1.5rem; text-align: center;">
+                        ${actionHtml}
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            // Polling control (2-second interval for real-time progress updates)
+            if (hasRunningOrPending && !pollingInterval) {
+                pollingInterval = setInterval(loadModels, 2000);
+            } else if (!hasRunningOrPending && pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+
+        } catch (err) {
+            console.error('Model catalog loading error:', err);
+            tableBody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 4rem 2rem; color: var(--risk-critical);">Unable to load model catalog. Please check connection or reload.</td></tr>`;
+        }
+    }
+
+    // Confirm Activation Action
+    if (modalConfirmBtn) {
+        modalConfirmBtn.addEventListener('click', async () => {
+            if (!pendingCandidateId) return;
+            modalConfirmBtn.disabled = true;
+            modalConfirmBtn.textContent = 'Verifying Safety Gate...';
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            try {
+                const res = await fetch(`/api/models/${pendingCandidateId}/activate/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                let data;
+                try {
+                    data = await res.json();
+                } catch (jsonErr) {
+                    data = { error: `Server returned non-JSON response (${res.status} ${res.statusText})` };
+                }
+                closeModal();
+
+                if (res.ok) {
+                    successMsg.innerHTML = `<strong>Candidate Model Activated:</strong> ${data.message || 'Model promoted to active status.'}`;
+                    successMsg.style.display = 'block';
+                    loadModels();
+                } else {
+                    throw new Error(data.error || data.detail || `Activation safety gate failed (HTTP ${res.status}).`);
+                }
+            } catch (err) {
+                closeModal();
+                let displayError = err.message;
+                if (err.name === 'TypeError' && (err.message.includes('Load failed') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
+                    displayError = 'Server connection error or process terminated. Please verify the server is running.';
+                }
+                errorMsg.innerHTML = `<strong>Activation Safety Violation:</strong> ${displayError}`;
+                errorMsg.style.display = 'block';
+            } finally {
+                modalConfirmBtn.disabled = false;
+                modalConfirmBtn.textContent = 'Confirm & Activate Candidate';
+            }
+        });
+    }
+
+    // Retrain Model Modal Confirm Action
+    if (retrainModalConfirmBtn) {
+        retrainModalConfirmBtn.addEventListener('click', async () => {
+            const selectedRadio = document.querySelector('input[name="training_source"]:checked');
+            const trainingSource = selectedRadio ? selectedRadio.value : 'SYNTHETIC';
+            const limitVal = retrainSampleLimit && retrainSampleLimit.value ? parseInt(retrainSampleLimit.value, 10) : null;
+
+            retrainModalConfirmBtn.disabled = true;
+            retrainModalConfirmBtn.textContent = 'Enqueuing Training...';
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            try {
+                const payload = { training_source: trainingSource };
+                if (limitVal && !isNaN(limitVal) && limitVal > 0) {
+                    payload.sample_limit = limitVal;
+                }
+
+                const res = await fetch('/api/models/retrain/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                closeRetrainModal();
+
+                if (res.ok || res.status === 202) {
+                    currentTrackingModelVersion = data.version_label;
+                    currentTrackingModelId = data.model_version_id;
+                    startRetrainTimer(new Date());
+
+                    renderRetrainingProgress({
+                        version_label: data.version_label,
+                        status: 'PENDING',
+                        metrics: {
+                            progress_pct: 1,
+                            current_stage: 'Enqueued in Celery task queue, awaiting worker dispatch...',
+                            training_source: data.training_source
+                        }
+                    });
+
+                    successMsg.innerHTML = `<strong>Controlled Retraining Enqueued:</strong> Candidate model <code>${data.version_label}</code> (${data.training_source}) created in PENDING status. Tracking progress in real-time below.`;
+                    successMsg.style.display = 'block';
+                    loadModels();
+                    if (!pollingInterval) {
+                        pollingInterval = setInterval(loadModels, 2000);
+                    }
+                } else {
+                    throw new Error(data.detail || data.error || data.message || 'Retraining request failed.');
+                }
+            } catch (err) {
+                closeRetrainModal();
+                errorMsg.innerHTML = `<strong>Retraining Request Failed:</strong> ${err.message}`;
+                errorMsg.style.display = 'block';
+            } finally {
+                retrainModalConfirmBtn.disabled = false;
+                retrainModalConfirmBtn.textContent = 'Start Retraining Candidate';
+            }
+        });
+    }
+
+    // Initial Load
+    loadModels();
+    fetchTrainingSources(false);
+});
+</script>
+{% endblock %}

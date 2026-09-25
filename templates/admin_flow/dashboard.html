@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Admin Flow Dashboard — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Demonstration Admin Flow dashboard overview with isolated evaluator workspace.{% endblock %}
+
+{% block admin_nav_dashboard %}active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_flow_reference.css' %}?v=20260920v1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="admin-ref-shell">
+    <div class="admin-ref-container">
+        
+        <!-- Header Hierarchy (Inspired by React Reference) -->
+        <header class="admin-ref-header">
+            <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;">
+                <span class="badge" style="background: #0F172A; color: #FFFFFF; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 4px;">
+                    Admin Flow
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; color: var(--ref-text-muted);">
+                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981;"></span>
+                    Workspace Active
+                </span>
+            </div>
+            <h1 class="admin-ref-title">Operational Precursor Intelligence</h1>
+            <p class="admin-ref-subtitle">
+                Monitor incident records, SIF precursor detection, Life-Saving Rules matching, and operational risk patterns.
+            </p>
+        </header>
+
+        <!-- TOP KPI AREA: Exactly 6 KPIs (Using React Reference Summary Card Style) -->
+        <section aria-label="Incident Summary Metrics" style="margin-bottom: 2rem;">
+            <div class="ref-summary-grid" id="analytics-stats">
+                
+                <!-- 1. Total Incidents -->
+                <div class="ref-summary-card border-black">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label">TOTAL INCIDENTS</span>
+                            <span style="color: var(--ref-text-dim);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="metric-value tabular-nums" id="stat-total">{{ analytics_summary.total_incidents }}</div>
+                        <p class="ref-summary-desc">All incident records analyzed</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>100% dataset coverage</span>
+                    </div>
+                </div>
+
+                <!-- 2. Prediction Eligible -->
+                <div class="ref-summary-card border-blue">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label">PREDICTION ELIGIBLE</span>
+                            <span style="color: #0284C7;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="metric-value tabular-nums" id="stat-eligible">{{ analytics_summary.prediction_eligible_count }}</div>
+                        <p class="ref-summary-desc">Non-sparse incident narratives</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>{% if analytics_summary.total_incidents %}{% widthratio analytics_summary.prediction_eligible_count analytics_summary.total_incidents 100 %}% of records{% else %}0% of records{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- 3. PSIF Candidates -->
+                <div class="ref-summary-card border-red">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label" style="color: #B91C1C;">PSIF CANDIDATES</span>
+                            <span style="color: #B91C1C;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                            </span>
+                        </div>
+                        <div class="metric-value tabular-nums" id="stat-psif" style="color: var(--risk-critical);">{{ analytics_summary.psif_count }}</div>
+                        <p class="ref-summary-desc">Elevated precursor risk signals</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span style="color: #B91C1C;">{{ analytics_summary.psif_percentage }}% of eligible</span>
+                    </div>
+                </div>
+
+                <!-- 4. Not PSIF -->
+                <div class="ref-summary-card border-green">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label">NOT PSIF</span>
+                            <span style="color: #16A34A;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="metric-value tabular-nums" id="stat-not-psif">{{ analytics_summary.not_psif_count }}</div>
+                        <p class="ref-summary-desc">Routine or low precursor risk</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>Contained or non-fatal</span>
+                    </div>
+                </div>
+
+                <!-- 5. Insufficient Evidence -->
+                <div class="ref-summary-card border-amber">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label">INSUFFICIENT EVIDENCE</span>
+                            <span style="color: #D97706;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            </span>
+                        </div>
+                        <div class="metric-value tabular-nums" id="stat-insufficient">{{ analytics_summary.insufficient_evidence_count }}</div>
+                        <p class="ref-summary-desc">Sparse narrative (&lt; 10 words)</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>Requires investigation</span>
+                    </div>
+                </div>
+
+                <!-- 6. Human Reviewed -->
+                <div class="ref-summary-card border-teal">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label">HUMAN REVIEWED</span>
+                            <span style="color: #0D9488;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="metric-value tabular-nums" id="stat-human-reviewed">{{ analytics_summary.human_reviewed_count }}</div>
+                        <p class="ref-summary-desc">Adjudicated by safety experts</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>HSE Ground Truth</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- DASHBOARD ACTION AREA: Prominent Dual Actions -->
+        <section class="ref-action-bar" aria-label="Core Workflows">
+            <div class="ref-action-title-group">
+                <h2>Predictive Safety Workflows</h2>
+                <p>Execute live precursor inference on an individual narrative or batch-process incident datasets.</p>
+            </div>
+            <div class="ref-action-btns">
+                <a href="{% url 'admin_flow:submit' %}" class="ref-btn ref-btn-primary" id="btn-single-incident-prediction">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    SINGLE INCIDENT PREDICTION
+                </a>
+                <a href="{% url 'admin_flow:upload' %}" class="ref-btn ref-btn-accent" id="btn-multi-incident-prediction">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    UPLOAD DATASET / MULTI-INCIDENT PREDICTION
+                </a>
+            </div>
+        </section>
+
+        <!-- Pattern Snapshot Section (Industrial Card System) -->
+        <section class="ref-card" id="pattern-snapshot-section" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 40px; height: 40px; border-radius: 8px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; color: #0284C7; flex-shrink: 0;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--ref-text-heading);">
+                            Pattern Intelligence Snapshot
+                        </h3>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.85rem; color: var(--ref-text-muted);">
+                            Consolidated signals across activity, barrier, and facility location dimensions.
+                        </p>
+                    </div>
+                </div>
+                <a href="{% url 'admin_flow:patterns' %}" class="ref-btn" id="btn-view-pattern-analysis">
+                    View Pattern Analysis Hub &rarr;
+                </a>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+                <!-- Top Activity -->
+                <div style="background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: var(--ref-radius-md); padding: 1.25rem;">
+                    <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #0284C7; margin-bottom: 0.4rem;">
+                        Top Operational Activity
+                    </div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: var(--ref-text-heading); margin-bottom: 0.25rem;" id="snapshot-top-activity">
+                        {{ pattern_snapshot.top_activity.name }}
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--ref-text-muted);">
+                        {% if pattern_snapshot.top_activity.has_data %}
+                        <strong>{{ pattern_snapshot.top_activity.count }}</strong> observations in workspace
+                        {% else %}
+                        Awaiting observation data
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Top Barrier -->
+                <div style="background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: var(--ref-radius-md); padding: 1.25rem;">
+                    <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #B91C1C; margin-bottom: 0.4rem;">
+                        Top Barrier-Linked Signal
+                    </div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: var(--ref-text-heading); margin-bottom: 0.25rem;" id="snapshot-top-barrier">
+                        {{ pattern_snapshot.top_barrier.name }}
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--ref-text-muted);">
+                        {% if pattern_snapshot.top_barrier.has_data %}
+                        <strong>{{ pattern_snapshot.top_barrier.count }}</strong> deficiency signals
+                        {% else %}
+                        Awaiting deficiency signals
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Top Location -->
+                <div style="background: var(--ref-bg); border: 1px solid var(--ref-border); border-radius: var(--ref-radius-md); padding: 1.25rem;">
+                    <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #D97706; margin-bottom: 0.4rem;">
+                        Highest Observation Concentration
+                    </div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: var(--ref-text-heading); margin-bottom: 0.25rem;" id="snapshot-top-location">
+                        {{ pattern_snapshot.top_location.name }}
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--ref-text-muted);">
+                        {% if pattern_snapshot.top_location.has_data %}
+                        <strong>{{ pattern_snapshot.top_location.count }}</strong> site observations
+                        {% else %}
+                        Awaiting facility observations
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% if analytics_summary.total_incidents == 0 %}
+        <!-- Clean Initial State / Getting Started -->
+        <section class="ref-card" style="text-align: center; padding: 3.5rem 2rem;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: #F1F5F9; color: #64748B; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </div>
+            <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--ref-text-heading);">
+                Operational Baseline (0 Incidents)
+            </h3>
+            <p style="color: var(--ref-text-muted); max-width: 520px; margin: 0 auto 1.75rem; font-size: 0.95rem; line-height: 1.55;">
+                No incidents or observations have been recorded yet. Submit a single incident report or upload a batch dataset to begin precursor intelligence analysis.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{% url 'admin_flow:submit' %}" class="ref-btn ref-btn-primary" style="padding: 0.75rem 1.5rem;">
+                    + Submit Incident Report
+                </a>
+                <a href="{% url 'admin_flow:upload' %}" class="ref-btn ref-btn-accent" style="padding: 0.75rem 1.5rem;">
+                    Upload Incident Dataset
+                </a>
+            </div>
+        </section>
+        {% else %}
+        <!-- Active Workspace Summary Surface -->
+        <section class="ref-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--ref-text-heading);">
+                        Workspace Incident Records
+                    </h3>
+                    <p style="color: var(--ref-text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
+                        Currently tracking {{ analytics_summary.total_incidents }} isolated incident record{% if analytics_summary.total_incidents != 1 %}s{% endif %}.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <a href="{% url 'admin_flow:psif' %}" class="ref-btn">
+                        View PSIF Analysis &rarr;
+                    </a>
+                    <a href="{% url 'admin_flow:iogp' %}" class="ref-btn">
+                        View IOGP Analysis &rarr;
+                    </a>
+                    <a href="{% url 'admin_flow:incidents' %}" class="ref-btn ref-btn-primary">
+                        View All Incidents ({{ analytics_summary.total_incidents }}) &rarr;
+                    </a>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

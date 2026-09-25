@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Submit Safety Report — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Submit an unsafe act, unsafe condition, near-miss, or incident report with energy and direct-control context.{% endblock %}
+
+{% block nav_report %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 1rem;
+}
+.form-section-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.form-section-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+}
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+@media (max-width: 768px) {
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+.field-error {
+    color: var(--risk-critical, #dc2626);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+.banner-info {
+    background: rgba(92, 124, 138, 0.08);
+    border: 1px solid rgba(92, 124, 138, 0.25);
+    border-radius: var(--radius-sm, 6px);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.banner-info-icon {
+    color: var(--cat-blue, #5C7C8A);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'incidents:list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to Incidents
+        </a>
+    </div>
+
+    <div class="page-header" style="margin-bottom: 2rem;">
+        <h1 class="page-title">Submit Safety Report</h1>
+        <p class="page-subtitle">Record a workplace observation, unsafe condition, near miss, or safety incident with high-energy hazard and direct-control context.</p>
+    </div>
+
+    <div class="banner-info">
+        <div class="banner-info-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+        </div>
+        <div>
+            <strong>Safety Science Standard:</strong> Capturing whether high-energy sources were present and whether direct controls were functioning is critical to detecting SIF precursors before severe harm occurs. Unknown states are preserved to prevent distorted assumptions.
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="card" style="background: rgba(156, 59, 50, 0.08); border-color: rgba(156, 59, 50, 0.35); margin-bottom: 2rem; padding: 1.5rem;" id="dq-rejection-panel">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risk-critical)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <h3 style="color: var(--risk-critical); font-size: 1.15rem; font-weight: 700; margin: 0;">Submission Rejected</h3>
+        </div>
+        <p style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem; margin-bottom: 0.75rem;">
+            Data quality is insufficient for analysis.
+        </p>
+        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
+            Please correct the following:
+        </p>
+        <ul style="margin: 0 0 1rem 0; padding-left: 1.5rem; color: var(--text-primary); font-size: 0.9rem; line-height: 1.6;">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <div style="background: var(--surface); padding: 0.75rem 1rem; border-radius: 4px; border: 1px solid var(--border); font-size: 0.85rem; color: var(--text-secondary);">
+            <strong>Action Required:</strong> Add more incident detail and submit again.
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <form method="post" action="{% url 'incidents:report' %}" novalidate>
+            {% csrf_token %}
+
+            <!-- Section 1: Report Identity -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    1. Report Identity
+                </h3>
+                <p class="form-section-subtitle">Basic operational classification and location of the event.</p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.report_type.id_for_label }}">Report Type *</label>
+                        {{ form.report_type }}
+                        {% if form.report_type.errors %}
+                        <div class="field-error">{{ form.report_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.incident_date.id_for_label }}">Date of Event *</label>
+                        {{ form.incident_date }}
+                        {% if form.incident_date.errors %}
+                        <div class="field-error">{{ form.incident_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.location.id_for_label }}">Location / Rig / Site</label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                        <div class="field-error">{{ form.location.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.department.id_for_label }}">Department / Asset</label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                        <div class="field-error">{{ form.department.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.job_task.id_for_label }}">Activity / Job Task</label>
+                        {{ form.job_task }}
+                        {% if form.job_task.errors %}
+                        <div class="field-error">{{ form.job_task.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.equipment_involved.id_for_label }}">Equipment Involved</label>
+                        {{ form.equipment_involved }}
+                        {% if form.equipment_involved.errors %}
+                        <div class="field-error">{{ form.equipment_involved.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Narrative -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    2. Event Narrative
+                </h3>
+                <p class="form-section-subtitle">Detailed narrative of the situation, observations, and immediate actions taken.</p>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" for="{{ form.description.id_for_label }}">Description / Narrative *</label>
+                    {{ form.description }}
+                    <small style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                        Provide specific physical details of what occurred. Avoid placeholder text like "n/a" or "test".
+                    </small>
+                    {% if form.description.errors %}
+                    <div class="field-error">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" for="{{ form.immediate_cause.id_for_label }}">Immediate Action Taken / Observed Cause</label>
+                    {{ form.immediate_cause }}
+                    {% if form.immediate_cause.errors %}
+                    <div class="field-error">{{ form.immediate_cause.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.witness_statement.id_for_label }}">Witness Statement (Optional)</label>
+                        {{ form.witness_statement }}
+                        {% if form.witness_statement.errors %}
+                        <div class="field-error">{{ form.witness_statement.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.corrective_actions.id_for_label }}">Corrective Action Suggestion (Optional)</label>
+                        {{ form.corrective_actions }}
+                        {% if form.corrective_actions.errors %}
+                        <div class="field-error">{{ form.corrective_actions.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Safety Context & Energy / Controls -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    3. Safety Context: Energy &amp; Direct Controls
+                </h3>
+                <p class="form-section-subtitle">Evaluating high-energy hazard presence and whether direct controls were effective or failed.</p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.high_energy_present.id_for_label }}">High-Energy Source Present?</label>
+                        {{ form.high_energy_present }}
+                        <small style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                            e.g. Height > 1.8m, Pressure > 100 psi, High Voltage, Heavy suspended load.
+                        </small>
+                        {% if form.high_energy_present.errors %}
+                        <div class="field-error">{{ form.high_energy_present.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.energy_type.id_for_label }}">Energy Type</label>
+                        {{ form.energy_type }}
+                        {% if form.energy_type.errors %}
+                        <div class="field-error">{{ form.energy_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.worker_exposed.id_for_label }}">Worker in Line of Fire / Exposed?</label>
+                        {{ form.worker_exposed }}
+                        {% if form.worker_exposed.errors %}
+                        <div class="field-error">{{ form.worker_exposed.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.direct_control_present.id_for_label }}">Direct Control Present?</label>
+                        {{ form.direct_control_present }}
+                        <small style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                            Engineered barrier, LOTO, fall arrest (not just PPE or signage).
+                        </small>
+                        {% if form.direct_control_present.errors %}
+                        <div class="field-error">{{ form.direct_control_present.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.control_type.id_for_label }}">Control Type</label>
+                        {{ form.control_type }}
+                        {% if form.control_type.errors %}
+                        <div class="field-error">{{ form.control_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.control_condition.id_for_label }}">Control Condition / Status</label>
+                        {{ form.control_condition }}
+                        {% if form.control_condition.errors %}
+                        <div class="field-error">{{ form.control_condition.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Outcome -->
+            <div class="form-section">
+                <h3 class="form-section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                    4. Outcome &amp; Injury (If Occurred)
+                </h3>
+                <p class="form-section-subtitle">Record actual injury outcome, if any injury was sustained.</p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.severity_actual.id_for_label }}">Actual Severity</label>
+                        {{ form.severity_actual }}
+                        {% if form.severity_actual.errors %}
+                        <div class="field-error">{{ form.severity_actual.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.injury_type.id_for_label }}">Injury Type (if any)</label>
+                        {{ form.injury_type }}
+                        {% if form.injury_type.errors %}
+                        <div class="field-error">{{ form.injury_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label" for="{{ form.body_part.id_for_label }}">Body Part (if any)</label>
+                        {{ form.body_part }}
+                        {% if form.body_part.errors %}
+                        <div class="field-error">{{ form.body_part.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                <a href="{% url 'incidents:list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" id="btn-submit-report">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    Submit Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

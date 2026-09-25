@@ -1,0 +1,1071 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Normalized Cross-Site Safety Intelligence — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Normalized cross-site safety signal analysis using deterministic canonical entity normalization across operational sites, activities, hazard families, and IOGP Life-Saving Rules.{% endblock %}
+
+{% block nav_cross_site %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Hero & Disclaimer Section ── */
+    .cs-hero {
+        background: linear-gradient(135deg, #091e3a 0%, #16325c 50%, #0a192f 100%);
+        border-radius: var(--radius-lg, 12px);
+        padding: 2.25rem 2rem;
+        margin-bottom: 1.75rem;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+    }
+    .cs-hero::after {
+        content: '';
+        position: absolute;
+        top: -60%;
+        right: -15%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .cs-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3rem 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #93c5fd;
+        margin-bottom: 0.75rem;
+    }
+    .cs-hero-title {
+        font-family: var(--font-heading, -apple-system, BlinkMacSystemFont, sans-serif);
+        font-size: 1.85rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.25;
+    }
+    .cs-hero-subtitle {
+        font-size: 0.96rem;
+        color: rgba(255, 255, 255, 0.82);
+        margin: 0 0 1.25rem 0;
+        max-width: 820px;
+        line-height: 1.55;
+    }
+    .cs-methodology-banner {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-left: 4px solid #38bdf8;
+        border-radius: var(--radius-md, 8px);
+        padding: 0.85rem 1.15rem;
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.5;
+        backdrop-filter: blur(8px);
+    }
+    .cs-proto-warning {
+        display: inline-block;
+        background: rgba(234, 179, 8, 0.18);
+        border: 1px solid rgba(234, 179, 8, 0.4);
+        color: #fef08a;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+
+    /* ── High-Level KPI Summary Grid ── */
+    .cs-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.85rem;
+        margin-bottom: 1.75rem;
+    }
+    @media (max-width: 1200px) { .cs-stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 640px) { .cs-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 400px) { .cs-stats-grid { grid-template-columns: 1fr; } }
+
+    .cs-kpi-card {
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        padding: 1rem;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+    }
+    .cs-kpi-val {
+        font-family: var(--font-heading, monospace);
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: var(--brand, #0f2b48);
+        line-height: 1.1;
+        margin-bottom: 0.25rem;
+    }
+    .cs-kpi-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.35rem;
+    }
+    .cs-kpi-sub {
+        font-size: 0.72rem;
+        color: var(--text-muted, #94a3b8);
+        line-height: 1.3;
+    }
+
+    /* ── Navigation Tabs ── */
+    .cs-tabs-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid var(--border, #e2e8f0);
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+    .cs-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.25rem;
+        border: none;
+        background: none;
+        font-family: var(--font-heading, sans-serif);
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-secondary, #64748b);
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -4px;
+        transition: all 0.18s ease;
+        white-space: nowrap;
+        border-radius: 4px 4px 0 0;
+    }
+    .cs-tab-btn:hover {
+        color: var(--brand, #0f2b48);
+        background: rgba(15, 43, 72, 0.04);
+    }
+    .cs-tab-btn.active {
+        color: var(--brand, #0f2b48);
+        border-bottom-color: var(--brand, #0f2b48);
+        background: rgba(15, 43, 72, 0.06);
+    }
+    .cs-tab-content {
+        display: none;
+    }
+    .cs-tab-content.active {
+        display: block;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Control Bar & Filters ── */
+    .cs-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    .cs-search-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--surface-alt, #f8fafc);
+        border: 1px solid var(--border, #cbd5e1);
+        border-radius: 6px;
+        padding: 0.35rem 0.75rem;
+        min-width: 260px;
+    }
+    .cs-search-box input {
+        border: none;
+        background: transparent;
+        font-size: 0.85rem;
+        color: var(--text-primary, #1e293b);
+        outline: none;
+        width: 100%;
+    }
+    .cs-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid var(--border, #cbd5e1);
+        background: #ffffff;
+        color: var(--text-primary, #1e293b);
+    }
+    .cs-btn:hover {
+        background: var(--surface-alt, #f1f5f9);
+        border-color: #94a3b8;
+    }
+    .cs-btn-primary {
+        background: var(--brand, #0f2b48);
+        color: #ffffff;
+        border-color: var(--brand, #0f2b48);
+    }
+    .cs-btn-primary:hover {
+        background: #163c63;
+        border-color: #163c63;
+    }
+
+    /* ── Tables ── */
+    .cs-card {
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    .cs-table-scroll {
+        overflow-x: auto;
+        width: 100%;
+    }
+    .cs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        text-align: left;
+    }
+    .cs-table th {
+        background: var(--surface-alt, #f8fafc);
+        font-family: var(--font-heading, sans-serif);
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary, #64748b);
+        padding: 0.75rem 1rem;
+        border-bottom: 2px solid var(--border, #e2e8f0);
+        white-space: nowrap;
+    }
+    .cs-table td {
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        vertical-align: middle;
+        color: var(--text-primary, #1e293b);
+    }
+    .cs-table tr:last-child td { border-bottom: none; }
+    .cs-table tbody tr:hover td {
+        background: rgba(15, 43, 72, 0.025);
+    }
+
+    /* ── Badges & Status Tags ── */
+    .badge-status {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .badge-exact { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-alias { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-normalized { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-unknown { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+    .badge-rule-candidate {
+        display: inline-block;
+        padding: 0.18rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: rgba(30, 58, 95, 0.08);
+        color: #1e3a5f;
+        border: 1px solid rgba(30, 58, 95, 0.18);
+        white-space: nowrap;
+        margin: 0.1rem;
+    }
+    .badge-rule-candidate.warning {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    .matrix-cell {
+        text-align: center;
+        font-family: var(--font-mono, monospace);
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.5rem !important;
+    }
+    .matrix-cell.zero { color: #cbd5e1; font-weight: 400; }
+    .matrix-cell.heat-1 { background: #f0fdf4; color: #166534; }
+    .matrix-cell.heat-2 { background: #dcfce7; color: #15803d; }
+    .matrix-cell.heat-3 { background: #fef3c7; color: #b45309; }
+    .matrix-cell.heat-4 { background: #fee2e2; color: #b91c1c; font-weight: 700; }
+
+    /* ── Notice Callouts ── */
+    .cs-disclaimer-box {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-left: 4px solid #64748b;
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        font-size: 0.8rem;
+        color: #475569;
+        line-height: 1.5;
+        margin-top: 1rem;
+    }
+    .cs-disclaimer-box strong { color: #1e293b; }
+
+    /* ── Recurrence Signal Cards ── */
+    .recurrence-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.25rem;
+    }
+    .recurrence-card {
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: var(--radius-md, 8px);
+        padding: 1.25rem;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+    }
+    .recurrence-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: #3b82f6;
+        border-radius: 8px 0 0 8px;
+    }
+    .recurrence-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .recurrence-title {
+        font-family: var(--font-heading, sans-serif);
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: var(--brand, #0f2b48);
+        margin: 0;
+    }
+    .site-pill-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin: 0.75rem 0;
+    }
+    .site-pill {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        padding: 0.15rem 0.5rem;
+    }
+    .guidance-statement {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        font-size: 0.78rem;
+        font-weight: 500;
+        border-radius: 4px;
+        padding: 0.4rem 0.65rem;
+        margin-top: 0.75rem;
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-window {
+        background: #ffffff;
+        border-radius: var(--radius-lg, 12px);
+        max-width: 800px;
+        width: 100%;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+        border: 1px solid var(--border, #e2e8f0);
+    }
+    .modal-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+    }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border, #e2e8f0);
+        display: flex;
+        justify-content: flex-end;
+        background: #f8fafc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- 1. Hero Section & Methodology Notice -->
+<div class="cs-hero">
+    <div style="position: relative; z-index: 2;">
+        <div class="cs-hero-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+            Normalized Cross-Site Intelligence Engine
+        </div>
+        <h1 class="cs-hero-title">Cross-Site Safety Signal Intelligence</h1>
+        <p class="cs-hero-subtitle">
+            Defensible cross-facility comparison of safety signals, recurring hazard families, and IOGP Life-Saving Rules.
+            Converts divergent site nomenclature into verified canonical taxonomies with complete traceability.
+        </p>
+
+        <div class="cs-methodology-banner">
+            <div style="display: flex; align-items: flex-start; gap: 0.6rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="flex-shrink:0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <div>
+                    <strong>Methodology Disclosure:</strong> {{ methodology_notice }}
+                    <div class="cs-proto-warning">
+                        Prototype Architecture — Validation on human-reviewed real-world OIL data required before operational deployment.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. System-Wide Cross-Site Safety Signal KPIs -->
+<div class="cs-stats-grid">
+    <div class="cs-kpi-card">
+        <div class="cs-kpi-label">Recorded Signals</div>
+        <div class="cs-kpi-val">{{ overview.total_observations|default:"560,574"|floatformat:"0" }}</div>
+        <div class="cs-kpi-sub">Total safety observations across all sites</div>
+    </div>
+    <div class="cs-kpi-card">
+        <div class="cs-kpi-label">Operational Sites</div>
+        <div class="cs-kpi-val">{{ overview.distinct_operational_sites_count|default:"15" }}</div>
+        <div class="cs-kpi-sub">Normalized OIL field facilities</div>
+    </div>
+    <div class="cs-kpi-card">
+        <div class="cs-kpi-label">Prediction-Eligible</div>
+        <div class="cs-kpi-val">{{ overview.prediction_eligible_count|default:"560,573"|floatformat:"0" }}</div>
+        <div class="cs-kpi-sub">Records with sufficient narrative (denominator)</div>
+    </div>
+    <div class="cs-kpi-card">
+        <div class="cs-kpi-label">PSIF Candidates</div>
+        <div class="cs-kpi-val">{{ overview.total_psif_candidate_count|default:"116,929"|floatformat:"0" }}</div>
+        <div class="cs-kpi-sub">Rate: {{ overview.psif_rate_pct|default:"20.86" }}% of eligible</div>
+    </div>
+    <div class="cs-kpi-card">
+        <div class="cs-kpi-label">Active IOGP Rules</div>
+        <div class="cs-kpi-val">{{ overview.iogp_rules_active_count|default:"9" }} / 9</div>
+        <div class="cs-kpi-sub">Rule-derived candidate categories</div>
+    </div>
+    <div class="cs-kpi-card">
+        <div class="cs-kpi-label">Multi-Site Signals</div>
+        <div class="cs-kpi-val">{{ overview.multi_site_rules_count|default:"9" }}</div>
+        <div class="cs-kpi-sub">Matched across ≥ 2 distinct sites</div>
+    </div>
+</div>
+
+<!-- 3. Tab Navigation -->
+<div class="cs-tabs-bar">
+    <button class="cs-tab-btn active" onclick="switchCSTab('site-comparison')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+        Site Comparison Table
+    </button>
+    <button class="cs-tab-btn" onclick="switchCSTab('site-iogp-matrix')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>
+        Site × IOGP Matrix
+    </button>
+    <button class="cs-tab-btn" onclick="switchCSTab('site-hazard-matrix')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        Site × Hazard Matrix
+    </button>
+    <button class="cs-tab-btn" onclick="switchCSTab('normalized-signals')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Normalized Signals (Taxonomies)
+    </button>
+    <button class="cs-tab-btn" onclick="switchCSTab('cross-site-recurrence')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        Cross-Site Recurrence Patterns
+    </button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 1: Site Comparison Table                                               -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-site-comparison" class="cs-tab-content active">
+    <div class="cs-toolbar">
+        <div class="cs-search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="site-table-search" placeholder="Filter sites or activities…" onkeyup="filterSiteTable()">
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Compare 2 Sites:</span>
+            <select id="compare-site-a" class="cs-btn" style="padding: 0.35rem 0.6rem;">
+                <option value="DULIAJAN">DULIAJAN</option>
+                <option value="NUMALIGARH">NUMALIGARH</option>
+                <option value="MORAN">MORAN</option>
+                <option value="NAHARKATIYA">NAHARKATIYA</option>
+                <option value="KUMCHAI">KUMCHAI</option>
+                <option value="BAGHJAN">BAGHJAN</option>
+            </select>
+            <select id="compare-site-b" class="cs-btn" style="padding: 0.35rem 0.6rem;">
+                <option value="NUMALIGARH" selected>NUMALIGARH</option>
+                <option value="DULIAJAN">DULIAJAN</option>
+                <option value="MORAN">MORAN</option>
+                <option value="NAHARKATIYA">NAHARKATIYA</option>
+                <option value="KUMCHAI">KUMCHAI</option>
+                <option value="BAGHJAN">BAGHJAN</option>
+            </select>
+            <button class="cs-btn cs-btn-primary" onclick="triggerSiteCompare()">Compare</button>
+        </div>
+    </div>
+
+    <!-- Comparison Modal Container (Populated via JS) -->
+    <div id="site-compare-results" style="display: none; margin-bottom: 1.5rem;"></div>
+
+    <div class="cs-card">
+        <div class="cs-table-scroll">
+            <table class="cs-table" id="site-comparison-table">
+                <thead>
+                    <tr>
+                        <th>Operational Facility / Site</th>
+                        <th>Status</th>
+                        <th>Observed Safety-Signal Volume</th>
+                        <th>Prediction Eligible</th>
+                        <th>PSIF Candidates</th>
+                        <th>PSIF Rate (Explicit Denominator)</th>
+                        <th>Not PSIF</th>
+                        <th>Human Reviewed</th>
+                        <th>Top Rule Candidates</th>
+                        <th>Top Activities</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in site_comparison %}
+                    <tr class="site-row" data-site-name="{{ row.site_name }}">
+                        <td>
+                            <div style="font-weight: 700; color: var(--brand);">{{ row.site_name }}</div>
+                            {% if row.raw_aliases %}
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">
+                                Aliases: {{ row.raw_aliases|slice:":2"|join:", " }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.is_unknown %}
+                            <span class="badge-status badge-unknown">UNKNOWN</span>
+                            {% elif row.normalization_status == "EXACT" %}
+                            <span class="badge-status badge-exact">EXACT</span>
+                            {% elif row.normalization_status == "ALIAS" %}
+                            <span class="badge-status badge-alias">ALIAS</span>
+                            {% else %}
+                            <span class="badge-status badge-normalized">{{ row.normalization_status|default:"NORMALIZED" }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 600; font-family: monospace;">{{ row.total_observations|floatformat:"0" }}</td>
+                        <td style="font-family: monospace;">{{ row.prediction_eligible_observations|floatformat:"0" }}</td>
+                        <td style="font-weight: 600; color: #b91c1c; font-family: monospace;">{{ row.psif_candidate_count|floatformat:"0" }}</td>
+                        <td>
+                            <div style="font-weight: 700;">{{ row.psif_rate_pct }}%</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">{{ row.denominator }}</div>
+                        </td>
+                        <td style="font-family: monospace;">{{ row.not_psif_count|floatformat:"0" }}</td>
+                        <td style="font-family: monospace;">{{ row.human_reviewed_count|floatformat:"0" }}</td>
+                        <td>
+                            {% for r in row.top_iogp_rules %}
+                            <span class="badge-rule-candidate" title="Rule-derived candidate">{{ r }}</span>
+                            {% empty %}
+                            <span style="color: var(--text-muted); font-size: 0.75rem;">None</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for a in row.top_activities %}
+                            <div style="font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 2px;">• {{ a }}</div>
+                            {% empty %}
+                            <span style="color: var(--text-muted); font-size: 0.75rem;">None</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if not row.is_unknown %}
+                            <button class="cs-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openSiteDetailModal('{{ row.site_name }}')">
+                                Inspect
+                            </button>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.72rem;">Aggregated</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            No site records available.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="cs-disclaimer-box">
+        <strong>Neutral Analytical Phrasing:</strong> Observed safety-signal volume reflects reporting activity, facility scale, and workforce density, not an inherent safety deficiency. Rates explicitly calculate <em>PSIF Candidates ÷ Prediction-Eligible Observations</em>.
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 2: Site × IOGP Matrix                                                  -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-site-iogp-matrix" class="cs-tab-content">
+    <div class="cs-card">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface-alt);">
+            <div style="font-weight: 700; color: var(--brand); font-size: 0.95rem;">Operational Sites × 9 Canonical IOGP Life-Saving Rules</div>
+            <div style="font-size: 0.78rem; color: var(--text-secondary);">
+                {{ iogp_matrix.status_disclaimer }}
+            </div>
+        </div>
+        <div class="cs-table-scroll">
+            <table class="cs-table">
+                <thead>
+                    <tr>
+                        <th>Operational Facility</th>
+                        <th style="text-align: center;">Total Rule Matches</th>
+                        {% for r in iogp_matrix.rules %}
+                        <th style="text-align: center; max-width: 110px; white-space: normal;" title="{{ r }}">
+                            {{ r }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in iogp_matrix.rows %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--brand);">{{ row.site }}</td>
+                        <td class="matrix-cell" style="background: #f1f5f9; font-weight: 700;">{{ row.total }}</td>
+                        {% for cell in row.cells %}
+                        <td class="matrix-cell {{ cell.heat_class }}">
+                            {{ cell.count }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="11" style="text-align: center; padding: 2rem; color: var(--text-muted);">No IOGP cross-tabulation data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="cs-disclaimer-box">
+        <strong>Rule Candidate Interpretation:</strong> IOGP rule labels are identified deterministically via keyword matching in incident narratives. A rule match indicates that the incident involved activities covered by that rule; it does NOT verify a safety violation or barrier failure.
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 3: Site × Hazard Matrix                                                -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-site-hazard-matrix" class="cs-tab-content">
+    <div class="cs-card">
+        <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface-alt);">
+            <div style="font-weight: 700; color: var(--brand); font-size: 0.95rem;">Operational Sites × 15 Canonical High-Energy Hazard Families</div>
+            <div style="font-size: 0.78rem; color: var(--text-secondary);">
+                Classified using Energy Wheel and IOGP Life-Saving Rules energy releases. Preserves distinction between equipment, energy, and exposure.
+            </div>
+        </div>
+        <div class="cs-table-scroll">
+            <table class="cs-table">
+                <thead>
+                    <tr>
+                        <th>Operational Facility</th>
+                        <th style="text-align: center;">Total Hazards</th>
+                        {% for h in hazard_matrix.hazards|slice:":10" %}
+                        <th style="text-align: center; max-width: 120px; white-space: normal;" title="{{ h }}">
+                            {{ h }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in hazard_matrix.rows %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--brand);">{{ row.site }}</td>
+                        <td class="matrix-cell" style="background: #f1f5f9; font-weight: 700;">{{ row.total }}</td>
+                        {% for cell in row.cells|slice:":10" %}
+                        <td class="matrix-cell {{ cell.heat_class }}">
+                            {{ cell.count }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="12" style="text-align: center; padding: 2rem; color: var(--text-muted);">No hazard cross-tabulation data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 4: Normalized Signals (Taxonomies)                                     -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-normalized-signals" class="cs-tab-content">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <!-- Activities Column -->
+        <div class="cs-card" style="margin-bottom: 0;">
+            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface-alt);">
+                <div style="font-weight: 700; color: var(--brand); font-size: 0.95rem;">Canonical Normalized Activities</div>
+                <div style="font-size: 0.76rem; color: var(--text-secondary);">Distinguishes driving vs servicing vs lifting vs permits.</div>
+            </div>
+            <div class="cs-table-scroll" style="max-height: 480px;">
+                <table class="cs-table">
+                    <thead>
+                        <tr>
+                            <th>Canonical Activity</th>
+                            <th>Total</th>
+                            <th>Sites</th>
+                            <th>PSIF Candidates</th>
+                            <th>PSIF %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for act in activities %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">{{ act.canonical_activity }}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                    Aliases: {{ act.raw_aliases|slice:":2"|join:", " }}
+                                </div>
+                            </td>
+                            <td style="font-family: monospace;">{{ act.total_observations }}</td>
+                            <td><span class="badge-status badge-alias">{{ act.distinct_sites_count }} sites</span></td>
+                            <td style="font-family: monospace; color: #b91c1c;">{{ act.psif_candidate_count }}</td>
+                            <td style="font-weight: 700;">{{ act.psif_rate_pct }}%</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" style="text-align: center; padding: 1.5rem;">No activity data</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Hazards Column -->
+        <div class="cs-card" style="margin-bottom: 0;">
+            <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface-alt);">
+                <div style="font-weight: 700; color: var(--brand); font-size: 0.95rem;">Canonical Hazard Families</div>
+                <div style="font-size: 0.76rem; color: var(--text-secondary);">15 canonical energy hazard categories.</div>
+            </div>
+            <div class="cs-table-scroll" style="max-height: 480px;">
+                <table class="cs-table">
+                    <thead>
+                        <tr>
+                            <th>Hazard Family</th>
+                            <th>Total</th>
+                            <th>Sites</th>
+                            <th>PSIF Candidates</th>
+                            <th>PSIF %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hz in hazards %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">{{ hz.canonical_hazard }}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                    Aliases: {{ hz.raw_aliases|slice:":2"|join:", " }}
+                                </div>
+                            </td>
+                            <td style="font-family: monospace;">{{ hz.total_observations }}</td>
+                            <td><span class="badge-status badge-alias">{{ hz.distinct_sites_count }} sites</span></td>
+                            <td style="font-family: monospace; color: #b91c1c;">{{ hz.psif_candidate_count }}</td>
+                            <td style="font-weight: 700;">{{ hz.psif_rate_pct }}%</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" style="text-align: center; padding: 1.5rem;">No hazard data</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 5: Cross-Site Recurrence Patterns                                      -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-cross-site-recurrence" class="cs-tab-content">
+    <div style="margin-bottom: 1.25rem;">
+        <div class="cs-disclaimer-box" style="margin-top: 0;">
+            <strong>Cross-Site Recurrence Principle:</strong> Historical observations only.
+            <em>“Similar observations have been recorded across multiple sites.”</em>
+            This analysis does NOT claim causality, predict future incidents, or imply identical root causes.
+        </div>
+    </div>
+
+    <div class="recurrence-grid">
+        {% for rec in recurrence_signals %}
+        <div class="recurrence-card">
+            <div>
+                <div class="recurrence-header">
+                    <h3 class="recurrence-title">{{ rec.canonical_rule }}</h3>
+                    <span class="badge-status badge-alias">{{ rec.site_count }} Sites</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    Status: <span class="badge-rule-candidate">{{ rec.rule_status }}</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary);">
+                    Recorded across <strong>{{ rec.total_incidents }}</strong> historical safety observations.
+                </div>
+                <div class="site-pill-wrap">
+                    {% for s in rec.canonical_sites %}
+                    <span class="site-pill">{{ s }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div>
+                <div class="guidance-statement">
+                    {{ rec.guidance_statement }}
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem;">
+                    Denominator: {{ rec.denominator }}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="cs-card" style="padding: 2.5rem; text-align: center; color: var(--text-muted); grid-column: 1 / -1;">
+            No multi-site recurrence signals meeting threshold (≥ 2 sites).
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 4. Site Details Modal (Interactive AJAX Inspection) -->
+<div id="site-modal" class="modal-backdrop">
+    <div class="modal-window">
+        <div class="modal-header">
+            <div>
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Operational Facility Trace</div>
+                <h2 id="modal-site-title" style="margin: 0; font-size: 1.25rem; color: var(--brand);">—</h2>
+            </div>
+            <button class="cs-btn" onclick="closeSiteModal()" style="padding: 0.3rem 0.6rem;">✕</button>
+        </div>
+        <div class="modal-body" id="modal-site-body">
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                Loading site operational context…
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="cs-btn" onclick="closeSiteModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+"use strict";
+
+function switchCSTab(tabId) {
+    document.querySelectorAll('.cs-tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.cs-tab-btn').forEach(el => el.classList.remove('active'));
+
+    const targetContent = document.getElementById('tab-' + tabId);
+    if (targetContent) targetContent.classList.add('active');
+
+    const targetBtn = Array.from(document.querySelectorAll('.cs-tab-btn')).find(btn =>
+        btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)
+    );
+    if (targetBtn) targetBtn.classList.add('active');
+}
+
+function filterSiteTable() {
+    const term = document.getElementById('site-table-search').value.toLowerCase();
+    const rows = document.querySelectorAll('.site-row');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+    });
+}
+
+async function openSiteDetailModal(siteId) {
+    const modal = document.getElementById('site-modal');
+    const title = document.getElementById('modal-site-title');
+    const body = document.getElementById('modal-site-body');
+
+    title.textContent = siteId;
+    body.innerHTML = '<div style="text-align:center; padding: 2rem;"><div class="spinner"></div><div>Loading normalized operational context…</div></div>';
+    modal.classList.add('show');
+
+    try {
+        const res = await fetch(`/api/cross-site/sites/${encodeURIComponent(siteId)}/`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const s = data.site;
+
+        let deptHtml = s.departments.map(d => `<span class="site-pill">${escapeHtml(d.department)} (${d.count})</span>`).join('') || 'None recorded';
+        let ruleHtml = s.iogp_rule_candidates.map(r => `<span class="badge-rule-candidate">${escapeHtml(r.rule)} (${r.count})</span>`).join('') || 'None recorded';
+        let actHtml = s.top_activities.map(a => `<li>${escapeHtml(a.activity)} (${a.count})</li>`).join('') || '<li>None</li>';
+        let hzHtml = (s.top_hazards || []).map(h => `<li>${escapeHtml(h.hazard)} (${h.count})</li>`).join('') || '<li>None</li>';
+
+        body.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div class="cs-kpi-card" style="padding: 0.75rem;">
+                    <div class="cs-kpi-label">Volume</div>
+                    <div style="font-size: 1.25rem; font-weight:700; color:var(--brand);">${s.total_observations}</div>
+                </div>
+                <div class="cs-kpi-card" style="padding: 0.75rem;">
+                    <div class="cs-kpi-label">Eligible</div>
+                    <div style="font-size: 1.25rem; font-weight:700;">${s.prediction_eligible_observations}</div>
+                </div>
+                <div class="cs-kpi-card" style="padding: 0.75rem;">
+                    <div class="cs-kpi-label">PSIF Candidates</div>
+                    <div style="font-size: 1.25rem; font-weight:700; color:#b91c1c;">${s.psif_candidate_count}</div>
+                </div>
+                <div class="cs-kpi-card" style="padding: 0.75rem;">
+                    <div class="cs-kpi-label">PSIF Rate</div>
+                    <div style="font-size: 1.25rem; font-weight:700;">${s.psif_rate_pct}%</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem; color:var(--brand);">Normalization Traceability</div>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.6rem 0.85rem; font-size: 0.78rem;">
+                    <strong>Raw / Canonical:</strong> ${escapeHtml(s.trace.canonical_value)} |
+                    <strong>Method:</strong> ${escapeHtml(s.trace.method)} |
+                    <strong>Status:</strong> ${escapeHtml(s.trace.status)} |
+                    <strong>Version:</strong> ${escapeHtml(s.trace.version)}
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">Departments Active</div>
+                <div>${deptHtml}</div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">IOGP Life-Saving Rule Candidates</div>
+                <div>${ruleHtml}</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">Top Canonical Activities</div>
+                    <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.82rem;">${actHtml}</ul>
+                </div>
+                <div>
+                    <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem;">Top Canonical Hazards</div>
+                    <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.82rem;">${hzHtml}</ul>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        body.innerHTML = `<div style="color: #b91c1c; padding: 1.5rem; text-align: center;">Failed to load details for ${escapeHtml(siteId)}: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+function closeSiteModal() {
+    document.getElementById('site-modal').classList.remove('show');
+}
+
+async function triggerSiteCompare() {
+    const s1 = document.getElementById('compare-site-a').value;
+    const s2 = document.getElementById('compare-site-b').value;
+    const container = document.getElementById('site-compare-results');
+
+    container.style.display = 'block';
+    container.innerHTML = '<div class="cs-card" style="padding:1.5rem; text-align:center;"><div class="spinner"></div><div>Running deterministic head-to-head comparison…</div></div>';
+
+    try {
+        const res = await fetch(`/api/cross-site/compare/?sites=${encodeURIComponent(s1)},${encodeURIComponent(s2)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const cmp = data.comparison;
+
+        let sharedRulesHtml = cmp.shared_iogp_rules.map(r => `<span class="badge-rule-candidate">${escapeHtml(r)}</span>`).join('') || 'None shared';
+        let sharedActsHtml = cmp.shared_activities.map(a => `<span class="site-pill">${escapeHtml(a)}</span>`).join('') || 'None shared';
+
+        let sitesHtml = (cmp.sites || []).map(s => `
+            <div class="cs-card" style="padding: 1rem; margin-bottom: 0;">
+                <div style="font-weight: 700; font-size: 1.1rem; color: var(--brand); margin-bottom: 0.5rem;">${escapeHtml(s.canonical_site)}</div>
+                <div style="font-size: 0.82rem; margin-bottom: 0.25rem;"><strong>Safety-Signal Volume:</strong> ${s.total_observations}</div>
+                <div style="font-size: 0.82rem; margin-bottom: 0.25rem;"><strong>PSIF Candidates:</strong> ${s.psif_candidate_count} (${s.psif_rate_pct}%)</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(s.denominator)}</div>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="cs-card" style="padding: 1.25rem; border-left: 4px solid var(--brand);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--brand);">
+                        Head-to-Head Comparative Profile: ${escapeHtml(s1)} vs ${escapeHtml(s2)}
+                    </div>
+                    <button class="cs-btn" onclick="document.getElementById('site-compare-results').style.display='none'">Dismiss</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    ${sitesHtml}
+                </div>
+                <div style="margin-bottom: 0.75rem;">
+                    <strong>Shared IOGP Rule Candidates:</strong>
+                    <div style="margin-top: 0.25rem;">${sharedRulesHtml}</div>
+                </div>
+                <div>
+                    <strong>Shared Operating Activities:</strong>
+                    <div style="margin-top: 0.25rem;">${sharedActsHtml}</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        container.innerHTML = `<div class="cs-card" style="padding:1rem; color:#b91c1c;">Comparison failed: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+{% endblock %}

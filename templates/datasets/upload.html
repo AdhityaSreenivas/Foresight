@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Upload Dataset — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Upload a CSV, JSON, or JSONL incident dataset to the PSIF Prediction Platform.{% endblock %}
+
+{% block nav_datasets %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Upload Page Styles ───────────────────────────────────────────────── */
+.drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--surface);
+    position: relative;
+    margin-bottom: 2rem;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--brand);
+    background: var(--bg);
+}
+.drop-zone-icon { 
+    margin-bottom: 1.5rem; 
+    color: var(--brand);
+    display: inline-flex;
+    background: var(--bg);
+    padding: 1.5rem;
+    border-radius: 50%;
+}
+.drop-zone-text { font-size: 1.15rem; color: var(--text-primary); font-weight: 500; font-family: var(--font-heading); margin-bottom: 0.5rem; }
+.drop-zone-text strong { color: var(--brand); cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.drop-zone-hint { font-size: 0.9rem; color: var(--text-secondary); }
+#file-input { display: none; }
+
+/* Upload progress */
+.upload-progress-wrap { display: none; margin-top: 2rem; padding: 1.5rem; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.upload-progress-wrap.visible { display: block; }
+.progress-bar-outer {
+    height: 8px; background: var(--border);
+    border-radius: 99px; overflow: hidden;
+}
+.progress-bar-inner {
+    height: 100%; background: var(--brand);
+    border-radius: 99px;
+    transition: width 0.2s;
+    width: 0%;
+}
+.progress-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Sections shown after upload */
+.section { display: none; margin-top: 3rem; }
+.section.visible { display: block; }
+.section-title {
+    font-size: 1.25rem; font-weight: 600; font-family: var(--font-heading);
+    color: var(--text-primary); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+}
+
+/* File info pill */
+.file-info-pill {
+    display: inline-flex; align-items: center; gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.75rem 1.25rem;
+    font-size: 0.95rem; margin-bottom: 1.5rem;
+}
+.file-type-badge {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 0.25rem 0.6rem; border-radius: 4px;
+    background: var(--brand); color: var(--white);
+}
+
+/* Preview table */
+.preview-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    max-height: 400px;
+    background: var(--bg);
+}
+.preview-table {
+    width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+.preview-table th {
+    background: var(--bg); color: var(--text-primary);
+    font-weight: 600; padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; white-space: nowrap;
+}
+.preview-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    max-width: 300px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+    color: var(--text-secondary);
+}
+.preview-table tr:hover td { background: var(--surface); }
+.preview-table tr:last-child td { border-bottom: none; }
+
+/* Mapping form */
+.mapping-grid {
+    display: grid; gap: 0.75rem;
+}
+.mapping-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.5rem; align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+.mapping-row:hover { background: var(--bg); }
+.mapping-row.has-mapping { border-left: 3px solid var(--brand); }
+.mapping-row.unmapped { border-left: 3px solid transparent; }
+.source-col {
+    font-size: 0.95rem; font-weight: 500;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 0.75rem;
+}
+.col-type-chip {
+    font-size: 0.7rem; padding: 0.2rem 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;
+    border-radius: 4px; background: var(--bg);
+    color: var(--text-secondary); border: 1px solid var(--border);
+}
+.mapping-select {
+    width: 100%; padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px; background: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.95rem; cursor: pointer;
+    font-family: var(--font-body);
+}
+.mapping-select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+.mapping-select option { background: var(--surface); color: var(--text-primary); }
+
+/* Action buttons */
+.action-row {
+    display: flex; gap: 1rem; margin-top: 2.5rem;
+    flex-wrap: wrap; align-items: center;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Status / error messages */
+.mapping-saved-badge {
+    display: none; align-items: center; gap: 0.5rem;
+    font-size: 0.9rem; color: #2ecc71; font-weight: 500;
+}
+.mapping-saved-badge.visible { display: flex; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    <div class="page-header" style="margin-bottom: 3rem;">
+        <h1 class="page-title">Upload Dataset</h1>
+        <p class="page-subtitle" style="margin-top: 0.5rem;">Ingest raw data to begin safety predictions.</p>
+    </div>
+
+    {% if not can_upload %}
+    <div class="message message-error" role="alert">
+        You don't have permission to upload datasets. You need the <strong>Admin</strong> or <strong>Safety Officer</strong> role.
+    </div>
+    {% else %}
+
+    <!-- Notification message -->
+    <div id="upload-notification" class="message" style="display:none; margin-bottom: 2rem; border-left: 4px solid var(--cat-green, #4e7a5e); background: rgba(78, 122, 94, 0.08); color: var(--cat-green, #4e7a5e);" role="status"></div>
+
+    <!-- Step 1: File Drop Zone -->
+    <section class="card" id="section-upload" aria-label="File upload">
+        <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.05rem;">Upload a CSV, JSON, or JSONL file. We'll parse the first 100 rows instantly so you can preview and map columns before processing.</p>
+
+        <div class="drop-zone" id="drop-zone" role="button" aria-label="Drop file here or click to browse" tabindex="0">
+            <div class="drop-zone-icon" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="drop-zone-text">
+                Drag &amp; drop a file here, or <strong id="browse-trigger">browse</strong>
+            </div>
+            <div class="drop-zone-hint">CSV, JSON, or JSONL &nbsp;·&nbsp; Maximum 250 MB</div>
+            <input type="file" id="file-input" accept=".csv,.json,.jsonl" aria-label="Choose file">
+        </div>
+
+        <!-- Upload Progress -->
+        <div class="upload-progress-wrap" id="upload-progress" aria-live="polite">
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="progress-bar" role="progressbar"
+                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+                <div class="progress-label" id="progress-label" style="margin-top: 0;">Uploading…</div>
+                <button type="button" id="btn-cancel-in-flight" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; font-weight: 600;">Cancel Upload</button>
+            </div>
+        </div>
+
+        <div class="message message-error" id="upload-error" style="display:none; margin-top: 1.5rem;" role="alert"></div>
+    </section>
+
+    <!-- Step 2: Preview + Column Mapping (shown after upload) -->
+    <section class="section" id="section-preview" aria-label="File preview and column mapping">
+        <div class="card">
+            <!-- File info pill -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                <div id="file-info-pill" class="file-info-pill" style="margin-bottom: 0;" aria-live="polite">
+                    <span class="file-type-badge" id="file-type-badge">CSV</span>
+                    <span id="file-name-label" style="font-weight: 500; color: var(--text-primary);">filename.csv</span>
+                    <span id="file-rows-label" class="tabular-nums" style="color: var(--text-secondary);"></span>
+                    <span id="file-upload-time-label" class="tabular-nums" style="display: none; font-size: 0.85rem; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 0.75rem;"></span>
+                </div>
+                <button type="button" class="btn btn-outline btn-cancel-upload" style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; font-size: 0.85rem;" aria-label="Cancel and discard uploaded file">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Cancel &amp; Discard
+                </button>
+            </div>
+
+            <!-- Data preview -->
+            <div class="section-title">
+                <span>Data Preview</span>
+                <span class="badge" id="preview-count-badge" style="font-size: 0.8rem; background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border);">100 rows</span>
+            </div>
+            <div class="preview-table-wrap" aria-label="First rows of uploaded data">
+                <table class="preview-table" id="preview-table">
+                    <thead><tr id="preview-header"></tr></thead>
+                    <tbody id="preview-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Column mapping -->
+            <div class="section-title" style="margin-top: 3.5rem;">
+                <span>Map Columns</span>
+                <span class="badge" style="font-size: 0.8rem; background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border);">Step 2 of 3</span>
+            </div>
+            <p style="color:var(--text-secondary); margin-bottom:2rem; font-size: 1rem;">
+                Match each source column to the corresponding PSIF incident field. Unmapped columns will be preserved in the raw data record.
+            </p>
+            <div class="mapping-grid" id="mapping-grid" aria-label="Column mapping controls"></div>
+
+            <div class="action-row mapping-action-row" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem;">
+                <button class="btn btn-primary" id="btn-save-mapping" aria-label="Save column mapping">
+                    Save Mapping
+                </button>
+                <button type="button" class="btn btn-outline btn-cancel-upload" id="btn-cancel-mapping" style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem; font-size: 0.95rem; font-weight: 500;" aria-label="Cancel and discard uploaded dataset">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Cancel &amp; Discard
+                </button>
+                <div class="mapping-saved-badge" id="mapping-saved-badge" aria-live="polite">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    Mapping saved
+                </div>
+                <div class="message message-error" id="mapping-error" style="display:none; margin:0; width: 100%;" role="alert"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 3: Process -->
+    <section class="section" id="section-process" aria-label="Start processing">
+        <div class="card" style="border-top: 4px solid var(--brand);">
+            <div class="section-title">
+                <span>Start Processing</span>
+                <span class="badge" style="font-size: 0.8rem; background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border);">Step 3 of 3</span>
+            </div>
+            <p style="color:var(--text-secondary); margin-bottom:2rem; font-size: 1rem;">
+                Processing runs in the background. You'll be redirected to the status page where you can track progress.
+            </p>
+            <div class="action-row process-action-row" style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" id="btn-process" aria-label="Start processing dataset" disabled style="padding-left: 2rem; padding-right: 2rem;">
+                    Start Processing
+                </button>
+                <button type="button" class="btn btn-outline btn-cancel-upload" id="btn-cancel-process" style="color: var(--risk-critical, #9c3b32); border-color: rgba(156, 59, 50, 0.4); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem; font-size: 0.95rem; font-weight: 500;" aria-label="Cancel and discard uploaded dataset">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Cancel &amp; Discard
+                </button>
+                <div class="message message-error" id="process-error" style="display:none; margin:0; width: 100%;" role="alert"></div>
+            </div>
+        </div>
+    </section>
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.PSIF_RESUME_ID = "{{ resume_id|default:'' }}";
+</script>
+<script src="{% static 'js/upload.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,590 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}PSIF Prediction Platform dashboard overview.{% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero" style="{% if hero_image %}background-image: url('{{ hero_image }}');{% endif %} margin-bottom: 2rem;">
+    <div class="hero-content">
+        <h1 class="hero-title">Welcome, {{ user.username }}</h1>
+        <p class="hero-subtitle">Monitor incident ingestion, analyze PSIF trends, and access real-time machine learning risk evaluations.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Analytics Stats — Binary SIF Metrics Suite -->
+    <div class="metrics-grid kpi-grid" id="analytics-stats">
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Total Incidents</div>
+                <div style="color: var(--muted); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="stat-total">{{ analytics_summary.formatted_total_incidents|default:analytics_summary.total_incidents|default:"--" }}</div>
+            <div class="metric-subtext" title="Ingested observations">Ingested observations</div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Prediction Eligible</div>
+                <div style="color: var(--cat-blue); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="stat-eligible">{{ analytics_summary.formatted_prediction_eligible_count|default:analytics_summary.prediction_eligible_count|default:"--" }}</div>
+            <div class="metric-subtext" title="Non-sparse reports">Non-sparse reports</div>
+        </div>
+        <div class="metric kpi-card" style="border-top: 3px solid var(--risk-critical);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">PSIF Candidates</div>
+                <div style="color: var(--risk-critical); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="stat-psif" style="color: var(--risk-critical);">{{ analytics_summary.formatted_psif_count|default:analytics_summary.psif_count|default:"--" }}</div>
+            <div class="metric-subtext" id="stat-psif-subtext" title="{% if analytics_summary and analytics_summary.psif_percentage is not None %}{{ analytics_summary.psif_percentage }}% of eligible{% else %}--% of eligible{% endif %}">
+                {% if analytics_summary and analytics_summary.psif_percentage is not None %}
+                    {{ analytics_summary.psif_percentage }}% of eligible
+                {% else %}
+                    --% of eligible
+                {% endif %}
+            </div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">NOT PSIF</div>
+                <div style="color: var(--risk-low); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="stat-not-psif">{{ analytics_summary.formatted_not_psif_count|default:analytics_summary.not_psif_count|default:"--" }}</div>
+            <div class="metric-subtext" title="Low precursor risk">Low precursor risk</div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Insufficient Evidence</div>
+                <div style="color: var(--risk-medium); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="stat-insufficient">{{ analytics_summary.formatted_insufficient_evidence_count|default:analytics_summary.insufficient_evidence_count|default:"--" }}</div>
+            <div class="metric-subtext" title="Sparse narrative (&lt; 10 words)">Sparse narrative (&lt; 10 words)</div>
+        </div>
+        <div class="metric kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.25rem;">
+                <div class="metric-label">Human Reviewed</div>
+                <div style="color: var(--brand); flex-shrink: 0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7.5" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                </div>
+            </div>
+            <div class="metric-value tabular-nums" id="stat-human-reviewed">{{ analytics_summary.formatted_human_reviewed_count|default:analytics_summary.human_reviewed_count|default:"--" }}</div>
+            <div class="metric-subtext" id="stat-agreement-subtext" title="{% if analytics_summary and analytics_summary.human_psif_count is not None and analytics_summary.human_reviewed_count > 0 %}{{ analytics_summary.human_psif_count }} PSIF · {{ analytics_summary.human_not_psif_count }} NOT PSIF{% elif analytics_summary and analytics_summary.human_model_agreement_rate is not None %}Agreement: {% widthratio analytics_summary.human_model_agreement_rate 1 100 %}%{% else %}HSE Ground Truth{% endif %}">
+                {% if analytics_summary and analytics_summary.human_psif_count is not None and analytics_summary.human_reviewed_count > 0 %}
+                    {{ analytics_summary.human_psif_count }} PSIF · {{ analytics_summary.human_not_psif_count }} NOT PSIF
+                {% elif analytics_summary and analytics_summary.human_model_agreement_rate is not None %}
+                    Agreement: {% widthratio analytics_summary.human_model_agreement_rate 1 100 %}%
+                {% else %}
+                    HSE Ground Truth
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="section">
+        <h2 class="section-title">Analytics Overview</h2>
+        <div class="grid-2">
+            <!-- Trend Chart -->
+            <div class="card" style="display: flex; flex-direction: column;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Incident Trend (Trailing 12 Months)</h3>
+                <div id="trendChartContainer" class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div id="trendChartEmpty" class="state-panel" style="display: none; height: 350px;">
+                    <div class="state-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 20V10M12 20V4M6 20V14"></path>
+                        </svg>
+                    </div>
+                    <h3 class="state-title">No trend data</h3>
+                    <p class="state-text">Upload datasets or submit predictions to populate trends.</p>
+                </div>
+            </div>
+
+            <!-- Binary PSIF Distribution Chart -->
+            <div class="card" style="display: flex; flex-direction: column;">
+                <h3 style="margin-bottom: 0.25rem; font-size: 1.25rem;">Binary PSIF Candidate Distribution</h3>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Candidate evaluation among prediction-eligible reports</div>
+                <div id="riskChartContainer" class="chart-container">
+                    <canvas id="riskChart"></canvas>
+                </div>
+                <div id="riskChartEmpty" class="state-panel" style="display: none; height: 350px;">
+                    <div class="state-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="state-title">No risk data</h3>
+                    <p class="state-text">Band distribution will appear here once predictions are processed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HSE Human Ground Truth & Model Validation Suite -->
+    <div class="section" style="margin-top: 3.5rem;" id="validation-suite-section">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h2 class="section-title" style="margin-bottom: 0.25rem;">HSE Human Ground Truth &amp; Model Benchmark Suite</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+                    Empirical benchmark of the active PSIF model against domain-expert human consensus adjudications (prototype evaluation).
+                </p>
+            </div>
+            <span class="badge" style="background: rgba(107, 122, 79, 0.12); color: var(--risk-low); border: 1px solid rgba(107, 122, 79, 0.3); font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.75rem;">
+                HSE Rubric v1.0 Benchmark
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+            <!-- Card 1: Ground Truth Adjudication Breakdown -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">Consensus Ground Truth</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                        Rig-specific adjudication across 150 stratified incidents
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; background: rgba(156, 59, 50, 0.08); border: 1px solid rgba(156, 59, 50, 0.25); border-radius: var(--radius-sm);">
+                            <span style="font-size: 0.85rem; color: var(--risk-critical); font-weight: 700;">Human PSIF</span>
+                            <span style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--risk-critical);" id="val-human-psif">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; background: rgba(107, 122, 79, 0.08); border: 1px solid rgba(107, 122, 79, 0.25); border-radius: var(--radius-sm);">
+                            <span style="font-size: 0.85rem; color: var(--risk-low); font-weight: 700;">Human NOT PSIF</span>
+                            <span style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--risk-low);" id="val-human-not-psif">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; background: rgba(176, 138, 46, 0.08); border: 1px solid rgba(176, 138, 46, 0.25); border-radius: var(--radius-sm);">
+                            <span style="font-size: 0.85rem; color: var(--risk-medium); font-weight: 700;">Insufficient Info</span>
+                            <span style="font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--risk-medium);" id="val-human-insuff">--</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+                    Decoupled from machine word-count: vague narratives independently isolated.
+                </div>
+            </div>
+
+            <!-- Card 2: Model vs Human Performance at Active Threshold -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; border-top: 3px solid var(--brand);">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">Model vs Human Benchmark</h3>
+                        <span class="badge" style="background: var(--bg-alt); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.7rem; font-weight: 600;">Threshold = 0.10</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                        High-recall operating point designed to catch severe precursors
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div style="padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Safety Recall</div>
+                            <div style="font-size: 1.35rem; font-weight: 700; color: var(--risk-low); font-family: var(--font-mono); margin-top: 0.25rem;" id="val-recall">--%</div>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem;">Precursor capture</div>
+                        </div>
+                        <div style="padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Precision</div>
+                            <div style="font-size: 1.35rem; font-weight: 700; color: var(--cat-blue); font-family: var(--font-mono); margin-top: 0.25rem;" id="val-precision">--%</div>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem;">Triage purity</div>
+                        </div>
+                        <div style="padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">F1 Score</div>
+                            <div style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin-top: 0.25rem;" id="val-f1">--</div>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem;">Harmonic mean</div>
+                        </div>
+                        <div style="padding: 0.75rem; background: rgba(156, 59, 50, 0.08); border: 1px solid rgba(156, 59, 50, 0.25); border-radius: var(--radius-sm);">
+                            <div style="font-size: 0.7rem; color: var(--risk-critical); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">False Negatives</div>
+                            <div style="font-size: 1.35rem; font-weight: 700; color: var(--risk-critical); font-family: var(--font-mono); margin-top: 0.25rem;" id="val-fn">--</div>
+                            <div style="font-size: 0.7rem; color: var(--risk-critical); margin-top: 0.2rem;">Missed PSIF events</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-family: var(--font-mono);" id="val-confusion-summary">
+                    Confusion Matrix: TP: -- &bull; FP: -- &bull; TN: -- &bull; FN: --
+                </div>
+            </div>
+
+            <!-- Card 3: Dual-Review Inter-Rater Concordance -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">Inter-Rater Reliability</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                        Dual-expert blinded reviews: Lead Auditor vs Field Specialist
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">Raw Agreement Rate</span>
+                                <span style="font-size: 1.15rem; font-weight: 700; color: var(--risk-low); font-family: var(--font-mono);" id="val-inter-agreement">--%</span>
+                            </div>
+                        </div>
+                        <div style="padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">Cohen's Kappa (&kappa;)</span>
+                                <span style="font-size: 1.15rem; font-weight: 700; color: var(--cat-blue); font-family: var(--font-mono);" id="val-inter-kappa">--</span>
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem;" id="val-inter-interp">
+                                Interpretation: --
+                            </div>
+                        </div>
+                        <div style="padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.85rem; color: var(--text-secondary);">Evaluated Pairs</span>
+                                <span style="font-size: 1rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);" id="val-inter-pairs">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+                    Demonstrates substantial independent reproducibility of the 6-point HSE rubric.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IOGP & Recurring Patterns Section -->
+    <div class="section" style="margin-top: 3.5rem;">
+        <h2 class="section-title">Safety Intelligence (IOGP & Patterns)</h2>
+        <div class="grid-2">
+            <!-- IOGP Rule Distribution -->
+            <div class="card" style="display: flex; flex-direction: column;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">IOGP Life-Saving Rules</h3>
+                <div id="iogpContainer" style="flex: 1; overflow-y: auto;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Recurrence & Alerts -->
+            <div class="card" style="display: flex; flex-direction: column;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Recurring Patterns & Alerts</h3>
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Cross-Site Escalations</h4>
+                    <div id="crossSiteAlertsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                <div>
+                    <h4 style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Department × Activity Recurrences</h4>
+                    <div id="recurringPatternsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Utility for fetching computed CSS variables
+    const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+    // Semantic risk colors
+    const colorLow = getCssVar('--risk-low') || '#6B7A4F';
+    const colorMedium = getCssVar('--risk-medium') || '#B08A2E';
+    const colorHigh = getCssVar('--risk-high') || '#B3611E';
+    const colorCritical = getCssVar('--risk-critical') || '#9C3B32';
+
+    // Categorical colors
+    const catSlate = getCssVar('--cat-slate') || '#6E7A83';
+    const catBlue = getCssVar('--cat-blue') || '#5C7C8A';
+
+    function fitSingleMetric(el) {
+        if (!el) return;
+        const len = el.textContent.trim().length;
+        if (len >= 13) {
+            el.style.fontSize = 'clamp(1.3rem, 1.7vw, 1.6rem)';
+            el.style.letterSpacing = '-0.035em';
+        } else if (len >= 11) {
+            el.style.fontSize = 'clamp(1.45rem, 1.9vw, 1.85rem)';
+            el.style.letterSpacing = '-0.03em';
+        } else if (len >= 9) {
+            el.style.fontSize = 'clamp(1.6rem, 2.1vw, 2.05rem)';
+            el.style.letterSpacing = '-0.025em';
+        } else {
+            el.style.fontSize = '';
+            el.style.letterSpacing = '';
+        }
+    }
+
+    function formatAndFit(id, val) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const num = Number(val);
+        el.textContent = isNaN(num) ? String(val) : num.toLocaleString();
+        fitSingleMetric(el);
+    }
+
+    // Immediately fit server-rendered values
+    document.querySelectorAll('.metric-value').forEach(fitSingleMetric);
+
+    fetch('/api/analytics/summary/')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            formatAndFit('stat-total', data.total_incidents || 0);
+            formatAndFit('stat-eligible', data.prediction_eligible_count || 0);
+            formatAndFit('stat-psif', data.psif_count || 0);
+            formatAndFit('stat-not-psif', data.not_psif_count || 0);
+            formatAndFit('stat-insufficient', data.insufficient_evidence_count || 0);
+            
+            const reviewedCount = data.adjudicated_count || data.human_reviewed_count || 0;
+            formatAndFit('stat-human-reviewed', reviewedCount);
+            
+            const psifPct = data.psif_percentage !== undefined ? data.psif_percentage : ((data.psif_prediction_rate || 0) * 100);
+            document.getElementById('stat-psif-subtext').textContent = `${psifPct.toFixed(1)}% of eligible`;
+
+            if (data.human_psif_count !== undefined && reviewedCount > 0) {
+                document.getElementById('stat-agreement-subtext').textContent = `${data.human_psif_count} PSIF · ${data.human_not_psif_count} NOT PSIF`;
+            } else if (data.human_model_agreement_rate !== null && data.human_model_agreement_rate !== undefined) {
+                document.getElementById('stat-agreement-subtext').textContent = `Agreement: ${(data.human_model_agreement_rate * 100).toFixed(1)}%`;
+            } else {
+                document.getElementById('stat-agreement-subtext').textContent = `Pending human review`;
+            }
+
+            // Populate Validation Suite Metrics
+            document.getElementById('val-human-psif').textContent = (data.human_psif_count || 0).toLocaleString();
+            document.getElementById('val-human-not-psif').textContent = (data.human_not_psif_count || 0).toLocaleString();
+            document.getElementById('val-human-insuff').textContent = (data.human_insufficient_count || 0).toLocaleString();
+
+            if (data.validation_metrics) {
+                const vm = data.validation_metrics;
+                document.getElementById('val-recall').textContent = `${(vm.recall * 100).toFixed(1)}%`;
+                document.getElementById('val-precision').textContent = `${(vm.precision * 100).toFixed(1)}%`;
+                document.getElementById('val-f1').textContent = vm.f1_score.toFixed(3);
+                document.getElementById('val-fn').textContent = vm.false_negatives;
+                document.getElementById('val-confusion-summary').textContent = 
+                    `Confusion Matrix (N=${vm.sample_size}): TP: ${vm.true_positives} • FP: ${vm.false_positives} • TN: ${vm.true_negatives} • FN: ${vm.false_negatives}`;
+            }
+
+            if (data.inter_rater_stats) {
+                const ir = data.inter_rater_stats;
+                document.getElementById('val-inter-agreement').textContent = `${ir.agreement_percentage.toFixed(1)}%`;
+                document.getElementById('val-inter-kappa').textContent = ir.cohen_kappa.toFixed(3);
+                document.getElementById('val-inter-interp').textContent = `Interpretation: ${ir.interpretation} Agreement`;
+                document.getElementById('val-inter-pairs').textContent = `${ir.total_pairs} Pairs`;
+            }
+
+            // Populate IOGP Distribution directly from authoritative summary response
+            const iogpData = data.iogp_distribution || [];
+            const iogpContainer = document.getElementById('iogpContainer');
+            if (iogpContainer) {
+                if (iogpData.length === 0) {
+                    iogpContainer.innerHTML = '<p style="color:var(--text-secondary); text-align:center; margin-top:2rem;">No IOGP tags generated yet.</p>';
+                } else {
+                    let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                    iogpData.forEach(item => {
+                        html += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                                <span style="font-weight: 500; font-size: 0.95rem;">${item.rule}</span>
+                                <span class="badge" style="background:var(--brand); color:#fff;">${(item.count || 0).toLocaleString()}</span>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    iogpContainer.innerHTML = html;
+                }
+            }
+
+            if (!data.total_incidents || data.total_incidents === 0) {
+                document.getElementById('riskChartContainer').style.display = 'none';
+                document.getElementById('riskChartEmpty').style.display = 'flex';
+                document.getElementById('trendChartContainer').style.display = 'none';
+                document.getElementById('trendChartEmpty').style.display = 'flex';
+                return;
+            }
+
+            const binDist = data.binary_distribution || {
+                'PSIF': data.psif_count || 0,
+                'NOT_PSIF': data.not_psif_count || 0
+            };
+
+            const ctxRisk = document.getElementById('riskChart').getContext('2d');
+            new Chart(ctxRisk, {
+                type: 'doughnut',
+                data: {
+                    labels: ['PSIF Candidates', 'NOT PSIF'],
+                    datasets: [{
+                        data: [
+                            binDist['PSIF'] || 0,
+                            binDist['NOT_PSIF'] || 0
+                        ],
+                        backgroundColor: [colorCritical, colorLow],
+                        borderWidth: 2,
+                        borderColor: getCssVar('--surface') || '#FFFFFF'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Public Sans' }, padding: 20 } },
+                        tooltip: { backgroundColor: 'rgba(17, 17, 17, 0.9)', titleFont: { family: 'Public Sans' }, bodyFont: { family: 'Public Sans' } }
+                    }
+                }
+            });
+        })
+        .catch(err => console.error('Error fetching summary:', err));
+
+    fetch('/api/analytics/trend/')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            const trends = data.trends || [];
+            if (trends.length === 0) {
+                document.getElementById('trendChartContainer').style.display = 'none';
+                document.getElementById('trendChartEmpty').style.display = 'flex';
+                return;
+            }
+            
+            const labels = trends.map(t => t.month);
+            const totalData = trends.map(t => t.total);
+            const psifData = trends.map(t => t.psif);
+
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Incidents',
+                            data: totalData,
+                            borderColor: catSlate,
+                            backgroundColor: catSlate + '1A',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: catSlate,
+                            pointBorderColor: '#FFF',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'PSIF Predicted',
+                            data: psifData,
+                            borderColor: catBlue,
+                            backgroundColor: catBlue + '1A',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: catBlue,
+                            pointBorderColor: '#FFF',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { labels: { font: { family: 'Public Sans' }, usePointStyle: true }, position: 'top' },
+                        tooltip: { backgroundColor: 'rgba(17, 17, 17, 0.9)', titleFont: { family: 'Public Sans' }, bodyFont: { family: 'Public Sans' } }
+                    }
+                }
+            });
+        })
+        .catch(err => console.error('Error fetching trend:', err));
+
+    // Fetch Recurring Patterns
+    fetch('/api/analytics/recurring-patterns/')
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(data => {
+            const patterns = data.patterns || [];
+            const container = document.getElementById('recurringPatternsContainer');
+            if (!container) return;
+            if (patterns.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-secondary); font-size:0.9rem;">No recurring patterns identified in the current window.</p>';
+                return;
+            }
+            let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+            patterns.slice(0, 6).forEach(p => {
+                html += `
+                    <div style="padding: 0.75rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                            <strong style="font-size:0.95rem;">${p.site || p.canonical_site} <span style="color:var(--text-secondary);">×</span> ${p.activity || p.canonical_activity}</strong>
+                            <span class="badge" style="background:var(--risk-high); color:#fff;">${p.occurrence_count} events</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--text-secondary);">
+                            <strong>Rules:</strong> ${p.rule || p.canonical_rule}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error loading recurring patterns:', err);
+            const container = document.getElementById('recurringPatternsContainer');
+            if (container) container.innerHTML = '<p style="color:var(--text-secondary); font-size:0.85rem;">Recurring patterns temporarily unavailable.</p>';
+        });
+
+    // Fetch Cross-Site Alerts
+    fetch('/api/analytics/cross-site-alerts/')
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(data => {
+            const alerts = data.alerts || [];
+            const container = document.getElementById('crossSiteAlertsContainer');
+            if (!container) return;
+            if (alerts.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-secondary); font-size:0.9rem;">No cross-site patterns detected.</p>';
+                return;
+            }
+            let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+            alerts.slice(0, 4).forEach(a => {
+                html += `
+                    <div style="padding: 0.85rem 1rem; background: rgba(156, 59, 50, 0.08); border: 1px solid rgba(156, 59, 50, 0.25); border-left: 4px solid var(--risk-critical); border-radius: var(--radius-sm);">
+                        <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom:0.4rem;">
+                            <strong style="font-size:0.95rem; color: var(--risk-critical);">Rule: ${a.rule || a.canonical_rule}</strong>
+                            <span class="badge" style="background: var(--risk-critical); color: #fff; font-weight: 700;">${a.total_incidents} events</span>
+                        </div>
+                        <div style="font-size:0.85rem; color: var(--text-secondary);">
+                            <strong style="color: var(--text-primary);">Spread:</strong> ${a.site_count} Departments (${(a.sites || []).slice(0, 4).join(', ')})
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error loading cross-site alerts:', err);
+            const container = document.getElementById('crossSiteAlertsContainer');
+            if (container) container.innerHTML = '<p style="color:var(--text-secondary); font-size:0.85rem;">Cross-site alerts temporarily unavailable.</p>';
+        });
+});
+</script>
+{% endblock %}

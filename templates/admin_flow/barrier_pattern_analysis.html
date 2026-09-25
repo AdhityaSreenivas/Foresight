@@ -1,0 +1,1289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Barrier Intelligence — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Identify the protective measures that prevented, limited, or failed to stop hazardous events across Admin Flow operations.{% endblock %}
+
+{% block admin_nav_patterns %}active{% endblock %}
+
+{% block extra_head %}
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<style>
+/* ── Barrier Intelligence Workspace Styles ─────────────────────────────────── */
+
+:root {
+    --state-effective: #2E7D32;
+    --state-effective-bg: #E8F5E9;
+    --state-effective-border: #A5D6A7;
+    --state-deficient: #9C3B32;
+    --state-deficient-bg: #FFEBEE;
+    --state-deficient-border: #EF9A9A;
+    --state-warning: #E67E22;
+    --state-warning-bg: #FFF3E0;
+    --state-warning-border: #FFE0B2;
+    --role-preventive: #1E4D2B;
+    --role-detective: #2980B9;
+    --role-mitigative: #657044;
+    --role-recovery: #8E44AD;
+}
+
+/* Semantics & Methodology Banner */
+.banner-semantics {
+    background: #fbfcf8;
+    border: 1px solid rgba(101, 112, 68, 0.3);
+    border-left: 4px solid var(--olive-dark, #657044);
+    border-radius: var(--radius-sm, 6px);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+/* Dimension Navigation Tabs */
+.dimension-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.dimension-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.15rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm, 6px) var(--radius-sm, 6px) 0 0;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.dimension-tab:hover {
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.dimension-tab.active {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+    background: rgba(30, 77, 43, 0.05);
+    font-weight: 700;
+}
+
+.dimension-tab .tab-badge {
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: var(--border);
+    color: var(--text-secondary);
+}
+
+.dimension-tab.active .tab-badge {
+    background: var(--brand);
+    color: #fff;
+}
+
+/* Top 4 KPI Metrics */
+.barrier-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.barrier-kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 1.15rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.barrier-kpi-label {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 0.4rem;
+}
+
+.barrier-kpi-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: 0.35rem;
+}
+
+.barrier-kpi-subtext {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Dual Highlight Callouts: Top Effective vs Top Deficient */
+.dual-callout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.callout-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.callout-card.effective-highlight {
+    border-left: 5px solid var(--state-effective);
+    background: linear-gradient(135deg, #ffffff 0%, #f4fbf4 100%);
+}
+
+.callout-card.deficient-highlight {
+    border-left: 5px solid var(--state-deficient);
+    background: linear-gradient(135deg, #ffffff 0%, #fdf5f5 100%);
+}
+
+.callout-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.badge-success-tag {
+    background: var(--state-effective-bg);
+    color: var(--state-effective);
+    border: 1px solid var(--state-effective-border);
+}
+
+.badge-danger-tag {
+    background: var(--state-deficient-bg);
+    color: var(--state-deficient);
+    border: 1px solid var(--state-deficient-border);
+}
+
+.callout-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.4rem 0;
+    line-height: 1.2;
+}
+
+.callout-stat-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.callout-stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-primary);
+}
+
+.callout-meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+}
+
+.meta-pill {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+}
+
+/* Filter Toolbar */
+.filter-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.filter-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1 1 180px;
+}
+
+.filter-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.filter-select, .filter-input {
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.86rem;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.filter-select:focus, .filter-input:focus {
+    border-color: var(--brand);
+}
+
+/* Primary Chart Section */
+.chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 1.5rem;
+    margin-bottom: 1.75rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.toggle-group {
+    display: inline-flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px;
+    gap: 3px;
+}
+
+.btn-toggle {
+    border: none;
+    background: transparent;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-toggle:hover {
+    color: var(--text-primary);
+}
+
+.btn-toggle.active {
+    background: #fff;
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-weight: 700;
+}
+
+.btn-toggle .toggle-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* State Distribution Section */
+.state-dist-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+}
+
+.state-pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.state-stat-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1 1 150px;
+}
+
+.state-box-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.state-box-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.state-box-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-primary);
+}
+
+/* Portfolio Cards Grid */
+.portfolio-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+}
+
+.barrier-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm, 6px);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.barrier-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    border-color: var(--brand);
+}
+
+.barrier-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.barrier-card-title {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+    line-height: 1.25;
+}
+
+.barrier-role-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.role-preventive { background: rgba(30, 77, 43, 0.12); color: var(--role-preventive); }
+.role-detective { background: rgba(41, 128, 185, 0.12); color: var(--role-detective); }
+.role-mitigative { background: rgba(101, 112, 68, 0.15); color: var(--role-mitigative); }
+.role-recovery { background: rgba(142, 68, 173, 0.12); color: var(--role-recovery); }
+
+.card-metrics-split {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: #f8faf5;
+    border: 1px solid rgba(168, 184, 120, 0.25);
+    border-radius: 4px;
+    padding: 0.6rem 0.5rem;
+    text-align: center;
+    margin-bottom: 0.85rem;
+}
+
+.card-metric-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card-metric-col:not(:last-child) {
+    border-right: 1px solid rgba(168, 184, 120, 0.3);
+}
+
+.card-metric-num {
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-primary);
+}
+
+.card-metric-lbl {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.card-evidence-box {
+    background: var(--bg);
+    border-left: 3px solid var(--olive-dark);
+    padding: 0.55rem 0.75rem;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.78rem;
+    color: var(--text-primary);
+    font-style: italic;
+    margin-bottom: 0.85rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-dimension-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: 0.74rem;
+    margin-top: auto;
+}
+
+.dim-tag {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.dim-tag-iogp {
+    background: rgba(92, 124, 138, 0.1);
+    color: #2b4c5b;
+    border-color: rgba(92, 124, 138, 0.25);
+    font-weight: 600;
+}
+
+/* Detail Drawer / Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+}
+
+.modal-content {
+    background: var(--surface);
+    border-radius: 8px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+@media (max-width: 900px) {
+    .barrier-kpi-grid, .dual-callout-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Breadcrumb & Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="badge" style="background: var(--brand); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; text-transform: uppercase;">Admin Flow</span>
+                <span class="badge" style="background: rgba(168, 184, 120, 0.25); color: var(--text-primary); font-size: 0.7rem; font-weight: 600;">Site: {{ barrier_data.site_context }}</span>
+                <span class="badge" style="background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.7rem;">Protective Safeguards</span>
+            </div>
+            <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem 0;">
+                BARRIER INTELLIGENCE
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; margin: 0; max-width: 780px;">
+                Identify the protective measures that prevented, limited, or failed to stop hazardous events.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'admin_flow:patterns' %}" class="btn btn-secondary" style="font-size: 0.85rem;">
+                &larr; Pattern Hub
+            </a>
+            <a href="{% url 'admin_flow:upload' %}" class="btn btn-primary" style="font-size: 0.85rem;">
+                Upload Dataset
+            </a>
+        </div>
+    </div>
+
+    <!-- Methodology & Semantic Clarity Banner -->
+    <div class="banner-semantics" id="barrier-methodology-note">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <strong>Architectural Distinction:</strong>
+        </div>
+        <div>
+            A <strong>Barrier</strong> is the actual physical or operational protective measure described in the incident (e.g., Safety Harness, Machine Guard, Isolation Valve, Gas Detector).
+            IOGP Life-Saving Rules represent the safety domain and are maintained as independent dimensions.
+            <strong>Effective safeguards</strong> are recognized as protective successes and are strictly separated from barrier deficiencies.
+        </div>
+    </div>
+
+    <!-- Dimension Navigation Tabs -->
+    <div class="dimension-tabs" role="tablist">
+        <a href="{% url 'admin_flow:patterns' %}" class="dimension-tab" role="tab" aria-selected="false" title="Pattern Analysis Hub">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Pattern Hub</span>
+        </a>
+        <a href="{% url 'admin_flow:patterns_activity' %}" class="dimension-tab" role="tab" aria-selected="false" id="tab-activity-patterns">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+            <span>Activity Patterns</span>
+        </a>
+        <a href="{% url 'admin_flow:patterns_barrier' %}" class="dimension-tab active" role="tab" aria-selected="true" id="tab-barrier-patterns">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Barrier Patterns</span>
+            <span class="tab-badge" id="badge-barriers-count">{{ barrier_data.unique_barrier_types_count }}</span>
+        </a>
+        <a href="{% url 'admin_flow:patterns_location' %}" class="dimension-tab" role="tab" aria-selected="false" title="Location Patterns">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            <span>Location Patterns</span>
+        </a>
+    </div>
+
+    <!-- 1. TOP 4 KPI CARDS -->
+    <div class="barrier-kpi-grid">
+        <div class="barrier-kpi-card" style="border-top: 3px solid var(--brand);">
+            <div class="barrier-kpi-label">Total Barrier-Linked Incidents</div>
+            <div class="barrier-kpi-value" id="kpi-total-barrier-incidents">{{ barrier_data.barrier_identified_count }}</div>
+            <div class="barrier-kpi-subtext">
+                <strong>{{ barrier_data.barrier_identification_rate }}%</strong> of reports establish barriers ({{ barrier_data.barrier_identified_count }}/{{ barrier_data.total_filtered_incidents }})
+            </div>
+        </div>
+
+        <div class="barrier-kpi-card" style="border-top: 3px solid var(--state-effective);">
+            <div class="barrier-kpi-label">Effective Barrier Signals</div>
+            <div class="barrier-kpi-value" style="color: var(--state-effective);" id="kpi-effective-barrier-signals">{{ barrier_data.effective_barrier_signals }}</div>
+            <div class="barrier-kpi-subtext">
+                <strong>{{ barrier_data.effective_rate }}%</strong> arrested, mitigated, or stopped progression
+            </div>
+        </div>
+
+        <div class="barrier-kpi-card" style="border-top: 3px solid var(--state-deficient);">
+            <div class="barrier-kpi-label">Deficient Barrier Signals</div>
+            <div class="barrier-kpi-value" style="color: var(--state-deficient);" id="kpi-deficient-barrier-signals">{{ barrier_data.deficient_barrier_signals }}</div>
+            <div class="barrier-kpi-subtext">
+                <strong>{{ barrier_data.deficient_rate }}%</strong> failed, absent, or bypassed controls
+            </div>
+        </div>
+
+        <div class="barrier-kpi-card" style="border-top: 3px solid var(--olive-dark);">
+            <div class="barrier-kpi-label">Unique Barrier Types</div>
+            <div class="barrier-kpi-value" id="kpi-unique-barrier-types">{{ barrier_data.unique_barrier_types_count }}</div>
+            <div class="barrier-kpi-subtext">
+                Distinct protective measure categories observed
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. DUAL CALLOUTS: TOP SUCCESSFUL VS TOP DEFICIENT BARRIER -->
+    <div class="dual-callout-grid">
+        <!-- Successful Barrier -->
+        <div class="callout-card effective-highlight" id="callout-top-effective">
+            <div>
+                <span class="callout-badge badge-success-tag">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Most Frequent Effective Barrier
+                </span>
+                <div class="callout-title" id="effective-barrier-name">
+                    {% if barrier_data.top_effective_barrier %}
+                        {{ barrier_data.top_effective_barrier.barrier_name }}
+                    {% else %}
+                        No effective barrier identified
+                    {% endif %}
+                </div>
+                <div class="callout-stat-row">
+                    <span class="callout-stat-num" style="color: var(--state-effective);">
+                        {{ barrier_data.top_effective_barrier.effective_count|default:0 }}
+                    </span>
+                    <span style="font-size: 0.88rem; color: var(--text-secondary); font-weight: 600;">
+                        effective observations (protective successes)
+                    </span>
+                </div>
+            </div>
+            {% if barrier_data.top_effective_barrier %}
+            <div class="callout-meta-pills">
+                <span class="meta-pill">Top Location: <strong>{{ barrier_data.top_effective_barrier.affected_locations.0|default:"Various" }}</strong></span>
+                <span class="meta-pill">Activity: <strong>{{ barrier_data.top_effective_barrier.top_activity }}</strong></span>
+                {% if barrier_data.top_effective_barrier.associated_iogp_rules %}
+                <span class="meta-pill dim-tag-iogp">Associated IOGP: {{ barrier_data.top_effective_barrier.associated_iogp_rules.0 }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Deficient Barrier -->
+        <div class="callout-card deficient-highlight" id="callout-top-deficient">
+            <div>
+                <span class="callout-badge badge-danger-tag">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Most Frequent Barrier Deficiency Signal
+                </span>
+                <div class="callout-title" id="deficient-barrier-name">
+                    {% if barrier_data.top_deficient_barrier %}
+                        {{ barrier_data.top_deficient_barrier.barrier_name }}
+                    {% else %}
+                        No deficiency signal identified
+                    {% endif %}
+                </div>
+                <div class="callout-stat-row">
+                    <span class="callout-stat-num" style="color: var(--state-deficient);">
+                        {{ barrier_data.top_deficient_barrier.deficient_count|default:0 }}
+                    </span>
+                    <span style="font-size: 0.88rem; color: var(--text-secondary); font-weight: 600;">
+                        deficient observations ({{ barrier_data.top_deficient_barrier.dominant_state }})
+                    </span>
+                </div>
+            </div>
+            {% if barrier_data.top_deficient_barrier %}
+            <div class="callout-meta-pills">
+                <span class="meta-pill">Top Location: <strong>{{ barrier_data.top_deficient_barrier.affected_locations.0|default:"Various" }}</strong></span>
+                <span class="meta-pill">Activity: <strong>{{ barrier_data.top_deficient_barrier.top_activity }}</strong></span>
+                {% if barrier_data.top_deficient_barrier.associated_iogp_rules %}
+                <span class="meta-pill dim-tag-iogp">Associated IOGP: {{ barrier_data.top_deficient_barrier.associated_iogp_rules.0 }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 3. GRANULAR FILTER TOOLBAR -->
+    <div class="filter-card">
+        <form method="get" action="{% url 'admin_flow:patterns_barrier' %}" class="filter-form" id="barrier-filter-form">
+            <div class="filter-group">
+                <label for="filter-state" class="filter-label">Barrier State</label>
+                <select name="state" id="filter-state" class="filter-select">
+                    <option value="all" {% if barrier_data.filters.state_filter == 'all' %}selected{% endif %}>All States</option>
+                    <option value="EFFECTIVE" {% if barrier_data.filters.state_filter == 'EFFECTIVE' %}selected{% endif %}>Effective Only</option>
+                    <option value="DEFICIENT" {% if barrier_data.filters.state_filter == 'DEFICIENT' %}selected{% endif %}>Deficient / Compromised</option>
+                    <option value="FAILED" {% if barrier_data.filters.state_filter == 'FAILED' %}selected{% endif %}>Failed</option>
+                    <option value="ABSENT" {% if barrier_data.filters.state_filter == 'ABSENT' %}selected{% endif %}>Absent / Not Installed</option>
+                    <option value="BYPASSED" {% if barrier_data.filters.state_filter == 'BYPASSED' %}selected{% endif %}>Bypassed</option>
+                    <option value="NOT_VERIFIED" {% if barrier_data.filters.state_filter == 'NOT_VERIFIED' %}selected{% endif %}>Not Verified</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filter-psif" class="filter-label">PSIF Classification</label>
+                <select name="psif" id="filter-psif" class="filter-select">
+                    <option value="all" {% if barrier_data.filters.psif_filter == 'all' %}selected{% endif %}>All Incidents</option>
+                    <option value="psif" {% if barrier_data.filters.psif_filter == 'psif' %}selected{% endif %}>PSIF Precursors Only</option>
+                    <option value="not_psif" {% if barrier_data.filters.psif_filter == 'not_psif' %}selected{% endif %}>Non-PSIF</option>
+                    <option value="insufficient" {% if barrier_data.filters.psif_filter == 'insufficient' %}selected{% endif %}>Insufficient Info</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filter-location" class="filter-label">Internal Facility Zone</label>
+                <select name="location" id="filter-location" class="filter-select">
+                    <option value="all" {% if barrier_data.filters.location_filter == 'all' %}selected{% endif %}>All Internal Locations</option>
+                    {% for loc in barrier_data.canonical_locations %}
+                    <option value="{{ loc }}" {% if barrier_data.filters.location_filter == loc %}selected{% endif %}>{{ loc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group" style="flex: 2 1 220px;">
+                <label for="filter-query" class="filter-label">Search Barrier or Narrative</label>
+                <input type="text" name="q" id="filter-query" class="filter-input" placeholder="e.g., harness, valve, interlock..." value="{{ barrier_data.filters.query }}">
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" id="btn-apply-filters" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    Filter
+                </button>
+                {% if barrier_data.has_active_filters %}
+                <a href="{% url 'admin_flow:patterns_barrier' %}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    {% if barrier_data.has_data %}
+        <!-- 4. PRIMARY BARRIER CHART: OCCURRENCE DISTRIBUTION -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div>
+                    <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem 0;">
+                        Recurring Barrier Signals
+                    </h2>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">
+                        Occurrence frequency of protective measures across the Admin Flow dataset.
+                    </p>
+                </div>
+
+                <!-- Metric View Toggle -->
+                <div class="toggle-group" role="group" aria-label="Chart view metric">
+                    <button type="button" class="btn-toggle active" id="toggle-total" data-metric="total" aria-pressed="true">
+                        <span class="toggle-indicator" style="background: var(--brand);"></span>
+                        Associated Incidents
+                    </button>
+                    <button type="button" class="btn-toggle" id="toggle-effective" data-metric="effective" aria-pressed="false">
+                        <span class="toggle-indicator" style="background: var(--state-effective);"></span>
+                        Effective Safeguards
+                    </button>
+                    <button type="button" class="btn-toggle" id="toggle-deficient" data-metric="deficient" aria-pressed="false">
+                        <span class="toggle-indicator" style="background: var(--state-deficient);"></span>
+                        Deficient Signals
+                    </button>
+                    <button type="button" class="btn-toggle" id="toggle-psif" data-metric="psif" aria-pressed="false">
+                        <span class="toggle-indicator" style="background: #E67E22;"></span>
+                        PSIF-Linked
+                    </button>
+                </div>
+            </div>
+
+            <div id="barrier-chart-wrapper" style="position: relative; width: 100%; height: 380px;">
+                <canvas id="barrierOccurrenceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 5. BARRIER STATE DISTRIBUTION SECTION -->
+        <div class="state-dist-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.2rem 0;">
+                        Barrier State Distribution
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+                        Performance classification of all documented protective control signals.
+                    </p>
+                </div>
+            </div>
+
+            <div class="state-pills-row">
+                <div class="state-stat-box">
+                    <span class="state-box-indicator" style="background: var(--state-effective);"></span>
+                    <div>
+                        <div class="state-box-label">Effective</div>
+                        <div class="state-box-val" style="color: var(--state-effective);">
+                            {{ barrier_data.state_distribution.EFFECTIVE|default:0 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="state-stat-box">
+                    <span class="state-box-indicator" style="background: var(--state-deficient);"></span>
+                    <div>
+                        <div class="state-box-label">Failed</div>
+                        <div class="state-box-val" style="color: var(--state-deficient);">
+                            {{ barrier_data.state_distribution.FAILED|default:0 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="state-stat-box">
+                    <span class="state-box-indicator" style="background: #E67E22;"></span>
+                    <div>
+                        <div class="state-box-label">Not Verified</div>
+                        <div class="state-box-val" style="color: #E67E22;">
+                            {{ barrier_data.state_distribution.NOT_VERIFIED|default:0 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="state-stat-box">
+                    <span class="state-box-indicator" style="background: #555555;"></span>
+                    <div>
+                        <div class="state-box-label">Absent / Removed</div>
+                        <div class="state-box-val" style="color: #555555;">
+                            {{ barrier_data.state_distribution.ABSENT|default:0 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="state-stat-box">
+                    <span class="state-box-indicator" style="background: #7B1FA2;"></span>
+                    <div>
+                        <div class="state-box-label">Bypassed</div>
+                        <div class="state-box-val" style="color: #7B1FA2;">
+                            {{ barrier_data.state_distribution.BYPASSED|default:0 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="state-stat-box">
+                    <span class="state-box-indicator" style="background: #D97706;"></span>
+                    <div>
+                        <div class="state-box-label">Partially Effective</div>
+                        <div class="state-box-val" style="color: #D97706;">
+                            {{ barrier_data.state_distribution.PARTIALLY_EFFECTIVE|default:0 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. INTERACTIVE BARRIER PORTFOLIO CARDS -->
+        <div class="portfolio-section-header">
+            <div>
+                <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.2rem 0;">
+                    Interactive Barrier Portfolio
+                </h3>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">
+                    Click on any barrier card to view narrative evidence excerpts and cross-dimension associations.
+                </p>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                Showing <strong>{{ barrier_data.portfolio_cards|length }}</strong> distinct barrier types
+            </div>
+        </div>
+
+        <div class="portfolio-grid" id="barrier-portfolio-grid">
+            {% for card in barrier_data.portfolio_cards %}
+            <div class="barrier-card" data-barrier-name="{{ card.barrier_name }}" data-card-idx="{{ forloop.counter0 }}">
+                <div>
+                    <div class="barrier-card-header">
+                        <div>
+                            <div style="font-size: 0.72rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px;">
+                                Rank #{{ card.rank }} &bull; {{ card.barrier_category }}
+                            </div>
+                            <h4 class="barrier-card-title">{{ card.barrier_name }}</h4>
+                        </div>
+                        <span class="barrier-role-badge role-{{ card.barrier_role|lower }}">{{ card.barrier_role }}</span>
+                    </div>
+
+                    <!-- Triple Metric Split -->
+                    <div class="card-metrics-split">
+                        <div class="card-metric-col">
+                            <span class="card-metric-num">{{ card.associated_incidents_count }}</span>
+                            <span class="card-metric-lbl">Total Obs</span>
+                        </div>
+                        <div class="card-metric-col">
+                            <span class="card-metric-num" style="color: var(--state-effective);">{{ card.effective_count }}</span>
+                            <span class="card-metric-lbl" style="color: var(--state-effective);">Effective</span>
+                        </div>
+                        <div class="card-metric-col">
+                            <span class="card-metric-num" style="color: var(--state-deficient);">{{ card.deficient_count }}</span>
+                            <span class="card-metric-lbl" style="color: var(--state-deficient);">Deficient</span>
+                        </div>
+                    </div>
+
+                    <!-- Evidence Quote Excerpt -->
+                    {% if card.evidence_examples %}
+                    <div class="card-evidence-box" title="Documented incident evidence">
+                        &ldquo;{{ card.evidence_examples.0.evidence_span }}&rdquo;
+                        <div style="font-size: 0.7rem; font-style: normal; margin-top: 3px; font-weight: 600; color: var(--text-secondary);">
+                            State: <span style="text-transform: uppercase; color: {% if card.evidence_examples.0.is_effective %}var(--state-effective){% else %}var(--state-deficient){% endif %};">{{ card.evidence_examples.0.state }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Dimension Tags -->
+                <div class="card-dimension-tags">
+                    {% if card.affected_locations %}
+                    <span class="dim-tag" title="Top Internal Facility Zone">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        {{ card.affected_locations.0 }}
+                    </span>
+                    {% endif %}
+
+                    {% if card.top_activity %}
+                    <span class="dim-tag" title="Top Associated Activity">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                        {{ card.top_activity }}
+                    </span>
+                    {% endif %}
+
+                    {% if card.associated_iogp_rules %}
+                    <span class="dim-tag dim-tag-iogp" title="Associated IOGP Rule Domain">
+                        {{ card.associated_iogp_rules.0 }}
+                    </span>
+                    {% endif %}
+
+                    <span class="dim-tag" style="margin-left: auto; font-weight: 700; color: var(--brand);">
+                        {{ card.psif_linked_count }} PSIF ({{ card.psif_rate }}%)
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- Empty State -->
+        <div style="background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: 3.5rem 2rem; text-align: center;">
+            <div style="font-size: 2.5rem; color: var(--olive-dark); margin-bottom: 0.75rem;">&#128737;</div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+                No Barrier Intelligence Data Found
+            </h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem;">
+                No protective barriers matching the specified filters could be established. Upload or reset the Admin Flow dataset to evaluate barrier signals.
+            </p>
+            <a href="{% url 'admin_flow:upload' %}" class="btn btn-primary">Upload Dataset</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Barrier Detail Inspector Modal -->
+<div class="modal-overlay modal-barrier-inspector" id="barrierModal" data-testid="modal-barrier-inspector">
+    <div class="modal-content">
+        <button type="button" class="modal-close-btn" id="modalCloseBtn">&times;</button>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+            <span class="barrier-role-badge" id="modalRoleBadge">ROLE</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;" id="modalCategory">CATEGORY</span>
+        </div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0 0 1rem 0;" id="modalTitle">Barrier Name</h2>
+
+        <!-- Key Metrics Summary -->
+        <div class="card-metrics-split" style="margin-bottom: 1.5rem;">
+            <div class="card-metric-col">
+                <span class="card-metric-num" id="modalTotalCount">0</span>
+                <span class="card-metric-lbl">Total Associated Incidents</span>
+            </div>
+            <div class="card-metric-col">
+                <span class="card-metric-num" style="color: var(--state-effective);" id="modalEffectiveCount">0</span>
+                <span class="card-metric-lbl" style="color: var(--state-effective);">Effective Safeguards</span>
+            </div>
+            <div class="card-metric-col">
+                <span class="card-metric-num" style="color: var(--state-deficient);" id="modalDeficientCount">0</span>
+                <span class="card-metric-lbl" style="color: var(--state-deficient);">Deficiencies / Breakdowns</span>
+            </div>
+        </div>
+
+        <!-- Cross-Dimension Associations -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="background: var(--bg); padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border);">
+                <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 2px;">Top Location</div>
+                <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary);" id="modalLocation">—</div>
+            </div>
+            <div style="background: var(--bg); padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border);">
+                <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 2px;">Top Activity</div>
+                <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary);" id="modalActivity">—</div>
+            </div>
+            <div style="background: var(--bg); padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border);">
+                <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 2px;">Associated IOGP Rule</div>
+                <div style="font-size: 0.88rem; font-weight: 700; color: #2b4c5b;" id="modalIOGP">—</div>
+            </div>
+        </div>
+
+        <!-- Narrative Evidence Excerpts -->
+        <h4 style="font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-primary); margin: 0 0 0.75rem 0;">
+            Documented Narrative Evidence Excerpts
+        </h4>
+        <div id="modalEvidenceList" style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.5rem;">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <div style="text-align: right;">
+            <a href="#" id="modalIncidentLink" class="btn btn-primary" style="font-size: 0.85rem;">
+                Search Associated Incidents &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Chart & Portfolio Data Serialization -->
+{{ barrier_data.chart_labels|json_script:"barrier-chart-labels" }}
+{{ barrier_data.chart_total_counts|json_script:"barrier-chart-totals" }}
+{{ barrier_data.chart_effective_counts|json_script:"barrier-chart-effectives" }}
+{{ barrier_data.chart_deficient_counts|json_script:"barrier-chart-deficients" }}
+{{ barrier_data.chart_psif_counts|json_script:"barrier-chart-psifs" }}
+{{ barrier_data.portfolio_cards|json_script:"barrier-portfolio-data" }}
+
+<script>
+window.addEventListener('load', function() {
+    const labelsEl = document.getElementById('barrier-chart-labels');
+    const totalsEl = document.getElementById('barrier-chart-totals');
+    const effectivesEl = document.getElementById('barrier-chart-effectives');
+    const deficientsEl = document.getElementById('barrier-chart-deficients');
+    const psifsEl = document.getElementById('barrier-chart-psifs');
+    const portfolioEl = document.getElementById('barrier-portfolio-data');
+
+    if (!labelsEl || !totalsEl) return;
+
+    const labels = JSON.parse(labelsEl.textContent || '[]');
+    const totalCounts = JSON.parse(totalsEl.textContent || '[]');
+    const effectiveCounts = JSON.parse(effectivesEl ? effectivesEl.textContent : '[]') || [];
+    const deficientCounts = JSON.parse(deficientsEl ? deficientsEl.textContent : '[]') || [];
+    const psifCounts = JSON.parse(psifsEl ? psifsEl.textContent : '[]') || [];
+    const portfolioCards = JSON.parse(portfolioEl ? portfolioEl.textContent : '[]') || [];
+
+    const canvas = document.getElementById('barrierOccurrenceChart');
+    if (!canvas || labels.length === 0) return;
+
+    // Dynamic height calculation
+    const wrapper = document.getElementById('barrier-chart-wrapper');
+    if (wrapper) {
+        wrapper.style.height = Math.max(340, labels.length * 40) + 'px';
+    }
+
+    const colorTotal = '#111111';
+    const colorEffective = '#2E7D32';
+    const colorDeficient = '#9C3B32';
+    const colorPSIF = '#E67E22';
+
+    let activeMetric = 'total';
+
+    const chartConfig = {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Associated Incidents',
+                data: totalCounts,
+                backgroundColor: colorTotal,
+                hoverBackgroundColor: '#333333',
+                borderRadius: 4,
+                barPercentage: 0.75,
+                categoryPercentage: 0.85
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.06)' },
+                    ticks: { precision: 0 }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { weight: '600', size: 12 },
+                        color: '#222'
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 17, 17, 0.94)',
+                    padding: 12,
+                    callbacks: {
+                        label: function(ctx) {
+                            const idx = ctx.dataIndex;
+                            const tot = totalCounts[idx] || 0;
+                            const eff = effectiveCounts[idx] || 0;
+                            const def = deficientCounts[idx] || 0;
+                            const psif = psifCounts[idx] || 0;
+                            return [
+                                ` Total Associated Incidents: ${tot}`,
+                                ` Effective Safeguards: ${eff}`,
+                                ` Deficient Signals: ${def}`,
+                                ` PSIF-Linked: ${psif}`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    const myChart = new Chart(canvas.getContext('2d'), chartConfig);
+
+    // Toggle Handlers
+    const toggles = {
+        total: document.getElementById('toggle-total'),
+        effective: document.getElementById('toggle-effective'),
+        deficient: document.getElementById('toggle-deficient'),
+        psif: document.getElementById('toggle-psif')
+    };
+
+    function setMetric(metric) {
+        if (metric === activeMetric) return;
+        activeMetric = metric;
+
+        Object.keys(toggles).forEach(k => {
+            if (toggles[k]) {
+                const isActive = (k === metric);
+                toggles[k].classList.toggle('active', isActive);
+                toggles[k].setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            }
+        });
+
+        if (metric === 'total') {
+            myChart.data.datasets[0].label = 'Associated Incidents';
+            myChart.data.datasets[0].data = totalCounts;
+            myChart.data.datasets[0].backgroundColor = colorTotal;
+        } else if (metric === 'effective') {
+            myChart.data.datasets[0].label = 'Effective Safeguards';
+            myChart.data.datasets[0].data = effectiveCounts;
+            myChart.data.datasets[0].backgroundColor = colorEffective;
+        } else if (metric === 'deficient') {
+            myChart.data.datasets[0].label = 'Deficient Signals';
+            myChart.data.datasets[0].data = deficientCounts;
+            myChart.data.datasets[0].backgroundColor = colorDeficient;
+        } else if (metric === 'psif') {
+            myChart.data.datasets[0].label = 'PSIF-Linked Volume';
+            myChart.data.datasets[0].data = psifCounts;
+            myChart.data.datasets[0].backgroundColor = colorPSIF;
+        }
+        myChart.update();
+    }
+
+    Object.keys(toggles).forEach(k => {
+        if (toggles[k]) {
+            toggles[k].addEventListener('click', () => setMetric(k));
+        }
+    });
+
+    // Modal Inspector Logic
+    const modal = document.getElementById('barrierModal');
+    const closeBtn = document.getElementById('modalCloseBtn');
+
+    function openInspector(card) {
+        if (!card || !modal) return;
+        document.getElementById('modalTitle').textContent = card.barrier_name;
+        document.getElementById('modalRoleBadge').textContent = card.barrier_role;
+        document.getElementById('modalRoleBadge').className = 'barrier-role-badge role-' + card.barrier_role.toLowerCase();
+        document.getElementById('modalCategory').textContent = card.barrier_category;
+        document.getElementById('modalTotalCount').textContent = card.associated_incidents_count;
+        document.getElementById('modalEffectiveCount').textContent = card.effective_count;
+        document.getElementById('modalDeficientCount').textContent = card.deficient_count;
+
+        document.getElementById('modalLocation').textContent = (card.affected_locations && card.affected_locations.length > 0) ? card.affected_locations[0] : 'Multiple Zones';
+        document.getElementById('modalActivity').textContent = card.top_activity || 'General Operations';
+        document.getElementById('modalIOGP').textContent = (card.associated_iogp_rules && card.associated_iogp_rules.length > 0) ? card.associated_iogp_rules[0] : 'None Associated';
+
+        const evidenceList = document.getElementById('modalEvidenceList');
+        evidenceList.innerHTML = '';
+        if (card.evidence_examples && card.evidence_examples.length > 0) {
+            card.evidence_examples.forEach(ex => {
+                const item = document.createElement('div');
+                item.style.cssText = 'background: var(--bg); border-left: 3px solid ' + (ex.is_effective ? 'var(--state-effective)' : 'var(--state-deficient)') + '; padding: 0.65rem 0.85rem; border-radius: 0 4px 4px 0; font-size: 0.84rem;';
+                item.innerHTML = `
+                    <div style="font-style: italic; margin-bottom: 4px;">&ldquo;${ex.evidence_span}&rdquo;</div>
+                    <div style="display: flex; gap: 0.75rem; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">
+                        <span>State: <strong style="color: ${ex.is_effective ? 'var(--state-effective)' : 'var(--state-deficient)}">${ex.state}</strong></span>
+                        ${ex.location ? `<span>Location: ${ex.location}</span>` : ''}
+                        ${ex.activity ? `<span>Activity: ${ex.activity}</span>` : ''}
+                    </div>
+                `;
+                evidenceList.appendChild(item);
+            });
+        } else {
+            evidenceList.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.82rem;">No direct narrative excerpts available for this barrier.</div>';
+        }
+
+        const link = document.getElementById('modalIncidentLink');
+        link.href = "{% url 'admin_flow:incidents' %}?q=" + encodeURIComponent(card.barrier_name);
+
+        modal.style.display = 'flex';
+    }
+
+    document.querySelectorAll('.barrier-card').forEach(cardEl => {
+        cardEl.addEventListener('click', function() {
+            const idx = parseInt(this.getAttribute('data-card-idx'), 10);
+            if (!isNaN(idx) && portfolioCards[idx]) {
+                openInspector(portfolioCards[idx]);
+            }
+        });
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    }
+});
+</script>
+{% endblock %}

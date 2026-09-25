@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Foresight PSIF Platform — Comprehensive Workplace Safety & Operational Precursor Intelligence Workspace.">
+    <title>Foresight PSIF Platform — Operational Precursor Intelligence</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Unified CSS File -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="psif-body">
+    <div class="psif-app" style="display: flex; min-height: 100vh;">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="psif-sidebar">
+            <div class="sidebar-header">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #0284c7; display: flex; align-items: center; justify-content: center; color: #fff;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; letter-spacing: -0.02em; line-height: 1.1;">
+                            Foresight
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.35rem; margin-top: 3px;">
+                            <span class="badge" style="background: #0f766e; color: #fff; font-size: 0.62rem; font-weight: 700; padding: 1px 5px; text-transform: uppercase;">ADMIN FLOW</span>
+                            <span style="font-size: 0.68rem; color: #64748b;">v2.6</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 0.85rem; font-size: 0.75rem; color: #94a3b8; font-weight: 500; display: flex; align-items: center; gap: 0.4rem;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                    <span>Duliajan Operational Complex</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav" style="padding: 1.25rem 0.85rem; flex: 1; overflow-y: auto;">
+                <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.08em; padding: 0 0.5rem 0.5rem 0.5rem;">
+                    Precursor Intelligence
+                </div>
+                
+                <a class="sidebar-nav-item active" onclick="switchView('view-dashboard')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                    <span>Overview Dashboard</span>
+                </a>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-pattern-hub')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    <span>Pattern Intelligence Hub</span>
+                </a>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-activity')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span>Activity Patterns</span>
+                </a>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-barrier')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span>Barrier Patterns</span>
+                </a>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-location')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span>Location Heatmap</span>
+                </a>
+
+                <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.08em; padding: 1.25rem 0.5rem 0.5rem 0.5rem;">
+                    Operations &amp; Governance
+                </div>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-submit')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    <span>Submit Incident</span>
+                </a>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-upload')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Batch Upload CSV</span>
+                </a>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-adjudication')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                    <span>Adjudication Bench</span>
+                </a>
+
+                <a class="sidebar-nav-item" onclick="switchView('view-model-review')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span>Model Assurance</span>
+                </a>
+            </nav>
+
+            <!-- User Footer -->
+            <div style="padding: 1rem 1.25rem; border-top: 1px solid #1e293b; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #0284c7; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #fff;">
+                    AV
+                </div>
+                <div style="flex: 1; overflow: hidden;">
+                    <div style="font-size: 0.82rem; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        Admin Verifier
+                    </div>
+                    <div style="font-size: 0.7rem; color: #64748b;">admin_flow_verifier</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN APPLICATION AREA -->
+        <main class="psif-main" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #0b1322;">
+            
+            <!-- TOP APP BAR -->
+            <header style="height: 64px; border-bottom: 1px solid #1e293b; background: #0e1726; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span id="current-view-title" style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; letter-spacing: -0.01em;">
+                        Operational Precursor Intelligence Overview
+                    </span>
+                    <span class="badge" style="background: rgba(2, 132, 199, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.72rem; font-weight: 600;">
+                        Active Workspace: admin_flow
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button onclick="resetWorkspaceDemo()" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.4rem 0.85rem; border-color: #ef4444; color: #fca5a5;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                        <span>Reset Clean Slate</span>
+                    </button>
+                    <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">1,000 Incidents Scoped</span>
+                </div>
+            </header>
+
+            <!-- VIEW 1: OVERVIEW DASHBOARD -->
+            <div id="view-dashboard" class="view-container active" style="padding: 1.75rem;">
+                <!-- Hero Banner -->
+                <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 8px; padding: 1.5rem 2rem; margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+                            <span class="badge" style="background: #0284c7; color: #fff; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">ADMIN DEMO EVALUATION</span>
+                            <span style="color: #94a3b8; font-size: 0.8rem;">Duliajan Operational Complex</span>
+                        </div>
+                        <h2 style="font-size: 1.6rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.4rem 0;">Operational Precursor Intelligence</h2>
+                        <p style="color: #94a3b8; font-size: 0.9rem; margin: 0; max-width: 680px; line-height: 1.5;">
+                            Real-time Serious Injury &amp; Fatality (SIF) precursor detection, deterministic Life-Saving Rules matching, and evidence-supported barrier integrity analytics.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button onclick="switchView('view-submit')" class="btn btn-primary" style="background: #0284c7; border: none; padding: 0.6rem 1.15rem; font-size: 0.88rem; font-weight: 700;">+ Submit Report</button>
+                        <button onclick="switchView('view-upload')" class="btn btn-secondary" style="background: #1e293b; border: 1px solid #475569; color: #f8fafc; padding: 0.6rem 1.15rem; font-size: 0.88rem; font-weight: 600;">Upload Dataset</button>
+                    </div>
+                </div>
+
+                <!-- 6 KPI Metrics Grid -->
+                <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+                    <div class="dark-card">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Total Incidents</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #f8fafc; margin: 0.4rem 0 0.2rem 0; font-family: monospace;">1,000</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Total reported incidents</div>
+                    </div>
+                    <div class="dark-card">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Prediction Eligible</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #38bdf8; margin: 0.4rem 0 0.2rem 0; font-family: monospace;">1,000</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">100% non-sparse narratives</div>
+                    </div>
+                    <div class="dark-card" style="border-top: 3px solid #ef4444;">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #f87171; letter-spacing: 0.05em;">PSIF Candidates</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #ef4444; margin: 0.4rem 0 0.2rem 0; font-family: monospace;">203</div>
+                        <div style="font-size: 0.75rem; color: #fca5a5;">20.3% of eligible reports</div>
+                    </div>
+                    <div class="dark-card">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">NOT PSIF</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #10b981; margin: 0.4rem 0 0.2rem 0; font-family: monospace;">797</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Low precursor risk</div>
+                    </div>
+                    <div class="dark-card">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Insufficient Evidence</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #f59e0b; margin: 0.4rem 0 0.2rem 0; font-family: monospace;">0</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">No sparse records (&lt;10 words)</div>
+                    </div>
+                    <div class="dark-card">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Human Reviewed</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #a855f7; margin: 0.4rem 0 0.2rem 0; font-family: monospace;">145</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">HSE Ground Truth validated</div>
+                    </div>
+                </div>
+
+                <!-- Pattern Snapshot Summary Card -->
+                <div class="dark-card" style="margin-bottom: 1.75rem; border-top: 3px solid #0284c7;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin: 0;">PATTERN SNAPSHOT</h3>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">Consolidated signal intelligence across activity, barrier, and location dimensions</div>
+                        </div>
+                        <button onclick="switchView('view-pattern-hub')" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.4rem 0.85rem; border: 1px solid #475569; color: #38bdf8;">
+                            View Full Pattern Hub &rarr;
+                        </button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Top Operational Activity</div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin: 0.25rem 0;">Vehicle / Parking Operations</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">140 observations (14.0% share)</div>
+                        </div>
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #ef4444; text-transform: uppercase;">Top Barrier Safeguard</div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin: 0.25rem 0;">Gas Detection / Atmospheric Monitoring</div>
+                            <div style="font-size: 0.78rem; color: #10b981;">206 effective successes</div>
+                        </div>
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #f59e0b; text-transform: uppercase;">Top Facility Concentration</div>
+                            <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin: 0.25rem 0;">Workshop / Maintenance Bay</div>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">240 observations (58 PSIF-linked)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: PATTERN INTELLIGENCE HUB -->
+            <div id="view-pattern-hub" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card" style="margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.5rem 0;">PATTERN INTELLIGENCE HUB</h2>
+                    <p style="font-size: 0.9rem; color: #94a3b8; margin: 0 0 1.5rem 0;">Unified multi-dimensional precursor intelligence synthesizing Activity, Barrier Safeguards, and Spatial Locations.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;">
+                        <div class="dark-card" style="cursor: pointer; border-left: 4px solid #38bdf8;" onclick="switchView('view-activity')">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Dimension 1</div>
+                            <h3 style="font-size: 1.2rem; font-weight: 800; color: #f8fafc; margin: 0.35rem 0 0.5rem 0;">Activity Patterns</h3>
+                            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.45;">14 distinct operational work tasks analyzed with precursor linkage rates.</p>
+                            <span style="color: #38bdf8; font-size: 0.82rem; font-weight: 700;">Explore Activity Patterns &rarr;</span>
+                        </div>
+                        <div class="dark-card" style="cursor: pointer; border-left: 4px solid #ef4444;" onclick="switchView('view-barrier')">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #ef4444; text-transform: uppercase;">Dimension 2</div>
+                            <h3 style="font-size: 1.2rem; font-weight: 800; color: #f8fafc; margin: 0.35rem 0 0.5rem 0;">Barrier Intelligence</h3>
+                            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.45;">28 physical and operational safeguards evaluated across effective and deficient states.</p>
+                            <span style="color: #ef4444; font-size: 0.82rem; font-weight: 700;">Explore Barrier Patterns &rarr;</span>
+                        </div>
+                        <div class="dark-card" style="cursor: pointer; border-left: 4px solid #f59e0b;" onclick="switchView('view-location')">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #f59e0b; text-transform: uppercase;">Dimension 3</div>
+                            <h3 style="font-size: 1.2rem; font-weight: 800; color: #f8fafc; margin: 0.35rem 0 0.5rem 0;">Location Heatmap</h3>
+                            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.45;">Schematic site heatmap of Duliajan Complex with observation density encoding.</p>
+                            <span style="color: #f59e0b; font-size: 0.82rem; font-weight: 700;">Explore Location Patterns &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: ACTIVITY PATTERNS (REBUILT & CANONICAL) -->
+            <div id="view-activity" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 style="font-size: 1.5rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.25rem 0;">OPERATIONAL ACTIVITY PATTERNS</h2>
+                            <p style="font-size: 0.88rem; color: #94a3b8; margin: 0;">Which work activities and operational tasks recur across the current incident dataset?</p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="btn-toggle-incident-vol" class="btn-toggle active" onclick="setActivityMetric('incident')">Incident Volume</button>
+                            <button id="btn-toggle-psif-vol" class="btn-toggle" onclick="setActivityMetric('psif')">PSIF-Linked Volume</button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Activity KPI Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Most Frequent Activity</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #38bdf8; margin: 0.3rem 0;">Vehicle / Parking Operations</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">140 incidents (14.0% share)</div>
+                        </div>
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Total Unique Activities</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0.3rem 0;">14 Tasks</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Distinct operational work types</div>
+                        </div>
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Recurring Patterns (&ge;2)</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #10b981; margin: 0.3rem 0;">14 Activities</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">100% recurring operational patterns</div>
+                        </div>
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Activity Data Coverage</div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #10b981; margin: 0.3rem 0;">100.0%</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">1,000 / 1,000 resolved (0 Unknown)</div>
+                        </div>
+                    </div>
+
+                    <!-- Ranked Activity Bars List -->
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin: 0 0 1rem 0;">Activity Frequency Distribution</h3>
+                    <div id="activity-bars-container" class="ranking-bar-list">
+                        <!-- Populated dynamically by script.js -->
+                    </div>
+                </div>
+
+                <!-- Activity × Location Heatmap Matrix -->
+                <div class="dark-card" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.35rem 0;">Activity &times; Location Distribution Heatmap</h3>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 1rem 0;">Empirically observed cross-tabulation between operational activities and internal site facilities.</p>
+                    
+                    <div class="matrix-container">
+                        <table class="matrix-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; padding-left: 0.85rem;">Operational Activity</th>
+                                    <th>Process Area</th>
+                                    <th>Workshop Bay</th>
+                                    <th>Tank Farm</th>
+                                    <th>Compressor Area</th>
+                                    <th>Pipe Rack</th>
+                                    <th>Wellhead Area</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="matrix-row-header">Vehicle / Parking Operations</td>
+                                    <td class="matrix-cell-1">18</td>
+                                    <td class="matrix-cell-3">52</td>
+                                    <td class="matrix-cell-2">24</td>
+                                    <td class="matrix-cell-1">12</td>
+                                    <td class="matrix-cell-1">14</td>
+                                    <td class="matrix-cell-1">20</td>
+                                </tr>
+                                <tr>
+                                    <td class="matrix-row-header">Work at Height / Scaffolding</td>
+                                    <td class="matrix-cell-2">28</td>
+                                    <td class="matrix-cell-2">30</td>
+                                    <td class="matrix-cell-1">15</td>
+                                    <td class="matrix-cell-1">10</td>
+                                    <td class="matrix-cell-3">42</td>
+                                    <td class="matrix-cell-0">8</td>
+                                </tr>
+                                <tr>
+                                    <td class="matrix-row-header">Lifting Operation / Crane Work</td>
+                                    <td class="matrix-cell-3">48</td>
+                                    <td class="matrix-cell-2">32</td>
+                                    <td class="matrix-cell-1">16</td>
+                                    <td class="matrix-cell-1">11</td>
+                                    <td class="matrix-cell-1">12</td>
+                                    <td class="matrix-cell-1">10</td>
+                                </tr>
+                                <tr>
+                                    <td class="matrix-row-header">Equipment Maintenance</td>
+                                    <td class="matrix-cell-3">45</td>
+                                    <td class="matrix-cell-2">35</td>
+                                    <td class="matrix-cell-1">14</td>
+                                    <td class="matrix-cell-2">21</td>
+                                    <td class="matrix-cell-0">6</td>
+                                    <td class="matrix-cell-0">6</td>
+                                </tr>
+                                <tr>
+                                    <td class="matrix-row-header">Painting &amp; Surface Coating</td>
+                                    <td class="matrix-cell-2">20</td>
+                                    <td class="matrix-cell-1">4</td>
+                                    <td class="matrix-cell-1">6</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                </tr>
+                                <tr>
+                                    <td class="matrix-row-header">Cleaning &amp; Housekeeping</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-2">20</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                </tr>
+                                <tr>
+                                    <td class="matrix-row-header">Digging / Excavation</td>
+                                    <td class="matrix-cell-2">24</td>
+                                    <td class="matrix-cell-1">10</td>
+                                    <td class="matrix-cell-1">15</td>
+                                    <td class="matrix-cell-0">2</td>
+                                    <td class="matrix-cell-0">5</td>
+                                    <td class="matrix-cell-0">3</td>
+                                </tr>
+                                <tr>
+                                    <td class="matrix-row-header">Laboratory / Research</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-1">10</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                    <td class="matrix-cell-0">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Ranked Operational Activity Portfolio Table -->
+                <div class="dark-card">
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.35rem 0;">Recurring Activity Portfolio &amp; Observed Associations</h3>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 1.25rem 0;">Cross-dimensional observed historical associations with Top Location, Protective Barrier, and IOGP Life-Saving Rules.</p>
+
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #334155; color: #94a3b8; background: #0f172a;">
+                                    <th style="padding: 0.75rem 0.5rem; width: 45px; text-align: center;">Rank</th>
+                                    <th style="padding: 0.75rem 0.75rem;">Operational Activity</th>
+                                    <th style="padding: 0.75rem 0.65rem; text-align: right;">Incidents</th>
+                                    <th style="padding: 0.75rem 0.65rem; text-align: right; color: #f87171;">PSIF</th>
+                                    <th style="padding: 0.75rem 0.65rem; text-align: right;">Rate</th>
+                                    <th style="padding: 0.75rem 0.75rem;">Top Location</th>
+                                    <th style="padding: 0.75rem 0.75rem;">Top Barrier Safeguard</th>
+                                    <th style="padding: 0.75rem 0.75rem;">Associated IOGP</th>
+                                    <th style="padding: 0.75rem 0.5rem; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-table-body">
+                                <!-- Populated dynamically by script.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 4: BARRIER PATTERNS (28 SAFEGUARDS & DUAL HIGHLIGHTS) -->
+            <div id="view-barrier" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card" style="margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.25rem 0;">BARRIER INTELLIGENCE &amp; DEFICIENCY SIGNALS</h2>
+                    <p style="font-size: 0.88rem; color: #94a3b8; margin: 0 0 1.25rem 0;">Identify the protective measures that prevented, limited, or failed to stop hazardous events.</p>
+
+                    <!-- Dual Highlights -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                        <div class="dark-card" style="border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.06);">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">Top Protective Success</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0.35rem 0;">Gas Detection / Atmospheric Monitoring</h3>
+                            <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 0.5rem 0;">
+                                206 verified protective success events where fixed and personal gas detectors alarmed early to prevent toxic H2S exposure.
+                            </p>
+                            <span class="badge" style="background: #10b981; color: #fff; font-weight: 700;">206 Effective Signals</span>
+                        </div>
+                        <div class="dark-card" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.06);">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #ef4444; text-transform: uppercase;">Top Barrier Deficiency Signal</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0.35rem 0;">Mechanical Forced Air Ventilation</h3>
+                            <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 0.5rem 0;">
+                                106 verified deficiency events where blower fans were absent or failed during internal vessel cleaning.
+                            </p>
+                            <span class="badge" style="background: #ef4444; color: #fff; font-weight: 700;">106 Deficient Signals</span>
+                        </div>
+                    </div>
+
+                    <!-- Safeguard Breakdown Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #38bdf8;">Lockout / Tagout (LOTO)</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #f8fafc; margin: 0.25rem 0;">187 Signals</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">142 Effective &bull; 45 Deficient</div>
+                        </div>
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #38bdf8;">Fall Protection Harness</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #f8fafc; margin: 0.25rem 0;">133 Signals</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">105 Effective &bull; 28 Deficient</div>
+                        </div>
+                        <div style="background: #090e17; border: 1px solid #334155; border-radius: 6px; padding: 1rem;">
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #38bdf8;">Machine Guarding / Interlock</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #f8fafc; margin: 0.25rem 0;">95 Signals</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">80 Effective &bull; 15 Deficient</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 5: LOCATION PATTERNS (SCHEMATIC SITE MAP) -->
+            <div id="view-location" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <h2 style="font-size: 1.5rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.25rem 0;">SPATIAL PRECURSOR HEATMAP</h2>
+                            <p style="font-size: 0.88rem; color: #94a3b8; margin: 0;">Schematic operational zone distribution across the Duliajan Operational Complex.</p>
+                        </div>
+                        <span class="badge" style="background: #0284c7; color: #fff; font-weight: 700; font-size: 0.75rem;">6 Facility Zones</span>
+                    </div>
+
+                    <!-- Split Layout: Site Grid Left, Facility Detail Right -->
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem;">
+                        <!-- Left: Schematic Grid -->
+                        <div class="site-perimeter">
+                            <div class="site-perimeter-badge">Site Schematic Perimeter</div>
+                            <div class="facility-zones-grid">
+                                <div class="zone-card heat-critical active" onclick="selectZone('Workshop / Maintenance Bay', 240, 58, 'Heavy mechanical repair, machining, crane maintenance, and vehicle staging.')">
+                                    <div class="zone-top">
+                                        <span class="zone-code">ZONE-01</span>
+                                        <span class="zone-count-badge">240</span>
+                                    </div>
+                                    <div>
+                                        <div class="zone-name">Workshop / Maintenance Bay</div>
+                                        <div class="zone-role">Mechanical Overhauls</div>
+                                    </div>
+                                    <div class="zone-bottom">
+                                        <span class="zone-psif-badge">58 PSIF</span>
+                                        <span style="font-size: 0.68rem; color: #94a3b8;">High Exposure</span>
+                                    </div>
+                                </div>
+                                <div class="zone-card heat-elevated" onclick="selectZone('Process Area / Refining Unit', 210, 48, 'Crude distillation, hydrocarbon fractionation, and catalytic hydrotreating.')">
+                                    <div class="zone-top">
+                                        <span class="zone-code">ZONE-02</span>
+                                        <span class="zone-count-badge">210</span>
+                                    </div>
+                                    <div>
+                                        <div class="zone-name">Process Area / Refining</div>
+                                        <div class="zone-role">Hydrocarbon Processing</div>
+                                    </div>
+                                    <div class="zone-bottom">
+                                        <span class="zone-psif-badge">48 PSIF</span>
+                                        <span style="font-size: 0.68rem; color: #94a3b8;">Thermal Energy</span>
+                                    </div>
+                                </div>
+                                <div class="zone-card heat-moderate" onclick="selectZone('Tank Farm / Crude Storage', 180, 36, 'Bulk storage tanks, floating roof systems, and custody transfer.')">
+                                    <div class="zone-top">
+                                        <span class="zone-code">ZONE-03</span>
+                                        <span class="zone-count-badge">180</span>
+                                    </div>
+                                    <div>
+                                        <div class="zone-name">Tank Farm Storage</div>
+                                        <div class="zone-role">Bulk Hydrocarbons</div>
+                                    </div>
+                                    <div class="zone-bottom">
+                                        <span class="zone-psif-badge">36 PSIF</span>
+                                        <span style="font-size: 0.68rem; color: #94a3b8;">Confined Work</span>
+                                    </div>
+                                </div>
+                                <div class="zone-card heat-moderate" onclick="selectZone('Compressor Area / Gas Train', 160, 32, 'High-pressure gas compression, turbine drives, and seal systems.')">
+                                    <div class="zone-top">
+                                        <span class="zone-code">ZONE-04</span>
+                                        <span class="zone-count-badge">160</span>
+                                    </div>
+                                    <div>
+                                        <div class="zone-name">Compressor Train</div>
+                                        <div class="zone-role">High Pressure Gas</div>
+                                    </div>
+                                    <div class="zone-bottom">
+                                        <span class="zone-psif-badge">32 PSIF</span>
+                                        <span style="font-size: 0.68rem; color: #94a3b8;">Pneumatic Energy</span>
+                                    </div>
+                                </div>
+                                <div class="zone-card heat-low" onclick="selectZone('Pipe Rack / Manifold', 120, 19, 'Elevated pipe bridges, interconnecting process piping, and valve racks.')">
+                                    <div class="zone-top">
+                                        <span class="zone-code">ZONE-05</span>
+                                        <span class="zone-count-badge">120</span>
+                                    </div>
+                                    <div>
+                                        <div class="zone-name">Pipe Rack Manifold</div>
+                                        <div class="zone-role">Process Interconnects</div>
+                                    </div>
+                                    <div class="zone-bottom">
+                                        <span class="zone-psif-badge">19 PSIF</span>
+                                        <span style="font-size: 0.68rem; color: #94a3b8;">Elevated Work</span>
+                                    </div>
+                                </div>
+                                <div class="zone-card heat-low" onclick="selectZone('Wellhead Area', 90, 10, 'Production christmas trees, flowlines, and injection headers.')">
+                                    <div class="zone-top">
+                                        <span class="zone-code">ZONE-06</span>
+                                        <span class="zone-count-badge">90</span>
+                                    </div>
+                                    <div>
+                                        <div class="zone-name">Wellhead Complex</div>
+                                        <div class="zone-role">Upstream Extraction</div>
+                                    </div>
+                                    <div class="zone-bottom">
+                                        <span class="zone-psif-badge">10 PSIF</span>
+                                        <span style="font-size: 0.68rem; color: #94a3b8;">Surface Controls</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Facility Detail Panel -->
+                        <div class="dark-card" id="zone-detail-panel" style="border-left: 4px solid #ef4444;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                <div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">SELECTED FACILITY ZONE</div>
+                                    <h3 id="selected-zone-name" style="font-size: 1.3rem; font-weight: 800; color: #f8fafc; margin: 0.25rem 0;">Workshop / Maintenance Bay</h3>
+                                </div>
+                                <span id="selected-zone-psif" class="badge" style="background: #ef4444; color: #fff; font-weight: 700; font-size: 0.75rem;">58 PSIF Observations</span>
+                            </div>
+                            <p id="selected-zone-desc" style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5; margin: 0 0 1.25rem 0;">
+                                Heavy mechanical repair, machining, crane maintenance, and vehicle staging across the main maintenance facility.
+                            </p>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+                                <div style="background: #0f172a; padding: 0.85rem; border-radius: 4px; border: 1px solid #334155;">
+                                    <div style="font-size: 0.7rem; color: #94a3b8;">TOTAL OBSERVATIONS</div>
+                                    <div id="selected-zone-total" style="font-size: 1.35rem; font-weight: 800; color: #f8fafc; font-family: monospace;">240</div>
+                                </div>
+                                <div style="background: #0f172a; padding: 0.85rem; border-radius: 4px; border: 1px solid #334155;">
+                                    <div style="font-size: 0.7rem; color: #94a3b8;">PSIF RATE</div>
+                                    <div id="selected-zone-rate" style="font-size: 1.35rem; font-weight: 800; color: #ef4444; font-family: monospace;">24.2%</div>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem;">Observed Precursor Activities</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                <span class="association-tag location">Vehicle / Parking (52)</span>
+                                <span class="association-tag barrier">Lifting Operations (32)</span>
+                                <span class="association-tag iogp">Welding &amp; Hot Work (30)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 6: SUBMIT INCIDENT REPORT -->
+            <div id="view-submit" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card" style="max-width: 800px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                        <div>
+                            <h2 style="font-size: 1.4rem; font-weight: 800; color: #f8fafc; margin: 0;">SUBMIT INCIDENT REPORT</h2>
+                            <div style="font-size: 0.78rem; color: #94a3b8;">Real-time calibrated SIF precursor classification &amp; Life-Saving Rules matching</div>
+                        </div>
+                        <button onclick="prefillPrecursorScenario()" class="btn btn-secondary" style="background: #0284c7; color: #fff; border: none; font-size: 0.8rem; font-weight: 700; padding: 0.45rem 0.85rem;">
+                            Pre-fill SIF Precursor Scenario &rarr;
+                        </button>
+                    </div>
+
+                    <form id="incident-form" onsubmit="event.preventDefault(); submitDemoIncident();">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.35rem;">INCIDENT DATE</label>
+                                <input id="form-incident-date" type="date" value="2026-03-03" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 0.55rem; border-radius: 4px; font-size: 0.85rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.35rem;">FACILITY LOCATION</label>
+                                <select id="form-location" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 0.55rem; border-radius: 4px; font-size: 0.85rem;">
+                                    <option value="Workshop / Maintenance Bay">Workshop / Maintenance Bay</option>
+                                    <option value="Process Area / Refining Unit">Process Area / Refining Unit</option>
+                                    <option value="Tank Farm / Storage">Tank Farm / Storage</option>
+                                    <option value="Compressor Area">Compressor Area</option>
+                                    <option value="Pipe Rack / Manifold">Pipe Rack / Manifold</option>
+                                    <option value="Wellhead Area">Wellhead Area</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.35rem;">OPERATIONAL ACTIVITY / JOB TASK</label>
+                                <input id="form-job-task" type="text" value="Pressure-Line Maintenance / Flange Breaking" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 0.55rem; border-radius: 4px; font-size: 0.85rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.35rem;">EQUIPMENT INVOLVED</label>
+                                <input id="form-equipment" type="text" value="Reciprocating Compressor Stage-2 Discharge Manifold" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 0.55rem; border-radius: 4px; font-size: 0.85rem;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.25rem;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.35rem;">INCIDENT NARRATIVE &amp; EVIDENCE</label>
+                            <textarea id="form-narrative" rows="5" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 0.75rem; border-radius: 4px; font-size: 0.88rem; line-height: 1.5;">During planned flange breaking on the discharge piping manifold of Compressor K-201, technicians unbolted the final stud without completing the dual-isolation bleed verification. Trapped hydrocarbon gas under 42 bar pressure released violently, causing high-energy gas cloud dispersion. Fortunately, personal H2S gas detectors alarmed instantly and the crew evacuated to the muster point with zero injuries.</textarea>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                            <button type="button" onclick="switchView('view-dashboard')" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Process Precursor Reasoning</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- VIEW 7: BATCH UPLOAD -->
+            <div id="view-upload" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card" style="max-width: 700px; margin: 0 auto; text-align: center;">
+                    <h2 style="font-size: 1.4rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.5rem 0;">BATCH INCIDENT DATASET INTAKE</h2>
+                    <p style="font-size: 0.88rem; color: #94a3b8; margin: 0 0 1.5rem 0;">Upload CSV or XLSX operational datasets for automated precursor classification and barrier extraction.</p>
+                    
+                    <div style="border: 2px dashed #475569; border-radius: 8px; padding: 3rem 1.5rem; background: #090e17; margin-bottom: 1.5rem;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.5" style="margin-bottom: 1rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.35rem;">Drag and drop your incident dataset here</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">Supports .csv, .xlsx files with narrative, activity, and location columns</div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="alert('Dataset batch validation complete: 1,000 records ready for ingestion.');">Select File from Computer</button>
+                </div>
+            </div>
+
+            <!-- VIEW 8: ADJUDICATION WORKBENCH -->
+            <div id="view-adjudication" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card">
+                    <h2 style="font-size: 1.4rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.5rem 0;">HUMAN-IN-THE-LOOP ADJUDICATION WORKBENCH</h2>
+                    <p style="font-size: 0.88rem; color: #94a3b8; margin: 0 0 1.5rem 0;">Review model inference, inspect narrative evidence spans, and confirm ground truth SIF determinations.</p>
+
+                    <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <span style="font-family: monospace; font-size: 0.85rem; color: #38bdf8; font-weight: 700;">INCIDENT AF-0013</span>
+                            <span class="badge" style="background:#ef4444; color:#fff; font-weight:700;">FLAGGED FOR EVALUATOR REVIEW</span>
+                        </div>
+                        <div style="font-size: 0.95rem; color: #f8fafc; line-height: 1.6; margin-bottom: 1rem; background: #1e293b; padding: 1rem; border-radius: 4px;">
+                            "While technicians were conducting manual material handling in the Electrical Substation to align new 400V circuit breakers, primary isolation switches were left energized and lockout/tagout was not verified. Arc flash occurred near technician breathing zone."
+                        </div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button class="btn btn-primary" onclick="alert('Confirmed as True PSIF Precursor.')">Confirm SIF Precursor</button>
+                            <button class="btn btn-secondary" onclick="alert('Overridden to Non-PSIF.')">Mark as Non-PSIF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 9: MODEL REVIEW -->
+            <div id="view-model-review" class="view-container" style="padding: 1.75rem;">
+                <div class="dark-card">
+                    <h2 style="font-size: 1.4rem; font-weight: 800; color: #f8fafc; margin: 0 0 0.5rem 0;">PSIF MODEL ASSURANCE &amp; CALIBRATION</h2>
+                    <p style="font-size: 0.88rem; color: #94a3b8; margin: 0 0 1.5rem 0;">Performance metrics, Brier calibration scores, and decision policy validation for active production model version.</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                        <div style="background:#0f172a; padding:1rem; border-radius:6px; border:1px solid #334155;">
+                            <div style="font-size:0.7rem; font-weight:700; color:#94a3b8;">ROC-AUC SCORE</div>
+                            <div style="font-size:1.6rem; font-weight:800; color:#10b981; margin:0.3rem 0; font-family:monospace;">0.942</div>
+                            <div style="font-size:0.75rem; color:#94a3b8;">High discriminative power</div>
+                        </div>
+                        <div style="background:#0f172a; padding:1rem; border-radius:6px; border:1px solid #334155;">
+                            <div style="font-size:0.7rem; font-weight:700; color:#94a3b8;">BRIER SCORE</div>
+                            <div style="font-size:1.6rem; font-weight:800; color:#10b981; margin:0.3rem 0; font-family:monospace;">0.081</div>
+                            <div style="font-size:0.75rem; color:#94a3b8;">Well-calibrated probabilities</div>
+                        </div>
+                        <div style="background:#0f172a; padding:1rem; border-radius:6px; border:1px solid #334155;">
+                            <div style="font-size:0.7rem; font-weight:700; color:#94a3b8;">SENSITIVITY (RECALL)</div>
+                            <div style="font-size:1.6rem; font-weight:800; color:#38bdf8; margin:0.3rem 0; font-family:monospace;">91.4%</div>
+                            <div style="font-size:0.75rem; color:#94a3b8;">High precursor capture rate</div>
+                        </div>
+                        <div style="background:#0f172a; padding:1rem; border-radius:6px; border:1px solid #334155;">
+                            <div style="font-size:0.7rem; font-weight:700; color:#94a3b8;">ACTIVE VERSION</div>
+                            <div style="font-size:1.2rem; font-weight:800; color:#f8fafc; margin:0.3rem 0; font-family:monospace;">v_20260906</div>
+                            <div style="font-size:0.75rem; color:#10b981;">Deterministic &amp; Calibrated</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ACTIVITY DETAIL MODAL -->
+    <div id="activity-detail-modal" class="activity-modal-backdrop" onclick="closeActivityModal(event)">
+        <div class="activity-modal-container" onclick="event.stopPropagation()">
+            <div class="activity-modal-header">
+                <div>
+                    <div style="font-size: 0.7rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">OPERATIONAL ACTIVITY INTELLIGENCE</div>
+                    <h3 id="modal-activity-title" style="font-size: 1.35rem; font-weight: 800; color: #f8fafc; margin: 0.2rem 0 0 0;">Activity Name</h3>
+                </div>
+                <button onclick="closeActivityModal()" style="background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer;">&times;</button>
+            </div>
+            <div class="activity-modal-body">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div style="background: #0f172a; padding: 0.85rem; border-radius: 4px; border: 1px solid #334155;">
+                        <div style="font-size: 0.7rem; color: #94a3b8;">INCIDENT COUNT</div>
+                        <div id="modal-incident-count" style="font-size: 1.35rem; font-weight: 800; color: #f8fafc; font-family: monospace;">0</div>
+                    </div>
+                    <div style="background: #0f172a; padding: 0.85rem; border-radius: 4px; border: 1px solid #334155;">
+                        <div style="font-size: 0.7rem; color: #94a3b8;">PSIF-LINKED</div>
+                        <div id="modal-psif-count" style="font-size: 1.35rem; font-weight: 800; color: #ef4444; font-family: monospace;">0</div>
+                    </div>
+                    <div style="background: #0f172a; padding: 0.85rem; border-radius: 4px; border: 1px solid #334155;">
+                        <div style="font-size: 0.7rem; color: #94a3b8;">PSIF RATE</div>
+                        <div id="modal-psif-rate" style="font-size: 1.35rem; font-weight: 800; color: #38bdf8; font-family: monospace;">0.0%</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">Observed Historical Associations</div>
+                <div id="modal-associations" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.25rem;"></div>
+
+                <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.4rem;">Representative Narrative Excerpts</div>
+                <div id="modal-narrative-excerpts" style="display: flex; flex-direction: column; gap: 0.65rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified JavaScript File -->
+    <script src="script.js"></script>
+</body>
+</html>

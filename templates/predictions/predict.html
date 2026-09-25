@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manual Prediction — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Run a manual PSIF prediction against the currently active model version.{% endblock %}
+
+{% block nav_predict %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 450px;
+    gap: 2.5rem;
+    align-items: start;
+}
+@media (max-width: 1024px) {
+    .grid-layout { grid-template-columns: 1fr; }
+}
+
+.prediction-stat {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.prediction-stat:last-child { border-bottom: none; }
+.stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-value { font-size: 1.1rem; font-weight: 600; font-family: var(--font-mono); color: var(--white); }
+
+.factors-list { list-style: none; padding: 0; margin: 0; }
+.factor-item {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    padding: 1rem; background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); margin-bottom: 0.5rem;
+}
+.factor-header { display: flex; justify-content: space-between; align-items: center; }
+.factor-name { color: var(--white); font-weight: 500; font-size: 0.9rem; }
+.factor-score { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; }
+.factor-score.pos { color: var(--risk-critical); }
+.factor-score.neg { color: var(--risk-low); }
+
+.factor-bar-container { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; display: flex; }
+.factor-bar-fill { height: 100%; }
+.factor-bar-fill.pos { background: var(--risk-critical); }
+.factor-bar-fill.neg { background: var(--risk-low); }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header" style="margin-bottom: 3rem;">
+        <h1 class="page-title">Manual Prediction</h1>
+        <p class="page-subtitle">Test the active model directly. Enter an incident narrative and metadata to receive an instant PSIF prediction.</p>
+    </div>
+
+    <div class="grid-layout">
+        <!-- Input Form (INPUT) -->
+        <div class="card">
+            <h3 class="section-title" style="border: none; margin-bottom: 1.5rem; font-size: 1.25rem;">Input Details</h3>
+            <form id="predict-form">
+                
+                <!-- Event Information -->
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 500; font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Event Information</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="incident_date">Incident Date (Optional)</label>
+                            <input type="date" id="incident_date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="department">Department (Optional)</label>
+                            <input type="text" id="department" class="form-control" placeholder="e.g. Maintenance">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="location">Location (Optional)</label>
+                            <input type="text" id="location" class="form-control" placeholder="e.g. Compressor Area">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="job_task">Job / Task (Optional)</label>
+                            <input type="text" id="job_task" class="form-control" placeholder="e.g. Equipment Inspection">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label" for="equipment_involved">Equipment Involved (Optional)</label>
+                            <input type="text" id="equipment_involved" class="form-control" placeholder="e.g. Compressor / Air Line">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 500; font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Event & Injury</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="injury_type">Injury Type (Optional)</label>
+                            <input type="text" id="injury_type" class="form-control" placeholder="e.g. Fracture">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="body_part">Body Part (Optional)</label>
+                            <input type="text" id="body_part" class="form-control" placeholder="e.g. Arm">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="severity_actual">Actual Severity (Optional)</label>
+                            <select id="severity_actual" class="form-select">
+                                <option value="">-- Select --</option>
+                                <option value="none">No Injury / Near Miss</option>
+                                <option value="first_aid">1 - First Aid</option>
+                                <option value="medical_treatment">2 - Medical Treatment</option>
+                                <option value="lost_time">3/4 - Lost Time</option>
+                                <option value="fatality">5 - Fatality</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="severity_potential">Potential Severity (Optional)</label>
+                            <select id="severity_potential" class="form-select">
+                                <option value="">-- Select --</option>
+                                <option value="low">Low</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="serious">Serious</option>
+                                <option value="fatality">Fatality</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2; display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="near_miss" value="true">
+                            <label class="form-label" for="near_miss" style="margin: 0; cursor: pointer;">This was a Near Miss event</label>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1rem; padding: 0.75rem; background: var(--bg); border-left: 3px solid var(--brand); border-radius: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                        <strong>Disclaimer:</strong> Severity information is retained as incident context and for human review. The current leakage-reduced model does not use these fields as predictive inputs.
+                    </div>
+                </div>
+
+                <!-- Causes -->
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 500; font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Causes</h4>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="immediate_cause">Immediate Cause (Optional)</label>
+                            <input type="text" id="immediate_cause" class="form-control" placeholder="e.g. Slip / loss of balance">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="root_cause_category">Root Cause Category (Optional)</label>
+                            <input type="text" id="root_cause_category" class="form-control" placeholder="e.g. Inadequate guarding">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Narrative -->
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 500; font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Narrative</h4>
+                    <div class="form-group">
+                        <label class="form-label" for="description">Incident Narrative (Description) <span style="color:var(--risk-critical)">*</span></label>
+                        <textarea id="description" class="form-control" style="min-height: 120px;" required placeholder="Describe what happened..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="corrective_actions">Corrective Actions (Optional)</label>
+                        <textarea id="corrective_actions" class="form-control" style="min-height: 80px;" placeholder="Actions taken or planned..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="witness_statement">Witness Statement (Optional)</label>
+                        <textarea id="witness_statement" class="form-control" style="min-height: 80px;" placeholder="Witness account..."></textarea>
+                    </div>
+                </div>
+
+                <div style="padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                    <button type="submit" class="btn btn-primary" id="btn-predict" style="width: 100%; height: 50px; font-size: 1.05rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.5rem;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        Analyze Incident
+                    </button>
+                </div>
+                <div id="error-message" class="message message-error" style="display:none; margin-top: 1.5rem;"></div>
+            </form>
+        </div>
+
+        <!-- Output Panel (RESULT) -->
+        <div class="prediction-panel" style="position: sticky; top: 2.5rem;" aria-live="polite">
+            <h3 style="margin: 0 0 2rem 0; padding: 0; border: none; font-size: 1.25rem; font-family: var(--font-heading); color: var(--white);">Prediction Result</h3>
+            
+            <div id="result-empty" style="text-align: center; padding: 3rem 1rem;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="color: rgba(255,255,255,0.15); margin-bottom: 1.5rem;">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                <p style="color: rgba(255,255,255,0.6); font-size: 1rem; line-height: 1.5; margin: 0;">Submit an incident narrative to generate a PSIF prediction.</p>
+            </div>
+
+            <div id="result-content" style="display: none;">
+                <div id="binary-badge" class="badge" style="width: 100%; display: block; text-align: center; margin-bottom: 1.5rem; padding: 0.75rem; font-size: 1.1rem; font-weight: 700; border: none; letter-spacing: 0.05em;"></div>
+                
+                <div id="sparse-warning" class="badge" style="display: none; width: 100%; text-align: center; margin-bottom: 1.5rem; padding: 0.75rem; font-size: 0.85rem; border: none; background: #facc15; color: #000; line-height: 1.4;">
+                    <strong>INSUFFICIENT INFORMATION:</strong> Narrative contains sparse or limited information (< 10 words). This score indicates insufficient data, NOT strong evidence that this incident is genuinely non-PSIF.
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div class="prediction-panel-title" style="color: rgba(255,255,255,0.7); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; margin-bottom: 0.25rem;">PSIF Model Score</div>
+                    <div id="res-prob" class="prediction-score tabular-nums" style="font-size: 2.75rem; font-weight: 700;"></div>
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.25rem;">(PSIF Model Score — not a calibrated probability)</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <div class="prediction-stat" style="flex-direction: column; align-items: flex-start; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 4px;">
+                        <span class="stat-label" style="font-size: 0.75rem;">Evidence Strength</span>
+                        <span id="res-evidence-strength" class="stat-value" style="font-size: 0.95rem; font-weight: 600; color: var(--white); margin-top: 0.25rem;">—</span>
+                    </div>
+                    <div class="prediction-stat" style="flex-direction: column; align-items: flex-start; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 4px;">
+                        <span class="stat-label" style="font-size: 0.75rem;">Model Version</span>
+                        <span id="res-model" class="stat-value" style="font-size: 0.85rem; font-weight: 400; font-family: var(--font-mono); color: var(--white); margin-top: 0.25rem;">—</span>
+                    </div>
+                </div>
+
+                <!-- Explanation Breakdown -->
+                <div id="explanation-container" style="margin-top: 1.5rem; display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); padding: 1rem;">
+                    <h4 style="margin: 0 0 0.75rem 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.8);">SIF Precursor Evidence</h4>
+                    
+                    <div id="supporting-factors-section" style="margin-bottom: 0.75rem; display: none;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--risk-critical); margin-bottom: 0.25rem;">Supporting Evidence:</div>
+                        <ul id="supporting-factors-list" style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: rgba(255,255,255,0.85); line-height: 1.4;"></ul>
+                    </div>
+
+                    <div id="contradicting-factors-section" style="margin-bottom: 0.75rem; display: none;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: var(--risk-low); margin-bottom: 0.25rem;">Contradicting Evidence:</div>
+                        <ul id="contradicting-factors-list" style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: rgba(255,255,255,0.85); line-height: 1.4;"></ul>
+                    </div>
+
+                    <div id="narrative-quotes-section" style="margin-bottom: 0.75rem; display: none;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.7); margin-bottom: 0.25rem;">Narrative Evidence Spans:</div>
+                        <ul id="narrative-quotes-list" style="margin: 0; padding-left: 1.25rem; font-size: 0.75rem; font-style: italic; color: rgba(255,255,255,0.75); line-height: 1.4;"></ul>
+                    </div>
+
+                    <div id="missing-info-section" style="margin-bottom: 0.5rem; display: none;">
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #facc15; margin-bottom: 0.25rem;">Missing / Uncertain Information:</div>
+                        <ul id="missing-info-list" style="margin: 0; padding-left: 1.25rem; font-size: 0.75rem; color: rgba(255,255,255,0.75); line-height: 1.4;"></ul>
+                    </div>
+                </div>
+
+                <!-- SHAP Contributors -->
+                <div id="factors-container" style="margin-top: 1.5rem; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+                        <h4 style="margin: 0; color: var(--white); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Model Feature Contributors (SHAP)</h4>
+                    </div>
+                    <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); margin: 0 0 0.75rem 0;">Relative feature contributions to the PSIF model score. Does not imply physical causality.</p>
+                    
+                    <div id="pos-factors-container" style="margin-bottom: 0.75rem; display: none;">
+                        <div style="font-size: 0.75rem; color: var(--risk-critical); font-weight: 600; margin-bottom: 0.25rem;">+ Pushing Toward PSIF</div>
+                        <ul id="pos-factors-list" class="factors-list"></ul>
+                    </div>
+                    <div id="neg-factors-container" style="margin-bottom: 0.75rem; display: none;">
+                        <div style="font-size: 0.75rem; color: var(--risk-low); font-weight: 600; margin-bottom: 0.25rem;">- Pulling Toward NOT PSIF</div>
+                        <ul id="neg-factors-list" class="factors-list"></ul>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);">
+                    <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.6); text-align: center;">
+                        <strong>HSE Human Review is required for operational decision-making.</strong>
+                    </p>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <a href="/incidents/" id="view-incident-btn" class="btn btn-outline" style="width: 100%; color: var(--white); border-color: rgba(255,255,255,0.2);">
+                        View Saved Incident Record
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('predict-form');
+    const btnSubmit = document.getElementById('btn-predict');
+    const errorMsg = document.getElementById('error-message');
+    
+    const resEmpty = document.getElementById('result-empty');
+    const resContent = document.getElementById('result-content');
+    
+    const binaryBadge = document.getElementById('binary-badge');
+    const resEvidenceStrength = document.getElementById('res-evidence-strength');
+    const resProb = document.getElementById('res-prob');
+    const resModel = document.getElementById('res-model');
+    const factorsContainer = document.getElementById('factors-container');
+    const viewIncidentBtn = document.getElementById('view-incident-btn');
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span style="opacity: 0.7;">Analyzing...</span>';
+        errorMsg.style.display = 'none';
+        
+        const payload = {
+            incident_date: document.getElementById('incident_date').value || null,
+            department: document.getElementById('department').value || null,
+            location: document.getElementById('location').value || null,
+            job_task: document.getElementById('job_task').value || null,
+            equipment_involved: document.getElementById('equipment_involved').value || null,
+            
+            injury_type: document.getElementById('injury_type').value || null,
+            body_part: document.getElementById('body_part').value || null,
+            severity_actual: document.getElementById('severity_actual').value || null,
+            severity_potential: document.getElementById('severity_potential').value || null,
+            near_miss: document.getElementById('near_miss').checked,
+            
+            immediate_cause: document.getElementById('immediate_cause').value || null,
+            root_cause_category: document.getElementById('root_cause_category').value || null,
+            
+            description: document.getElementById('description').value || null,
+            corrective_actions: document.getElementById('corrective_actions').value || null,
+            witness_statement: document.getElementById('witness_statement').value || null
+        };
+        
+        try {
+            const res = await fetch('/api/predict/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                // Populate results
+                resEmpty.style.display = 'none';
+                resContent.style.display = 'block';
+                
+                // Binary Badge
+                const binaryBadge = document.getElementById('binary-badge');
+                const isInsufficient = data.analytical_status === 'INSUFFICIENT_EVIDENCE' || data.analytical_status === 'INSUFFICIENT_INFORMATION' || data.is_sparse_input;
+                if (isInsufficient) {
+                    binaryBadge.style.background = '#ca8a04';
+                    binaryBadge.style.color = '#FFFFFF';
+                    binaryBadge.textContent = 'INSUFFICIENT INFORMATION';
+                } else if (data.psif_predicted) {
+                    binaryBadge.style.background = 'var(--risk-critical)';
+                    binaryBadge.style.color = '#FFFFFF';
+                    binaryBadge.textContent = 'PSIF';
+                } else {
+                    binaryBadge.style.background = 'var(--risk-low)';
+                    binaryBadge.style.color = '#FFFFFF';
+                    binaryBadge.textContent = 'NOT PSIF';
+                }
+                
+                const sparseWarning = document.getElementById('sparse-warning');
+                if (sparseWarning) {
+                    sparseWarning.style.display = isInsufficient ? 'block' : 'none';
+                }
+                
+                // Score & Strength
+                const score = data.psif_score !== undefined ? data.psif_score : data.probability;
+                resProb.textContent = parseFloat(score).toFixed(3);
+                
+                const resEvidence = document.getElementById('res-evidence-strength');
+                if (resEvidence) {
+                    resEvidence.textContent = data.evidence_strength || 'Moderate';
+                }
+                
+                const thresholdStr = data.threshold !== undefined ? ` (thr: ${data.threshold})` : '';
+                resModel.textContent = `${data.model_version}${thresholdStr}`;
+
+                // Explanation & Evidence Layer
+                const exp = data.explanation || data.explanation_detail;
+                const expContainer = document.getElementById('explanation-container');
+                if (exp && expContainer) {
+                    let hasExp = false;
+
+                    // Supporting
+                    const supSec = document.getElementById('supporting-factors-section');
+                    const supList = document.getElementById('supporting-factors-list');
+                    if (exp.supporting_evidence && exp.supporting_evidence.length > 0) {
+                        supList.innerHTML = exp.supporting_evidence.map(s => `<li>${s}</li>`).join('');
+                        supSec.style.display = 'block';
+                        hasExp = true;
+                    } else {
+                        supSec.style.display = 'none';
+                    }
+
+                    // Contradicting
+                    const conSec = document.getElementById('contradicting-factors-section');
+                    const conList = document.getElementById('contradicting-factors-list');
+                    if (exp.contradicting_evidence && exp.contradicting_evidence.length > 0) {
+                        conList.innerHTML = exp.contradicting_evidence.map(s => `<li>${s}</li>`).join('');
+                        conSec.style.display = 'block';
+                        hasExp = true;
+                    } else {
+                        conSec.style.display = 'none';
+                    }
+
+                    // Narrative Quotes
+                    const quoteSec = document.getElementById('narrative-quotes-section');
+                    const quoteList = document.getElementById('narrative-quotes-list');
+                    const quotes = exp.narrative_evidence || exp.extracted_phrases;
+                    if (quotes && quotes.length > 0) {
+                        quoteList.innerHTML = quotes.map(q => `<li>&ldquo;${q}&rdquo;</li>`).join('');
+                        quoteSec.style.display = 'block';
+                        hasExp = true;
+                    } else {
+                        quoteSec.style.display = 'none';
+                    }
+
+                    // Missing Info
+                    const missSec = document.getElementById('missing-info-section');
+                    const missList = document.getElementById('missing-info-list');
+                    if (exp.missing_or_uncertain_info && exp.missing_or_uncertain_info.length > 0) {
+                        missList.innerHTML = exp.missing_or_uncertain_info.map(m => `<li>${m}</li>`).join('');
+                        missSec.style.display = 'block';
+                        hasExp = true;
+                    } else {
+                        missSec.style.display = 'none';
+                    }
+
+                    expContainer.style.display = hasExp ? 'block' : 'none';
+                }
+                
+                // SHAP Factors (Separated Positive and Negative)
+                const posFactors = data.positive_factors || (data.top_factors || []).filter(f => f.contribution > 0);
+                const negFactors = data.negative_factors || (data.top_factors || []).filter(f => f.contribution < 0);
+                
+                const posContainer = document.getElementById('pos-factors-container');
+                const negContainer = document.getElementById('neg-factors-container');
+                const posList = document.getElementById('pos-factors-list');
+                const negList = document.getElementById('neg-factors-list');
+
+                const renderFactorList = (factors, listEl, isPos) => {
+                    listEl.innerHTML = '';
+                    let maxVal = 0;
+                    for (const f of factors) {
+                        if (Math.abs(f.contribution) > maxVal) maxVal = Math.abs(f.contribution);
+                    }
+                    if (maxVal === 0) maxVal = 1;
+
+                    for (const f of factors) {
+                        const val = f.contribution;
+                        if (Math.abs(val) > 0.005) {
+                            const li = document.createElement('li');
+                            li.className = 'factor-item';
+                            const valFmt = val > 0 ? `+${val.toFixed(3)}` : val.toFixed(3);
+                            const posClass = isPos ? 'pos' : 'neg';
+                            const widthRatio = (Math.abs(val) / maxVal) * 100;
+
+                            li.innerHTML = `
+                                <div class="factor-header">
+                                    <span class="factor-name" title="${f.feature}">${f.feature.length > 25 ? f.feature.substring(0, 25) + '...' : f.feature}</span>
+                                    <span class="factor-score tabular-nums ${posClass}">${valFmt}</span>
+                                </div>
+                                <div class="factor-bar-container">
+                                    <div class="factor-bar-fill ${posClass}" style="width: ${widthRatio}%"></div>
+                                </div>
+                            `;
+                            listEl.appendChild(li);
+                        }
+                    }
+                };
+
+                let hasShap = false;
+                if (posFactors && posFactors.length > 0) {
+                    renderFactorList(posFactors, posList, true);
+                    posContainer.style.display = 'block';
+                    hasShap = true;
+                } else {
+                    posContainer.style.display = 'none';
+                }
+
+                if (negFactors && negFactors.length > 0) {
+                    renderFactorList(negFactors, negList, false);
+                    negContainer.style.display = 'block';
+                    hasShap = true;
+                } else {
+                    negContainer.style.display = 'none';
+                }
+
+                factorsContainer.style.display = hasShap ? 'block' : 'none';
+                
+                // View Link
+                if (data.incident_id) {
+                    viewIncidentBtn.href = `/incidents/${data.incident_id}/`;
+                    viewIncidentBtn.style.display = 'inline-block';
+                } else {
+                    viewIncidentBtn.style.display = 'none';
+                }
+                
+            } else {
+                resContent.style.display = 'none';
+                resEmpty.style.display = 'block';
+
+                if (data.accepted === false || data.quality_status === 'CRITICAL') {
+                    const blocking = data.blocking_findings || [];
+                    const missing = data.missing_fields || [];
+                    const items = blocking.length > 0 ? blocking : ['Incident narrative is insufficient for analysis.'];
+                    if (missing.length > 0 && !items.some(i => i.toLowerCase().includes('missing'))) {
+                        items.push('Missing critical fields: ' + missing.join(', '));
+                    }
+
+                    const listHtml = items.map(it => `<li>${it}</li>`).join('');
+                    errorMsg.innerHTML = `
+                        <div style="background: rgba(156, 59, 50, 0.08); border: 1px solid rgba(156, 59, 50, 0.35); border-radius: 6px; padding: 1.25rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--risk-critical)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                <strong style="color: var(--risk-critical); font-size: 1rem;">Submission Rejected: Data quality is insufficient for analysis.</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Please correct the following:</div>
+                            <ul style="margin: 0 0 0.75rem 0; padding-left: 1.25rem; font-size: 0.875rem; color: var(--text-primary); line-height: 1.5;">
+                                ${listHtml}
+                            </ul>
+                            <div style="font-size: 0.825rem; color: var(--text-secondary); font-style: italic;">Add more incident detail and submit again.</div>
+                        </div>
+                    `;
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+
+                throw new Error(data.error || data.detail || 'Prediction failed.');
+            }
+        } catch (err) {
+            resContent.style.display = 'none';
+            resEmpty.style.display = 'block';
+            errorMsg.textContent = err.message;
+            errorMsg.style.display = 'block';
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.5rem;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg> Analyze Incident';
+        }
+    });
+});
+</script>
+{% endblock %}

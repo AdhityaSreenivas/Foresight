@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}PSIF Classification — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}PSIF Precursor Classification and analytical workbench for Admin Flow.{% endblock %}
+
+{% block admin_nav_psif %}active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_flow_reference.css' %}?v=20260920v1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.ref-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+@media (max-width: 900px) {
+    .ref-chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.ref-chart-box {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-lg);
+    box-shadow: var(--ref-shadow-sm);
+    padding: 1.5rem;
+}
+.ref-incident-card {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-md);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--ref-shadow-sm);
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.ref-incident-card:hover {
+    border-color: var(--ref-border-strong);
+    box-shadow: var(--ref-shadow-md);
+}
+.ref-incident-card.is-psif {
+    border-left: 4px solid var(--ref-psif-red);
+}
+.ref-incident-card.is-nonpsif {
+    border-left: 4px solid var(--ref-nonpsif-green);
+}
+.ref-incident-card.is-sparse {
+    border-left: 4px solid var(--ref-amber);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-ref-shell">
+    <div class="admin-ref-container">
+
+        <!-- Header -->
+        <header class="admin-ref-header">
+            <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;">
+                <span class="badge" style="background: #0F172A; color: #FFFFFF; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 4px;">
+                    Admin Flow
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; color: var(--ref-text-muted);">
+                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #0284C7;"></span>
+                    Dual-Threshold Model Inference
+                </span>
+            </div>
+            <h1 class="admin-ref-title">PSIF Precursor Classification</h1>
+            <p class="admin-ref-subtitle">
+                Calibrated Potential Serious Injury &amp; Fatality (PSIF) classification, evidence sufficiency analysis, and score distribution.
+            </p>
+        </header>
+
+        <!-- 1. FOUR SUMMARY CARDS -->
+        <section aria-label="PSIF Summary Metrics">
+            <div class="ref-summary-grid-4">
+                
+                <!-- Card 1: PSIF Candidates -->
+                <div class="ref-summary-card border-red">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label" style="color: var(--ref-psif-red);">PSIF CANDIDATES</span>
+                            <span style="color: var(--ref-psif-red);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                            </span>
+                        </div>
+                        <div class="ref-summary-val" id="kpi-psif" style="color: var(--ref-psif-red);">{{ psif_metrics.psif_count }}</div>
+                        <p class="ref-summary-desc">Elevated precursor risk signals</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span style="color: var(--ref-psif-red);">{{ psif_metrics.psif_rate_display }} of eligible</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: NOT PSIF -->
+                <div class="ref-summary-card border-green">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label" style="color: var(--ref-nonpsif-green);">NOT PSIF</span>
+                            <span style="color: var(--ref-nonpsif-green);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="ref-summary-val" id="kpi-not-psif" style="color: var(--ref-nonpsif-green);">{{ psif_metrics.not_psif_count }}</div>
+                        <p class="ref-summary-desc">Routine or low precursor risk</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>Pathway contained</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Insufficient Information -->
+                <div class="ref-summary-card border-amber">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label" style="color: var(--ref-amber);">INSUFFICIENT INFORMATION</span>
+                            <span style="color: var(--ref-amber);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            </span>
+                        </div>
+                        <div class="ref-summary-val" id="kpi-insufficient" style="color: var(--ref-amber);">{{ psif_metrics.insufficient_evidence_count }}</div>
+                        <p class="ref-summary-desc">Sparse narrative (&lt;10 words)</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>Excluded from denominator</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Prediction Eligible -->
+                <div class="ref-summary-card border-blue">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="ref-summary-label" style="color: var(--ref-iogp-blue);">PREDICTION ELIGIBLE</span>
+                            <span style="color: var(--ref-iogp-blue);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                            </span>
+                        </div>
+                        <div class="ref-summary-val" id="kpi-eligible" style="color: var(--ref-iogp-blue);">{{ psif_metrics.prediction_eligible_count }}</div>
+                        <p class="ref-summary-desc">Evaluated non-sparse records</p>
+                    </div>
+                    <div class="ref-summary-footer">
+                        <span>Total: {{ psif_metrics.total_incidents }} records</span>
+                        <div id="kpi-total-incidents">{{ psif_metrics.total_incidents }}</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Methodology Disclosure Callout -->
+        <section class="ref-card" style="margin-bottom: 2rem; padding: 1.15rem 1.5rem; background: var(--ref-surface, #FFFFFF); border-left: 4px solid #0284C7;">
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="color: #0284C7; flex-shrink: 0; margin-top: 2px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </span>
+                <div style="font-size: 0.85rem; color: var(--ref-text-body); line-height: 1.5;">
+                    <strong>PSIF Rate Semantics:</strong> {{ psif_metrics.methodology_note }}
+                    <div style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--ref-text-muted);">
+                        The PSIF Rate is defined strictly as <em>PSIF Candidates &divide; Prediction-Eligible Observations &times; 100</em>. Insufficient-evidence records are quarantined to prevent distortion of precursor prevalence.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. VISUAL COMPARISON & SCORE DISTRIBUTION -->
+        <section class="ref-chart-grid" aria-label="Analytical Visualizations">
+            
+            <!-- Chart 1: PSIF vs NOT PSIF Distribution -->
+            <div class="ref-chart-box">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--ref-text-heading); margin: 0 0 0.25rem 0;">
+                            PSIF vs Not PSIF Distribution
+                        </h3>
+                        <p style="font-size: 0.82rem; color: var(--ref-text-muted); margin: 0;">
+                            Evaluated eligible observations (Dual-Threshold Classification)
+                        </p>
+                    </div>
+                </div>
+                {% if psif_metrics.has_eligible %}
+                <div style="position: relative; height: 260px; width: 100%;">
+                    <canvas id="psifBinaryChart"></canvas>
+                </div>
+                {% else %}
+                <div style="height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ref-bg); border-radius: 8px; border: 1px dashed var(--ref-border); color: var(--ref-text-muted); text-align: center; padding: 1.5rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.5rem; opacity: 0.5;">
+                        <circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <div style="font-weight: 600; font-size: 0.9rem;">No eligible observations evaluated yet.</div>
+                    <div style="font-size: 0.78rem; margin-top: 0.25rem;">Submit observations or upload a batch to render comparison.</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Chart 2: PSIF Model Score Distribution -->
+            <div class="ref-chart-box">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--ref-text-heading); margin: 0 0 0.25rem 0;">
+                            PSIF Model Score Distribution
+                        </h3>
+                        <p style="font-size: 0.82rem; color: var(--ref-text-muted); margin: 0;">
+                            Model score concentration across calibrated risk bands
+                        </p>
+                    </div>
+                </div>
+                {% if psif_metrics.has_eligible %}
+                <div style="position: relative; height: 260px; width: 100%;">
+                    <canvas id="scoreDistributionChart"></canvas>
+                </div>
+                {% else %}
+                <div style="height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ref-bg); border-radius: 8px; border: 1px dashed var(--ref-border); color: var(--ref-text-muted); text-align: center; padding: 1.5rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.5rem; opacity: 0.5;">
+                        <line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <div style="font-weight: 600; font-size: 0.9rem;">No model scores computed yet.</div>
+                    <div style="font-size: 0.78rem; margin-top: 0.25rem;">Scores strictly populate from canonical model inference.</div>
+                </div>
+                {% endif %}
+            </div>
+
+        </section>
+
+        <!-- 3. CLASSIFICATION & REASONING DETAIL LIST (Inspired by incident-classification.html) -->
+        <section aria-label="Evaluated Observations">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--ref-text-heading); margin: 0 0 0.2rem 0;">
+                        Observation Intelligence &amp; Reasoning Records
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--ref-text-muted); margin: 0;">
+                        Detailed decision traces, evidence chains, and causal pathways.
+                    </p>
+                </div>
+                <span style="font-size: 0.82rem; font-weight: 600; color: var(--ref-text-muted);">
+                    Showing up to {{ incidents|length }} observation{% if incidents|length != 1 %}s{% endif %}
+                </span>
+            </div>
+
+            {% if incidents %}
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                {% for inc in incidents %}
+                <div class="ref-incident-card {% if inc.prediction and inc.prediction.is_sparse_input %}is-sparse{% elif inc.prediction and inc.prediction.psif_predicted %}is-psif{% elif inc.prediction %}is-nonpsif{% endif %}">
+                    
+                    <!-- Top Line: ID, Date, Department, Status Pill & Score -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+                            <span style="font-family: monospace; font-size: 0.92rem; font-weight: 700; color: var(--ref-text-heading);">
+                                #{{ inc.id|stringformat:"s"|slice:":8" }}
+                            </span>
+                            <span style="color: var(--ref-text-dim);">&bull;</span>
+                            <span style="font-size: 0.82rem; color: var(--ref-text-muted);">
+                                {{ inc.incident_date|date:"M j, Y"|default:"Recent" }}
+                            </span>
+                            <span style="color: var(--ref-text-dim);">&bull;</span>
+                            <span style="font-size: 0.82rem; font-weight: 600; color: var(--ref-text-body);">
+                                {{ inc.department|default:"Facility General" }}
+                            </span>
+                            {% if inc.location %}
+                            <span style="color: var(--ref-text-dim);">&bull;</span>
+                            <span style="font-size: 0.82rem; color: var(--ref-text-muted);">
+                                Location: <strong>{{ inc.location }}</strong>
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Classification & Score Badges -->
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            {% if inc.prediction and inc.prediction.is_sparse_input %}
+                                <span class="ref-portfolio-pill" style="background: var(--ref-amber-bg); color: var(--ref-amber); border-color: var(--ref-amber-border);">
+                                    INSUFFICIENT INFORMATION
+                                </span>
+                            {% elif inc.prediction and inc.prediction.psif_predicted %}
+                                <span class="ref-portfolio-pill" style="background: var(--ref-psif-red-bg); color: var(--ref-psif-red); border-color: var(--ref-psif-red-border);">
+                                    PSIF CANDIDATE
+                                </span>
+                            {% elif inc.prediction %}
+                                <span class="ref-portfolio-pill" style="background: var(--ref-nonpsif-green-bg); color: var(--ref-nonpsif-green); border-color: var(--ref-nonpsif-green-border);">
+                                    NOT PSIF
+                                </span>
+                            {% endif %}
+
+                            <!-- Strict Semantics: 'PSIF Model Score' -->
+                            {% if inc.prediction and not inc.prediction.is_sparse_input %}
+                            <span style="font-size: 0.78rem; font-weight: 700; font-family: monospace; background: var(--ref-surface-sunk); padding: 0.25rem 0.55rem; border-radius: 4px; border: 1px solid var(--ref-border);">
+                                PSIF Model Score: {{ inc.prediction.psif_probability|floatformat:3 }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Narrative Excerpt -->
+                    <p style="margin: 0; font-size: 0.88rem; color: var(--ref-text-body); line-height: 1.55;">
+                        {{ inc.description }}
+                    </p>
+
+                    <!-- Footer: Investigation Link -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; pt: 0.5rem; border-top: 1px solid var(--ref-border); padding-top: 0.5rem;">
+                        <div style="font-size: 0.78rem; color: var(--ref-text-muted);">
+                            {% if inc.job_task %}Activity: <strong>{{ inc.job_task }}</strong>{% endif %}
+                        </div>
+                        <a href="{% url 'admin_flow:incident_reasoning' pk=inc.pk %}" class="ref-btn ref-btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.85rem;">
+                            Investigate Reasoning &amp; Evidence &rarr;
+                        </a>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Clean Empty State -->
+            <div class="ref-card" style="text-align: center; padding: 3.5rem 2rem;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: #F1F5F9; color: #64748B; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--ref-text-heading); margin-bottom: 0.5rem;">
+                    No Classified Incidents in Scope
+                </h3>
+                <p style="color: var(--ref-text-muted); max-width: 500px; margin: 0 auto 1.5rem; font-size: 0.92rem; line-height: 1.55;">
+                    Submit a live incident report or upload a batch dataset to perform dual-threshold precursor inference and view detailed reasoning.
+                </p>
+                <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                    <a href="{% url 'admin_flow:submit' %}" class="ref-btn ref-btn-primary">
+                        + Submit Incident Report
+                    </a>
+                    <a href="{% url 'admin_flow:upload' %}" class="ref-btn ref-btn-accent">
+                        Upload Incident Dataset
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+        </section>
+
+    </div>
+</div>
+
+<!-- Chart initialization scripts -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    {% if psif_metrics.has_eligible %}
+    // 1. Binary comparison chart
+    const ctxBinary = document.getElementById("psifBinaryChart");
+    if (ctxBinary) {
+        new Chart(ctxBinary.getContext("2d"), {
+            type: "bar",
+            data: {
+                labels: ["PSIF Candidates", "NOT PSIF"],
+                datasets: [{
+                    data: [{{ psif_metrics.psif_count }}, {{ psif_metrics.not_psif_count }}],
+                    backgroundColor: ["#B91C1C", "#16A34A"],
+                    borderRadius: 6,
+                    barThickness: 45
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(c) {
+                                return ` Observations: ${c.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "inherit", weight: "600" }, color: "#0F172A" }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, font: { family: "inherit" }, color: "#64748B" },
+                        grid: { color: "#E2E8F0" }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Score distribution chart (Calibrated PSIF Model Score bands)
+    const ctxScore = document.getElementById("scoreDistributionChart");
+    if (ctxScore) {
+        new Chart(ctxScore.getContext("2d"), {
+            type: "bar",
+            data: {
+                labels: ["0.00-0.20", "0.20-0.40", "0.40-0.60", "0.60-0.80", "0.80-1.00"],
+                datasets: [{
+                    label: "Observations",
+                    data: [
+                        {{ psif_metrics.score_buckets.b1|default:0 }},
+                        {{ psif_metrics.score_buckets.b2|default:0 }},
+                        {{ psif_metrics.score_buckets.b3|default:0 }},
+                        {{ psif_metrics.score_buckets.b4|default:0 }},
+                        {{ psif_metrics.score_buckets.b5|default:0 }}
+                    ],
+                    backgroundColor: ["#16A34A", "#65A30D", "#CA8A04", "#EA580C", "#B91C1C"],
+                    borderRadius: 4,
+                    barThickness: 32
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(c) {
+                                return ` PSIF Model Score count: ${c.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "inherit" }, color: "#64748B" }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, font: { family: "inherit" }, color: "#64748B" },
+                        grid: { color: "#E2E8F0" }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

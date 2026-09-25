@@ -1,0 +1,262 @@
+"""
+PSIF Platform — Base Django Settings
+All environment-specific overrides live in dev.py / prod.py.
+Configuration is loaded from .env via django-environ.
+"""
+
+from pathlib import Path
+import os
+import sys
+import environ
+
+# Prevent OpenMP library clash between PyTorch and XGBoost on macOS
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+if sys.platform == "darwin":
+    os.environ.setdefault("OBJC_DISABLE_INITIALIZE_FORK_SAFETY", "YES")
+
+# ── Path setup ────────────────────────────────────────────────────────────────
+# BASE_DIR points to the project root (where manage.py lives)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# ── Environment loading ───────────────────────────────────────────────────────
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    MAX_UPLOAD_SIZE_MB=(int, 250),
+    BERT_BATCH_SIZE=(int, 32),
+    PSIF_THRESHOLD=(float, 0.5),
+    RISK_LOW_MAX=(float, 0.25),
+    RISK_MEDIUM_MAX=(float, 0.50),
+    RISK_HIGH_MAX=(float, 0.75),
+)
+
+# Read the .env file at project root (silently ignored if absent in prod)
+environ.Env.read_env(BASE_DIR / ".env", overwrite=True)
+
+# ── Core ──────────────────────────────────────────────────────────────────────
+SECRET_KEY = env("SECRET_KEY")
+DEBUG = env("DEBUG")
+ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+
+# ── Application definition ────────────────────────────────────────────────────
+INSTALLED_APPS = [
+    # Django built-ins
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # Third-party
+    "rest_framework",
+    # Project apps (under apps/)
+    "apps.accounts",
+    "apps.datasets",
+    "apps.incidents",
+    "apps.predictions",
+    "apps.dashboard",
+    "apps.admin_flow",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+# ── Database — PostgreSQL 15 + psycopg 3 ─────────────────────────────────────
+DATABASES = {
+    "default": {
+        "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST", default="localhost"),
+        "PORT": env("DB_PORT", default="5432"),
+        "OPTIONS": {
+            # psycopg 3 client-side cursor factory (improves streaming perf)
+            "cursor_factory": None,
+        },
+        "CONN_MAX_AGE": 60,  # persistent connections for 60s
+    }
+}
+
+# ── Custom User model ─────────────────────────────────────────────────────────
+AUTH_USER_MODEL = "accounts.User"
+
+# ── Auth redirects ────────────────────────────────────────────────────────────
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
+
+# ── Password validation ───────────────────────────────────────────────────────
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# ── Internationalisation ──────────────────────────────────────────────────────
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+# ── Static files ──────────────────────────────────────────────────────────────
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# ── Media files (uploaded datasets) ──────────────────────────────────────────
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / env("MEDIA_ROOT", default="media")
+
+# Maximum upload size in bytes (default 250MB, minimum 250MB)
+MAX_UPLOAD_SIZE_MB = max(250, env.int("MAX_UPLOAD_SIZE_MB", default=250))
+MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+# ── File upload settings ──────────────────────────────────────────────────────
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_BYTES
+FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_BYTES
+
+# ── Default primary key ───────────────────────────────────────────────────────
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ── Django REST Framework ─────────────────────────────────────────────────────
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+}
+
+# ── Celery ────────────────────────────────────────────────────────────────────
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/1")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+CELERY_TASK_EAGER_PROPAGATES = True
+
+# Reliability & crash resilience
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+# Use solo pool on macOS/Darwin to avoid unsafe fork() after PyTorch/XGBoost/OpenMP initialization
+CELERY_WORKER_POOL = env("CELERY_WORKER_POOL", default="solo" if sys.platform == "darwin" else "prefork")
+CELERY_WORKER_CONCURRENCY = env.int("CELERY_WORKER_CONCURRENCY", default=1 if sys.platform == "darwin" else 4)
+
+DEV_SYNC_FALLBACK = env.bool("DEV_SYNC_FALLBACK", default=False)
+
+# ── Cache Configuration (Redis) ──────────────────────────────────────────────
+IS_TESTING = "test" in sys.argv or "pytest" in sys.modules or env.bool("TESTING", default=False)
+
+if IS_TESTING:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "test-cache",
+            "TIMEOUT": 300,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": env("CACHE_BACKEND", default="django.core.cache.backends.redis.RedisCache"),
+            "LOCATION": env("CACHE_LOCATION", default=env("REDIS_URL", default="redis://127.0.0.1:6379/2")),
+            "TIMEOUT": 300,
+        }
+    }
+
+# ── ML / NLP configuration ────────────────────────────────────────────────────
+BERT_MODEL_NAME = env("BERT_MODEL_NAME", default="distilbert-base-uncased")
+BERT_BATCH_SIZE = env("BERT_BATCH_SIZE")
+
+# PSIF classification threshold (probability above which is_psif_predicted = True)
+PSIF_THRESHOLD = env("PSIF_THRESHOLD")
+
+# ── Risk level probability bands ──────────────────────────────────────────────
+# Used consistently in: model_inference.py, serializers, frontend badge coloring
+# low:      [0,      RISK_LOW_MAX)
+# medium:   [RISK_LOW_MAX,    RISK_MEDIUM_MAX)
+# high:     [RISK_MEDIUM_MAX, RISK_HIGH_MAX)
+# critical: [RISK_HIGH_MAX,   1.0]
+RISK_BANDS = {
+    "LOW_MAX": env("RISK_LOW_MAX"),       # default 0.25
+    "MEDIUM_MAX": env("RISK_MEDIUM_MAX"),  # default 0.50
+    "HIGH_MAX": env("RISK_HIGH_MAX"),      # default 0.75
+}
+
+# ── ML Artifacts directory ────────────────────────────────────────────────────
+ML_ARTIFACTS_DIR = BASE_DIR / env("ML_ARTIFACTS_DIR", default="ml_engine/artifacts")
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "apps.datasets": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "apps.incidents": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "apps.predictions": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "ml_engine": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "celery": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}

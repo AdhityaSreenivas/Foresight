@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Live Processing — Admin Flow — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Live incident batch processing, dual-threshold inference, and real-time counter visualization.{% endblock %}
+
+{% block admin_nav_upload %}active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_flow_reference.css' %}?v=20260920v1">
+<style>
+/* Scoped styles adapted from live-counting-webpage/index.html */
+.live-header-cluster {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--ref-border);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.live-status-cluster {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+.live-conn-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ref-text-muted);
+}
+.live-conn-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10B981;
+}
+.live-conn-dot.pulse {
+    animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+}
+.live-spinner {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid #CCFBF1;
+    border-top-color: #0D9488;
+    animation: liveSpin 0.9s linear infinite;
+}
+@keyframes liveSpin {
+    to { transform: rotate(360deg); }
+}
+.completed-banner {
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem 1.75rem;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: var(--ref-radius-lg);
+    margin-top: 1.5rem;
+}
+.completed-banner.show {
+    display: flex;
+}
+.completed-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+@media (max-width: 680px) {
+    .completed-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+.timing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+.timing-item .k {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ref-text-muted);
+}
+.timing-item .v {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--ref-text-heading);
+    font-variant-numeric: tabular-nums;
+    margin-top: 0.15rem;
+}
+.file-table-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1.8fr) 140px 100px;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--ref-radius-md);
+    border: 1px solid var(--ref-border);
+    background: var(--ref-surface);
+    margin-bottom: 0.65rem;
+}
+@media (max-width: 700px) {
+    .file-table-row {
+        grid-template-columns: 24px 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-ref-shell">
+    <div class="admin-ref-container">
+
+        <!-- Navigation Return -->
+        <div style="margin-bottom: 1rem;">
+            <a href="{% url 'admin_flow:upload' %}" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--ref-text-muted); text-decoration: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Upload Dataset
+            </a>
+        </div>
+
+        <!-- Header Row (from Reference) -->
+        <header class="live-header-cluster">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.35rem;">
+                    <span class="badge" style="background: #0F172A; color: #FFFFFF; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 4px;">
+                        Admin Flow
+                    </span>
+                    <span style="font-size: 0.82rem; font-weight: 600; color: var(--ref-text-muted);">
+                        Pipeline Telemetry
+                    </span>
+                </div>
+                <h1 class="admin-ref-title">Live Processing</h1>
+                <p class="admin-ref-subtitle">
+                    Processing multiple incident records &bull; High-throughput dual-threshold precursor inference
+                </p>
+            </div>
+
+            <!-- Status Cluster -->
+            <div class="live-status-cluster">
+                <div class="live-conn-wrap">
+                    <span class="live-conn-dot pulse"></span>
+                    <span>Live Pipeline</span>
+                </div>
+                <span id="live-status-pill" class="ref-status-badge {% if live_stats.status == 'completed' %}completed{% elif live_stats.status == 'processing' %}processing{% else %}failed{% endif %}">
+                    <span class="ref-status-dot {% if live_stats.status == 'processing' %}pulse{% endif %}"></span>
+                    <span id="label-job-status">{{ live_stats.status|upper }}</span>
+                </span>
+            </div>
+        </header>
+
+        {% if not has_data %}
+        <div style="background: var(--ref-surface, #FFFFFF); border: 1px solid #E2E8F0; border-left: 4px solid #0284C7; border-radius: 6px; padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.84rem; color: #475569;">
+            <strong>Live Counter Zero Baseline:</strong> No active streaming job. Counters reflect the current demonstration workspace state. <a href="{% url 'admin_flow:upload' %}" style="color: #0284C7; font-weight: 700; text-decoration: underline;">Upload an incident dataset</a> to stream live inferences.
+        </div>
+        {% endif %}
+
+        <!-- MAIN GRID: Counters (Left) + Status Card (Right) -->
+        <div class="ref-live-grid">
+            
+            <!-- LEFT COLUMN -->
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                
+                <!-- Counter 1: PSIF Candidates -->
+                <div class="ref-card ref-live-counter-card psif">
+                    <div>
+                        <div class="ref-counter-head">
+                            <span>PSIF Candidates</span>
+                            <span class="ref-portfolio-pill" style="background: var(--ref-psif-red-bg); color: var(--ref-psif-red); border-color: var(--ref-psif-red-border);">
+                                Critical Precursors
+                            </span>
+                        </div>
+                        <div class="ref-counter-number-row">
+                            <span class="ref-counter-number" id="live-psif-counter">0</span>
+                            <span class="ref-counter-pct" id="live-psif-pct">0.0% of batch</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--ref-text-muted); line-height: 1.45;">
+                            Incidents where the credible Serious Injury or Fatality pathway is verified and high-energy controls were absent, compromised, or failed.
+                        </p>
+                    </div>
+                    <div class="ref-progress-track">
+                        <div class="ref-progress-fill psif" id="bar-psif-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Counter 2: Non-PSIF -->
+                <div class="ref-card ref-live-counter-card nonpsif">
+                    <div>
+                        <div class="ref-counter-head">
+                            <span>Non-PSIF</span>
+                            <span class="ref-portfolio-pill" style="background: var(--ref-nonpsif-green-bg); color: var(--ref-nonpsif-green); border-color: var(--ref-nonpsif-green-border);">
+                                Contained / Low Risk
+                            </span>
+                        </div>
+                        <div class="ref-counter-number-row">
+                            <span class="ref-counter-number" id="live-nonpsif-counter">0</span>
+                            <span class="ref-counter-pct" id="live-nonpsif-pct">0.0% of batch</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--ref-text-muted); line-height: 1.45;">
+                            Evaluated incidents where physical safeguards held, energy was contained, or consequences remained strictly routine.
+                        </p>
+                    </div>
+                    <div class="ref-progress-track">
+                        <div class="ref-progress-fill nonpsif" id="bar-nonpsif-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- COMPLETION STATE BANNER (Appears when processing completes) -->
+                <div class="completed-banner" id="completed-banner">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--ref-nonpsif-green);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <span style="font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em;">
+                            Processing Complete — All Observations Evaluated
+                        </span>
+                    </div>
+
+                    <div class="completed-stats">
+                        <div style="background: #FFFFFF; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.75rem 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--ref-text-muted); text-transform: uppercase;">PROCESSED</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: var(--ref-text-heading);" id="final-processed">0</div>
+                        </div>
+                        <div style="background: #FFFFFF; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.75rem 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--ref-psif-red); text-transform: uppercase;">PSIF CANDIDATES</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: var(--ref-psif-red);" id="final-psif">0</div>
+                        </div>
+                        <div style="background: #FFFFFF; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.75rem 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--ref-nonpsif-green); text-transform: uppercase;">NON-PSIF</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: var(--ref-nonpsif-green);" id="final-nonpsif">0</div>
+                        </div>
+                        <div style="background: #FFFFFF; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.75rem 1rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--ref-amber); text-transform: uppercase;">INSUFFICIENT INFO</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: var(--ref-amber);" id="final-insufficient">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Navigation Action Buttons (Strict Requirement) -->
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                        <a href="{% url 'admin_flow:incidents' %}" class="ref-btn ref-btn-primary" id="btn-view-incidents">
+                            View Incident Results &rarr;
+                        </a>
+                        <a href="{% url 'admin_flow:psif' %}" class="ref-btn ref-btn-accent" id="btn-view-classification">
+                            View PSIF Classification &rarr;
+                        </a>
+                        <a href="{% url 'admin_flow:iogp' %}" class="ref-btn">
+                            View IOGP Classification &rarr;
+                        </a>
+                        <a href="{% url 'admin_flow:dashboard' %}" class="ref-btn">
+                            Return to Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- BATCH FILE / JOB STATUS SECTION -->
+                <div style="margin-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
+                        <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ref-text-muted); margin: 0;">
+                            Batch Ingestion History
+                        </h3>
+                        <span style="font-size: 0.78rem; color: var(--ref-text-dim);">
+                            Isolated Admin Flow Batches
+                        </span>
+                    </div>
+
+                    {% if recent_datasets %}
+                        {% for ds in recent_datasets %}
+                        <div class="file-table-row">
+                            <div style="color: {% if ds.status == 'completed' %}#16A34A{% else %}#0284C7{% endif %};">
+                                {% if ds.status == 'completed' %}
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                {% else %}
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; font-weight: 700; color: var(--ref-text-heading); word-break: break-all;">
+                                    {{ ds.name }}
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--ref-text-muted); margin-top: 2px;">
+                                    {{ ds.total_rows }} rows &bull; {{ ds.created_at|date:"M j, Y, H:i" }}
+                                </div>
+                            </div>
+                            <div style="font-size: 0.82rem; font-family: monospace; color: var(--ref-text-body);">
+                                <span style="color: var(--ref-psif-red); font-weight: 700;">{{ ds.psif_count }} PSIF</span> /
+                                <span style="color: var(--ref-nonpsif-green); font-weight: 700;">{{ ds.non_psif_count }} Non</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span class="ref-status-badge {% if ds.status == 'completed' %}completed{% else %}processing{% endif %}" style="font-size: 0.68rem; padding: 2px 7px;">
+                                    {{ ds.status|upper }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="ref-card" style="padding: 1rem; text-align: center; color: var(--ref-text-muted); font-size: 0.85rem;">
+                            No batch files recorded yet.
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: STATUS CARD (STICKY) -->
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="ref-card" style="position: sticky; top: 1.5rem;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--ref-border); padding-bottom: 0.75rem;">
+                        <h3 style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ref-text-muted); margin: 0;">
+                            Processing Monitor
+                        </h3>
+                        <div class="live-status-cluster">
+                            <span class="live-spinner" id="live-spinner" style="display: {% if live_stats.status == 'processing' %}block{% else %}none{% endif %};"></span>
+                            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #0D9488;" id="live-indicator-text">
+                                {% if live_stats.status == 'processing' %}Active Stream{% else %}Complete{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Current File -->
+                    <div style="background: var(--ref-surface-sunk); border: 1px solid var(--ref-border); border-radius: var(--ref-radius-md); padding: 0.85rem 1rem; margin-bottom: 1rem;">
+                        <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--ref-text-dim); margin-bottom: 2px;">
+                            Active File
+                        </div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: var(--ref-text-heading); word-break: break-all;">
+                            {{ live_stats.dataset_name }}
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar & Counter -->
+                    <div style="margin-bottom: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.82rem; margin-bottom: 0.4rem;">
+                            <span style="color: var(--ref-text-muted); font-weight: 600;">Ingestion Progress</span>
+                            <span style="font-weight: 800; font-family: monospace; color: var(--ref-text-heading);" id="live-progress-pct">
+                                {{ live_stats.progress_pct }}%
+                            </span>
+                        </div>
+                        <div class="ref-progress-track" style="height: 10px; border-radius: 5px;" id="live-progress-bar">
+                            <div class="ref-progress-fill blue" id="bar-main-progress" style="width: {{ live_stats.progress_pct }}%;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--ref-text-dim); margin-top: 0.35rem; font-family: monospace;">
+                            <span id="label-processed-count">{{ live_stats.processed_rows }} processed</span>
+                            <span>{{ live_stats.total_rows }} total rows</span>
+                        </div>
+                    </div>
+
+                    <!-- Timing Stats -->
+                    <div class="timing-grid" style="padding-top: 0.85rem; border-top: 1px solid var(--ref-border); margin-bottom: 1rem;">
+                        <div class="timing-item">
+                            <div class="k">Status</div>
+                            <div class="v" id="live-timing-status">{{ live_stats.status|title }}</div>
+                        </div>
+                        <div class="timing-item">
+                            <div class="k">Rows</div>
+                            <div class="v" id="live-timing-rows">{{ live_stats.total_rows }}</div>
+                        </div>
+                        <div class="timing-item">
+                            <div class="k">Done</div>
+                            <div class="v" id="live-timing-done">{{ live_stats.processed_rows }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Quality Gating Breakdown -->
+                    <div style="padding-top: 0.85rem; border-top: 1px solid var(--ref-border);">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ref-text-muted); margin-bottom: 0.65rem;">
+                            Data Quality Pre-Screening
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.82rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #16A34A;"></span>
+                                    <span>Accepted Valid Records</span>
+                                </span>
+                                <span style="font-weight: 700; font-family: monospace;">{{ live_stats.accepted_count }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #D97706;"></span>
+                                    <span>Sparse / Warning Records</span>
+                                </span>
+                                <span style="font-weight: 700; font-family: monospace;">{{ live_stats.warning_count }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #B91C1C;"></span>
+                                    <span>Rejected / Critical Conflicts</span>
+                                </span>
+                                <span style="font-weight: 700; font-family: monospace;">{{ live_stats.rejected_count }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Live Counter Animation & Polling Logic -->
+<script>
+(function() {
+    {% if has_data %}
+    const realTotal = {{ live_stats.total_rows|default:0 }};
+    const realPsif = {{ live_stats.psif_count|default:0 }};
+    const realNonPsif = {{ live_stats.non_psif_count|default:0 }};
+    const realProcessed = {{ live_stats.processed_rows|default:0 }};
+    const realInsufficient = {{ live_stats.insufficient_count|default:0 }};
+    const datasetId = "{{ live_stats.dataset_id|default:'' }}";
+    let isComplete = ("{{ live_stats.status }}" === "completed" || "{{ live_stats.status }}" === "failed" || "{{ live_stats.status }}" === "canceled");
+
+    // Elements
+    const elPsif = document.getElementById("live-psif-counter");
+    const elNonPsif = document.getElementById("live-nonpsif-counter");
+    const elPsifPct = document.getElementById("live-psif-pct");
+    const elNonPsifPct = document.getElementById("live-nonpsif-pct");
+    const barPsif = document.getElementById("bar-psif-fill");
+    const barNonPsif = document.getElementById("bar-nonpsif-fill");
+    const banner = document.getElementById("completed-banner");
+    const finalProc = document.getElementById("final-processed");
+    const finalPsif = document.getElementById("final-psif");
+    const finalNon = document.getElementById("final-nonpsif");
+    const finalInsuff = document.getElementById("final-insufficient");
+
+    // Animate numbers smoothly from current to target
+    function animateCounters(targetPsif, targetNonPsif, total) {
+        const duration = 1200; // ms
+        const startTime = performance.now();
+
+        function step(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const ease = 1 - Math.pow(1 - progress, 3);
+
+            const currPsif = Math.round(targetPsif * ease);
+            const currNon = Math.round(targetNonPsif * ease);
+
+            if (elPsif) elPsif.textContent = currPsif.toLocaleString();
+            if (elNonPsif) elNonPsif.textContent = currNon.toLocaleString();
+
+            const sum = currPsif + currNon;
+            const pctPsif = sum > 0 ? ((currPsif / sum) * 100).toFixed(1) : "0.0";
+            const pctNon = sum > 0 ? ((currNon / sum) * 100).toFixed(1) : "0.0";
+
+            if (elPsifPct) elPsifPct.textContent = `${pctPsif}% of evaluated`;
+            if (elNonPsifPct) elNonPsifPct.textContent = `${pctNon}% of evaluated`;
+
+            if (barPsif) barPsif.style.width = `${pctPsif}%`;
+            if (barNonPsif) barNonPsif.style.width = `${pctNon}%`;
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                // Ensure exact final numbers
+                if (elPsif) elPsif.textContent = targetPsif.toLocaleString();
+                if (elNonPsif) elNonPsif.textContent = targetNonPsif.toLocaleString();
+                if (banner && isComplete) {
+                    banner.classList.add("show");
+                    if (finalProc) finalProc.textContent = realProcessed.toLocaleString();
+                    if (finalPsif) finalPsif.textContent = targetPsif.toLocaleString();
+                    if (finalNon) finalNon.textContent = targetNonPsif.toLocaleString();
+                    if (finalInsuff) finalInsuff.textContent = realInsufficient.toLocaleString();
+                }
+            }
+        }
+
+        requestAnimationFrame(step);
+    }
+
+    // Launch initial count animation
+    animateCounters(realPsif, realNonPsif, realTotal);
+
+    // If still actively processing, poll real backend status endpoint
+    if (!isComplete && datasetId) {
+        const pollInterval = setInterval(function() {
+            fetch(`/admin-flow/api/live-status/${datasetId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status) {
+                        const lblStatus = document.getElementById("label-job-status");
+                        if (lblStatus) lblStatus.textContent = data.status.toUpperCase();
+                        
+                        const elProc = document.getElementById("label-processed-count");
+                        if (elProc) elProc.textContent = `${data.processed_rows} processed`;
+
+                        const elMainBar = document.getElementById("bar-main-progress");
+                        if (elMainBar) elMainBar.style.width = `${data.progress_pct}%`;
+
+                        const elProgPct = document.getElementById("live-progress-pct");
+                        if (elProgPct) elProgPct.textContent = `${data.progress_pct}%`;
+
+                        // Live-update counter cards on every tick so numbers tick up during processing
+                        const tot = data.total_rows || 0;
+                        const elPsif = document.getElementById("live-psif-counter");
+                        const elPsifPct = document.getElementById("live-psif-pct");
+                        if (elPsif) elPsif.textContent = data.psif_count;
+                        if (elPsifPct && tot > 0) elPsifPct.textContent = `${((data.psif_count / tot) * 100).toFixed(1)}% of batch`;
+
+                        const elNon = document.getElementById("live-nonpsif-counter");
+                        const elNonPct = document.getElementById("live-nonpsif-pct");
+                        if (elNon) elNon.textContent = data.non_psif_count;
+                        if (elNonPct && tot > 0) elNonPct.textContent = `${((data.non_psif_count / tot) * 100).toFixed(1)}% of batch`;
+
+                        if (data.is_complete) {
+                            isComplete = true;
+                            clearInterval(pollInterval);
+                            animateCounters(data.psif_count, data.non_psif_count, data.total_rows);
+                            const spinner = document.getElementById("live-spinner");
+                            if (spinner) spinner.style.display = "none";
+                            const indText = document.getElementById("live-indicator-text");
+                            if (indText) indText.textContent = "Complete";
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Live status poll error:", err);
+                });
+        }, 1500);
+    }
+    {% endif %}
+})();
+</script>
+{% endblock %}

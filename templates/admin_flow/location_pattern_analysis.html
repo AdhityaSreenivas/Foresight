@@ -1,0 +1,843 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Location-Based Pattern Analysis | Admin Flow | Foresight{% endblock %}
+{% block admin_nav_patterns %}active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_flow_location_patterns.css' %}?v=20260912v1">
+{% endblock %}
+
+{% block content %}
+<div class="container visual-workspace">
+    <!-- Header & Context -->
+    <div class="workspace-header">
+        <div class="workspace-title-group">
+            <h1>
+                Location-Based Pattern Analysis
+                <span class="site-badge">Site-Intelligence Workspace</span>
+            </h1>
+            <p class="workspace-subtitle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span>{{ location_data.site_context }}</span>
+                <span style="color: var(--site-text-tertiary);">•</span>
+                <span>Operational Site Perimeter</span>
+            </p>
+        </div>
+
+        {% if location_data.has_data %}
+        <div class="workspace-banner-pill">
+            Percentage denominator: incident count / {{ location_data.total_filtered_incidents }} total incidents
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 3-Dimension Navigation Tabs -->
+    <nav class="dimension-tabs" aria-label="Pattern Analysis Dimensions">
+        <a href="{% url 'admin_flow:patterns_activity' %}" class="dimension-tab">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Activity Patterns
+        </a>
+        <a href="{% url 'admin_flow:patterns_barrier' %}" class="dimension-tab">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Barrier Patterns
+        </a>
+        <a href="{% url 'admin_flow:patterns_location' %}" class="dimension-tab active">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Location Patterns
+            <span class="tab-badge">{{ location_data.distinct_locations_count }}</span>
+        </a>
+    </nav>
+
+    <!-- Methodological Banner -->
+    <div class="workspace-banner">
+        <div class="workspace-banner-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--olive-dark, #657044)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>{{ location_data.methodology_note }}</span>
+        </div>
+    </div>
+
+    {% if not location_data.has_data %}
+    <!-- Empty State -->
+    <div class="empty-state-workspace">
+        <div class="empty-state-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        </div>
+        <h3 class="empty-state-title">No location patterns available yet.</h3>
+        <p class="empty-state-text">
+            Upload an operational dataset or submit a demonstration report to compute the site-intelligence matrix and schematic heatmap for {{ location_data.site_context }}.
+        </p>
+        <div class="empty-actions">
+            <a href="{% url 'admin_flow:upload' %}" class="btn-empty-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Upload Dataset
+            </a>
+            <a href="{% url 'admin_flow:submit' %}" class="btn-empty-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Submit Report
+            </a>
+        </div>
+    </div>
+
+    {% else %}
+
+    <!-- Top Summary 4 KPI Cards (Foresight Style) -->
+    <div class="summary-kpi-grid">
+        <!-- Card 1: Highest Observation Concentration -->
+        <div class="kpi-dark-card accent-red">
+            <div class="kpi-label">
+                <span>HIGHEST OBSERVATION CONCENTRATION</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--risk-critical, #991B1B)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <div class="kpi-value-row">
+                <div class="kpi-number">{{ location_data.top_location.incident_count }}</div>
+                <span class="kpi-sub-badge badge-pct">{{ location_data.top_location.share_of_total }}%</span>
+                {% if location_data.top_location.psif_linked_count > 0 %}
+                <span class="kpi-sub-badge badge-psif">{{ location_data.top_location.psif_linked_count }} PSIF</span>
+                {% endif %}
+            </div>
+            <div class="kpi-desc" title="{{ location_data.top_location.name }}">
+                {{ location_data.top_location.name }}
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary, #52524E); margin-top: 2px;">
+                Highest observation concentration in the current Admin Flow dataset.
+            </div>
+        </div>
+
+        <!-- Card 2: Operating Zones Represented -->
+        <div class="kpi-dark-card accent-cyan">
+            <div class="kpi-label">
+                <span>OPERATING ZONES REPRESENTED</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--olive-dark, #657044)" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </div>
+            <div class="kpi-value-row">
+                <div class="kpi-number">{{ location_data.summary.card2.count }}</div>
+                <span class="kpi-sub-badge badge-pct">Active Zones</span>
+            </div>
+            <div class="kpi-desc">
+                {{ location_data.summary.card2.total_zones }} Mapped Physical Site Zones
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary, #52524E); margin-top: 2px;">
+                {{ location_data.site_context }}
+            </div>
+        </div>
+
+        <!-- Card 3: PSIF-Linked Concentration -->
+        <div class="kpi-dark-card accent-rose">
+            <div class="kpi-label">
+                <span>PSIF-LINKED CONCENTRATION</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--risk-critical, #991B1B)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+            </div>
+            <div class="kpi-value-row">
+                <div class="kpi-number">{{ location_data.total_psif_linked }}</div>
+                <span class="kpi-sub-badge badge-psif">{{ location_data.summary.card3.rate }}% Precursor Rate</span>
+            </div>
+            <div class="kpi-desc">
+                {{ location_data.summary.card3.label }}
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-secondary, #52524E); margin-top: 2px;">
+                High-energy potential precursors
+            </div>
+        </div>
+
+        <!-- Card 4: Location Coverage / Attribution -->
+        <div class="kpi-dark-card accent-emerald">
+            <div class="kpi-label">
+                <span>LOCATION ATTRIBUTION RATE</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--risk-low, #166534)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div class="kpi-value-row">
+                <div class="kpi-number">{{ location_data.coverage_stats.location_identified_count }}</div>
+                <span class="kpi-sub-badge badge-pct">{{ location_data.coverage_stats.location_identified_pct }}% Mapped</span>
+            </div>
+            <div class="kpi-desc">
+                {{ location_data.coverage_stats.location_identified_count }}/{{ location_data.total_filtered_incidents }} Mapped to Internal Site Zones
+            </div>
+            <div style="font-size: 0.7rem; color: var(--site-text-tertiary); margin-top: 2px;">
+                {{ location_data.coverage_stats.unknown_location_count }} general / unassigned records
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <form method="get" class="workspace-filter-toolbar">
+        <div class="filter-left-controls">
+            <select name="psif" class="filter-chip-select" onchange="this.form.submit()">
+                <option value="all" {% if location_data.filters.psif_filter == 'all' %}selected{% endif %}>All Precursor States</option>
+                <option value="psif" {% if location_data.filters.psif_filter == 'psif' %}selected{% endif %}>PSIF Precursors Only</option>
+                <option value="not_psif" {% if location_data.filters.psif_filter == 'not_psif' %}selected{% endif %}>Non-PSIF Observations</option>
+                <option value="insufficient" {% if location_data.filters.psif_filter == 'insufficient' %}selected{% endif %}>Insufficient Information</option>
+            </select>
+
+            <div class="filter-search-box">
+                <svg class="search-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" name="q" value="{{ location_data.filters.query }}" placeholder="Filter by narrative or task..." class="filter-search-input">
+            </div>
+
+            <button type="submit" class="btn-filter-apply">Apply Filter</button>
+        </div>
+
+        {% if location_data.has_active_filters %}
+        <a href="{% url 'admin_flow:patterns_location' %}" class="btn-filter-reset">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            Clear Filters
+        </a>
+        {% endif %}
+    </form>
+
+    <!-- Main Visual Split: Left Schematic Map & Right Detail Inspector (Foresight Style) -->
+    <div class="site-main-split">
+        <!-- Left: Schematic Site Layout (Map) -->
+        <div class="schematic-map-container">
+            <div class="map-control-bar">
+                <div class="map-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--olive-dark, #657044)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    <span>{{ location_data.site_context }} — Site Schematic Grid</span>
+                </div>
+
+                <!-- Legend strictly titled INCIDENT OBSERVATION DENSITY per Phase 7 & 17 -->
+                <div class="density-legend">
+                    <span class="legend-title-text">{{ location_data.legend_title }}</span>
+                    <div class="legend-swatches">
+                        <div class="swatch-item"><span class="swatch-color" style="background:#C62828;"></span> Very High</div>
+                        <div class="swatch-item"><span class="swatch-color" style="background:#E65100;"></span> High</div>
+                        <div class="swatch-item"><span class="swatch-color" style="background:#F57F17;"></span> Moderate</div>
+                        <div class="swatch-item"><span class="swatch-color" style="background:#2E7D32;"></span> Low</div>
+                        <div class="swatch-item"><span class="swatch-color" style="background:#CBD5E1;"></span> Zero</div>
+                    </div>
+                </div>
+
+                <!-- Zoom Controls -->
+                <div class="zoom-controls">
+                    <button type="button" class="zoom-btn" onclick="zoomIn()" title="Zoom In" aria-label="Zoom in">+</button>
+                    <button type="button" class="zoom-btn" onclick="zoomOut()" title="Zoom Out" aria-label="Zoom out">−</button>
+                    <button type="button" class="zoom-btn" onclick="resetZoom()" title="Reset View" aria-label="Reset zoom">⟲</button>
+                    <span class="zoom-level-indicator" id="zoomLevelText">100%</span>
+                </div>
+            </div>
+
+            <!-- Viewport for safe zooming and fluid responsive containment -->
+            <div class="canvas-viewport" id="canvasViewport">
+                <div class="canvas-zoom-wrapper" id="canvasZoomWrapper">
+                    <div class="site-physical-canvas" id="siteCanvas">
+                        <span class="canvas-boundary-tag">Site Operational Boundary</span>
+
+                        <!-- 3x3 Architectural Grid (Z-01 to Z-09) -->
+                        <div class="canonical-3x3-grid">
+                    {% for zone in location_data.schematic_grid %}
+                    <div class="facility-block {% if forloop.first %}selected{% endif %} {% if not zone.has_observations %}zero-obs{% endif %}" 
+                         id="zone-card-{{ zone.code }}"
+                         data-zone-code="{{ zone.code }}"
+                         data-zone-name="{{ zone.name }}"
+                         data-canonical-name="{{ zone.canonical_name }}"
+                         data-incident-count="{{ zone.incident_count }}"
+                         data-psif-count="{{ zone.psif_linked_count }}"
+                         data-psif-rate="{{ zone.psif_linkage_rate }}"
+                         data-share-pct="{{ zone.share_of_total }}"
+                         data-share-label="{{ zone.share_label }}"
+                         data-top-act="{{ zone.top_activity }}"
+                         data-top-bar="{{ zone.top_barrier }}"
+                         data-top-iogp="{{ zone.top_iogp_rule }}"
+                         data-heat-color="{{ zone.heat_color }}"
+                         data-heat-label="{{ zone.heat_label }}"
+                         onclick="selectZone(this)">
+                        
+                        <div class="facility-top-row">
+                            <span class="facility-code">{{ zone.code }}</span>
+                            <div class="facility-badges">
+                                <span class="density-dot" style="background: {{ zone.heat_color }}; box-shadow: 0 0 6px {{ zone.heat_color }};"></span>
+                                <span class="facility-count-badge">{{ zone.incident_count }}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="facility-name">{{ zone.name }}</div>
+                            <div class="facility-role">{{ zone.role }}</div>
+                        </div>
+
+                        <div class="facility-bottom-row">
+                            <div class="intensity-bar-track">
+                                <div class="intensity-bar-fill" style="width: {% widthratio zone.incident_count location_data.top_location.incident_count 100 %}%; background: {{ zone.heat_color }};"></div>
+                            </div>
+                            <div class="facility-mini-stat">
+                                <span>{{ zone.share_of_total }}% share</span>
+                                {% if zone.psif_linked_count > 0 %}
+                                <span class="psif-tag">{{ zone.psif_linked_count }} PSIF</span>
+                                {% else %}
+                                <span>0 PSIF</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Auxiliary Zones Block (if any) -->
+                {% if location_data.auxiliary_zones %}
+                <div class="auxiliary-header-row">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <span class="auxiliary-title">Connected Auxiliary Operational Zones</span>
+                </div>
+
+                <div class="auxiliary-grid">
+                    {% for aux in location_data.auxiliary_zones %}
+                    <div class="facility-block {% if not aux.has_observations %}zero-obs{% endif %}"
+                         id="zone-card-{{ aux.code }}"
+                         data-zone-code="{{ aux.code }}"
+                         data-zone-name="{{ aux.internal_location }}"
+                         data-canonical-name="{{ aux.internal_location }}"
+                         data-incident-count="{{ aux.incident_count }}"
+                         data-psif-count="{{ aux.psif_linked_count }}"
+                         data-psif-rate="{{ aux.psif_linkage_rate }}"
+                         data-share-pct="{{ aux.share_of_total }}"
+                         data-share-label="{{ aux.share_label }}"
+                         data-top-act="{{ aux.top_activity }}"
+                         data-top-bar="{{ aux.top_barrier_linked_signal }}"
+                         data-top-iogp="{{ aux.top_iogp_rule }}"
+                         data-heat-color="{{ aux.heat_color }}"
+                         data-heat-label="{{ aux.heat_label }}"
+                         onclick="selectZone(this)">
+                        
+                        <div class="facility-top-row">
+                            <span class="facility-code">{{ aux.code }}</span>
+                            <div class="facility-badges">
+                                <span class="density-dot" style="background: {{ aux.heat_color }};"></span>
+                                <span class="facility-count-badge">{{ aux.incident_count }}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="facility-name">{{ aux.internal_location }}</div>
+                            <div class="facility-role">{{ aux.role|default:"Auxiliary Facility" }}</div>
+                        </div>
+
+                        <div class="facility-bottom-row">
+                            <div class="intensity-bar-track">
+                                <div class="intensity-bar-fill" style="width: {% widthratio aux.incident_count location_data.top_location.incident_count 100 %}%; background: {{ aux.heat_color }};"></div>
+                            </div>
+                            <div class="facility-mini-stat">
+                                <span>{{ aux.share_of_total }}% share</span>
+                                {% if aux.psif_linked_count > 0 %}
+                                <span class="psif-tag">{{ aux.psif_linked_count }} PSIF</span>
+                                {% else %}
+                                <span>0 PSIF</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                    </div><!-- /siteCanvas -->
+                </div><!-- /canvasZoomWrapper -->
+            </div><!-- /canvasViewport -->
+        </div><!-- /schematic-map-container -->
+
+        <!-- Right: Selected Location Detail Inspector (Foresight Style) -->
+        <div class="location-detail-panel" id="detailPanel">
+            <!-- Dynamic Zone Header -->
+            <div class="detail-header">
+                <div class="detail-tag-row">
+                    <span class="detail-code-badge" id="panelZoneCode">Z-01</span>
+                    <span class="detail-density-badge" id="panelDensityBadge" style="background: #DCFCE7; color: #166534; border: 1px solid #86EFAC;">LOW</span>
+                </div>
+                <h3 class="detail-name" id="panelZoneName">Workshop / Maintenance Bay</h3>
+                <div class="detail-site-context">{{ location_data.site_context }} • Site Facility Block</div>
+            </div>
+
+            <!-- Detail Metrics 3-Pack -->
+            <div class="detail-metrics-grid">
+                <div class="detail-metric-card">
+                    <div class="num" id="panelTotalCount">0</div>
+                    <div class="lbl">Observations</div>
+                </div>
+                <div class="detail-metric-card">
+                    <div class="num cell-psif-num" id="panelPsifCount" style="color: var(--risk-critical, #991B1B);">0</div>
+                    <div class="lbl">PSIF-Linked</div>
+                </div>
+                <div class="detail-metric-card">
+                    <div class="num" id="panelSharePct">0%</div>
+                    <div class="lbl">Site Share</div>
+                </div>
+            </div>
+
+            <!-- PATTERN RELATIONSHIP CHAIN (Phase 9 & 14 Mandate) -->
+            <div class="pattern-chain-container">
+                <div class="pattern-chain-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    PATTERN RELATIONSHIP CHAIN
+                </div>
+                <div class="chain-steps-flow">
+                    <div class="chain-step step-loc">
+                        <div class="step-marker">1</div>
+                        <div class="step-content">
+                            <span class="step-label">Location Dimension</span>
+                            <span class="step-val" id="chainLocationVal">Workshop / Maintenance Bay</span>
+                        </div>
+                    </div>
+                    <div class="chain-step step-act">
+                        <div class="step-marker">2</div>
+                        <div class="step-content">
+                            <span class="step-label">Dominant Activity</span>
+                            <span class="step-val" id="chainActivityVal">Machining and Tool Operation</span>
+                        </div>
+                    </div>
+                    <div class="chain-step step-bar">
+                        <div class="step-marker">3</div>
+                        <div class="step-content">
+                            <span class="step-label">Critical Control / IOGP Signal</span>
+                            <span class="step-val" id="chainBarrierVal">Line of Fire</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chain-caption-note">
+                    <span>Observed in <strong id="chainObsCount" style="color: var(--text-primary, #111111);">0</strong> reports</span>
+                    <span>PSIF-linked: <strong id="chainPsifCount" style="color: var(--risk-critical, #991B1B);">0</strong></span>
+                </div>
+                <a href="{% url 'admin_flow:incidents' %}" id="panelViewIncidentsBtn" class="btn-view-related-incidents">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6"></path><path d="M10 14L21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+                    View Related Incidents
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Analytical Area: Cross-Dimensional Matrix (Reference A) -->
+    <div class="matrix-workspace-section">
+        <div class="matrix-header-bar">
+            <div class="matrix-title-group">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--olive-dark, #657044)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Cross-Dimensional Risk Intelligence Matrix
+                </h2>
+                <p>Correlates physical facility zones with IOGP Life-Saving Rules and operational activity domains.</p>
+            </div>
+
+            <div class="matrix-tab-pills">
+                <button type="button" class="matrix-tab-btn active" id="btnTabIogp" onclick="switchMatrixTab('iogp')">
+                    IOGP Life-Saving Rules Matrix
+                </button>
+                <button type="button" class="matrix-tab-btn" id="btnTabAct" onclick="switchMatrixTab('activity')">
+                    Operational Activity Matrix
+                </button>
+            </div>
+        </div>
+
+        <!-- Matrix Tab 1: IOGP Rules Matrix (Strict 1400px No-Scroll Fit) -->
+        <div id="matrixTabIogpContent" class="matrix-table-wrap">
+            <table class="analytics-matrix-table">
+                <thead>
+                    <tr>
+                        <th class="col-loc-header">Operating Zone / Facility</th>
+                        <th class="col-metric-header">Total</th>
+                        <th class="col-metric-header col-metric-psif">PSIF</th>
+                        {% for rule in location_data.iogp_matrix.columns %}
+                        <th class="col-rule-header" title="{{ rule }}">
+                            {% if rule == "Bypassing Safety Controls" %}Bypassing Controls
+                            {% elif rule == "Safe Mechanical Lifting" %}Mech. Lifting
+                            {% elif rule == "Energy Isolation" %}Energy Isolation
+                            {% elif rule == "Work at Height" %}Work at Height
+                            {% elif rule == "Confined Space" %}Confined Space
+                            {% elif rule == "Hot Work" %}Hot Work
+                            {% elif rule == "Line of Fire" %}Line of Fire
+                            {% elif rule == "Toxic Gas" %}Toxic Gas
+                            {% elif rule == "Driving Safety" %}Driving Safety
+                            {% else %}{{ rule }}{% endif %}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in location_data.iogp_matrix.rows %}
+                    <tr id="matrix-row-{{ forloop.counter0 }}">
+                        <td class="loc-name-cell">
+                            <span class="loc-indicator-dot" style="background: var(--olive-dark, #657044);"></span>
+                            <span title="{{ row.location }}">{{ row.location }}</span>
+                        </td>
+                        <td class="cell-total-num">{{ row.total_incidents }}</td>
+                        <td class="cell-psif-num">{{ row.psif_count }}</td>
+                        {% for cell in row.cells %}
+                        <td>
+                            <div class="matrix-cell-content {{ cell.css_class }}" title="{{ cell.tooltip }}">
+                                {% if cell.count > 0 %}{{ cell.count }}{% else %}—{% endif %}
+                            </div>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="12" style="padding: 1.5rem; color: var(--text-secondary, #52524E);">No cross-dimensional IOGP observations recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if location_data.iogp_matrix.rows %}
+                <tfoot>
+                    <tr>
+                        <th class="col-loc-header">RULE TOTALS</th>
+                        <th class="cell-total-num">{{ location_data.total_filtered_incidents }}</th>
+                        <th class="cell-psif-num">{{ location_data.total_psif_linked }}</th>
+                        {% for col in location_data.iogp_matrix.column_totals %}
+                        <th class="col-rule-header" title="{{ col.rule }}: {{ col.count }} total">{% if col.count > 0 %}{{ col.count }}{% else %}—{% endif %}</th>
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+
+        <!-- Matrix Tab 2: Operational Activity Matrix -->
+        <div id="matrixTabActContent" class="matrix-table-wrap" style="display: none;">
+            <table class="analytics-matrix-table">
+                <thead>
+                    <tr>
+                        <th class="col-loc-header">Operating Zone / Facility</th>
+                        <th class="col-metric-header">Total</th>
+                        {% for act in location_data.activity_matrix.columns %}
+                        <th class="col-act-header" title="{{ act }}">
+                            {% if act == "Machining and Tool Operation" %}Machining & Tools
+                            {% elif act == "Routine Operational Maintenance" %}Routine Maint.
+                            {% elif act == "Hot Work in Classified Area" %}Hot Work (Classified)
+                            {% elif act == "Electrical Work & Isolation" %}Electrical & Isolation
+                            {% elif act == "Confined Space Entry" %}Confined Space
+                            {% elif act == "Heavy Lifting & Rigging" %}Heavy Lifting
+                            {% else %}{{ act }}{% endif %}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in location_data.activity_matrix.rows %}
+                    <tr>
+                        <td class="loc-name-cell">
+                            <span class="loc-indicator-dot" style="background: var(--cat-mauve, #7C3AED);"></span>
+                            <span title="{{ row.location }}">{{ row.location }}</span>
+                        </td>
+                        <td class="cell-total-num">{{ row.total_incidents }}</td>
+                        {% for cell in row.cells %}
+                        <td>
+                            <div class="matrix-cell-content {{ cell.css_class }}" title="{{ cell.tooltip }}">
+                                {% if cell.count > 0 %}{{ cell.count }}{% else %}—{% endif %}
+                            </div>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="padding: 1.5rem; color: var(--text-secondary, #52524E);">No activity-linked observations recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if location_data.activity_matrix.rows %}
+                <tfoot>
+                    <tr>
+                        <th class="col-loc-header">ACTIVITY TOTALS</th>
+                        <th class="cell-total-num">{{ location_data.total_filtered_incidents }}</th>
+                        {% for col in location_data.activity_matrix.column_totals %}
+                        <th class="col-act-header" title="{{ col.activity }}: {{ col.count }} total">{% if col.count > 0 %}{{ col.count }}{% else %}—{% endif %}</th>
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+
+    <!-- Bottom Analytical Area: Ranking Bars & Coverage Breakdown -->
+    <div class="bottom-analytics-grid">
+        <!-- Column 1: Internal Location Ranking (Horizontal Bars) -->
+        <div class="ranking-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.15rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border, #E3E3DB);">
+                <div>
+                    <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary, #111111); margin: 0 0 2px 0;">Internal Location Observation Ranking</h3>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary, #52524E);">Ordered descending by total incident frequency.</div>
+                </div>
+                <span class="workspace-banner-pill">{{ location_data.distinct_locations_count }} Locations</span>
+            </div>
+
+            <div class="ranking-list">
+                {% for bar in location_data.ranking_bars %}
+                <div class="ranking-row" onclick="focusLocationByName('{{ bar.name }}')">
+                    <div class="ranking-main-info">
+                        <div style="display: flex; align-items: center;">
+                            <span class="rank-badge {% if bar.rank == 1 %}top-rank{% endif %}">#{{ bar.rank }}</span>
+                            <span class="ranking-location-name">{{ bar.name }}</span>
+                        </div>
+                        <div class="ranking-count-pills">
+                            <span class="pill-count">{{ bar.incident_count }} obs</span>
+                            <span class="pill-psif">{{ bar.psif_linked_count }} PSIF</span>
+                            <span style="font-size: 0.72rem; color: var(--text-secondary, #52524E); margin-left: 4px;">{{ bar.share_label }}</span>
+                        </div>
+                    </div>
+
+                    <div class="ranking-bar-track">
+                        <div class="ranking-bar-fill" style="width: {{ bar.bar_width_pct }}%; background: {{ bar.heat_color }};"></div>
+                    </div>
+
+                    <div class="ranking-meta-sub">
+                        <span>Top Activity: <strong>{{ bar.top_activity }}</strong></span>
+                        <span>Control: <strong>{{ bar.top_barrier }}</strong></span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Column 2: Data Quality & Coverage Panel -->
+        <div class="coverage-card">
+            <div style="margin-bottom: 1.15rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border, #E3E3DB);">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary, #111111); margin: 0 0 2px 0;">Data Quality & Attribution Coverage</h3>
+                <div style="font-size: 0.75rem; color: var(--text-secondary, #52524E);">Reconciles 100% of observations without fabricating coordinates.</div>
+            </div>
+
+            <div class="coverage-stats-list">
+                <!-- Location Mapped -->
+                <div class="coverage-item">
+                    <div class="coverage-top-row">
+                        <span class="coverage-item-title">Specific Site Zones Mapped</span>
+                        <span class="coverage-item-val">{{ location_data.coverage_stats.location_identified_count }} / {{ location_data.total_filtered_incidents }} ({{ location_data.coverage_stats.location_identified_pct }}%)</span>
+                    </div>
+                    <div class="coverage-bar-track">
+                        <div class="coverage-bar-fill" style="width: {{ location_data.coverage_stats.location_identified_pct }}%; background: #166534;"></div>
+                    </div>
+                    <div class="coverage-desc">
+                        Mapped to canonical 3x3 layout or recognized auxiliary operating zone blocks.
+                    </div>
+                </div>
+
+                <!-- Unassigned / General Site -->
+                <div class="coverage-item">
+                    <div class="coverage-top-row">
+                        <span class="coverage-item-title">Unassigned / General Site Narrative</span>
+                        <span class="coverage-item-val" style="color: var(--text-secondary, #52524E);">{{ location_data.coverage_stats.unknown_location_count }} / {{ location_data.total_filtered_incidents }} ({{ location_data.coverage_stats.unknown_location_pct }}%)</span>
+                    </div>
+                    <div class="coverage-bar-track">
+                        <div class="coverage-bar-fill" style="width: {{ location_data.coverage_stats.unknown_location_pct }}%; background: #52524E;"></div>
+                    </div>
+                    <div class="coverage-desc">
+                        Incidents with descriptive work narrative but no explicit physical zone identifier.
+                    </div>
+                </div>
+
+                <!-- Activity Normalization -->
+                <div class="coverage-item">
+                    <div class="coverage-top-row">
+                        <span class="coverage-item-title">Operational Activity Categorized</span>
+                        <span class="coverage-item-val" style="color: var(--olive-dark, #657044);">{{ location_data.coverage_stats.activity_identified_count }} / {{ location_data.total_filtered_incidents }} ({{ location_data.coverage_stats.activity_identified_pct }}%)</span>
+                    </div>
+                    <div class="coverage-bar-track">
+                        <div class="coverage-bar-fill" style="width: {{ location_data.coverage_stats.activity_identified_pct }}%; background: var(--olive-dark, #657044);"></div>
+                    </div>
+                    <div class="coverage-desc">
+                        Specific industrial tasks matched to canonical work domains.
+                    </div>
+                </div>
+
+                <!-- Barrier Breakdown Signals -->
+                <div class="coverage-item">
+                    <div class="coverage-top-row">
+                        <span class="coverage-item-title">Barrier Deficiency Signals</span>
+                        <span class="coverage-item-val" style="color: var(--risk-critical, #991B1B);">{{ location_data.coverage_stats.barrier_identified_count }} / {{ location_data.total_filtered_incidents }} ({{ location_data.coverage_stats.barrier_identified_pct }}%)</span>
+                    </div>
+                    <div class="coverage-bar-track">
+                        <div class="coverage-bar-fill" style="width: {{ location_data.coverage_stats.barrier_identified_pct }}%; background: var(--risk-critical, #991B1B);"></div>
+                    </div>
+                    <div class="coverage-desc">
+                        Evidence-supported barrier deficiency states (Failed, Absent, Bypassed).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Non-punitive unassigned disclaimer -->
+            <div class="unassigned-notice-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--olive-dark, #657044)" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <div class="unassigned-notice-text">
+                    <strong>Auditability Guarantee:</strong> Unassigned records are accounted for in all aggregate denominators. Foresight never invents coordinates to populate empty schematic zones.
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Embedded JSON state for instant zero-latency client-side interaction -->
+{{ location_data.locations|json_script:"location-data-json" }}
+
+<script>
+/* ==========================================================================
+   Admin Flow — Visual Site Intelligence Workspace Client Logic
+   ========================================================================== */
+
+let currentZoomLevel = 1.0;
+let parsedLocationsList = [];
+
+document.addEventListener("DOMContentLoaded", function() {
+    try {
+        const rawJson = document.getElementById("location-data-json");
+        if (rawJson) {
+            const parsed = JSON.parse(rawJson.textContent);
+            parsedLocationsList = Array.isArray(parsed) ? parsed : (parsed.locations || []);
+        }
+    } catch (e) {
+        console.warn("Could not parse location data JSON:", e);
+    }
+
+    // Default select first zone card or top location
+    const firstZoneCard = document.querySelector(".facility-block");
+    if (firstZoneCard) {
+        selectZone(firstZoneCard);
+    }
+});
+
+function selectZone(elem) {
+    if (!elem) return;
+
+    // Update active highlight class
+    document.querySelectorAll(".facility-block").forEach(b => b.classList.remove("selected"));
+    elem.classList.add("selected");
+
+    const code = elem.getAttribute("data-zone-code") || "Z-01";
+    const name = elem.getAttribute("data-canonical-name") || elem.getAttribute("data-zone-name") || "Operating Zone";
+    const count = elem.getAttribute("data-incident-count") || "0";
+    const psifCount = elem.getAttribute("data-psif-count") || "0";
+    const sharePct = elem.getAttribute("data-share-pct") || "0";
+    const topAct = elem.getAttribute("data-top-act") || "General Operations";
+    const topBar = elem.getAttribute("data-top-bar") || "None Observed";
+    const topIogp = elem.getAttribute("data-top-iogp") || "General Safety Controls";
+    const heatColor = elem.getAttribute("data-heat-color") || "#10b981";
+    const heatLabel = elem.getAttribute("data-heat-label") || "LOW";
+
+    // Update Detail Panel Header & Metrics
+    const panelCode = document.getElementById("panelZoneCode");
+    const panelName = document.getElementById("panelZoneName");
+    const panelDensity = document.getElementById("panelDensityBadge");
+    const panelTotal = document.getElementById("panelTotalCount");
+    const panelPsif = document.getElementById("panelPsifCount");
+    const panelShare = document.getElementById("panelSharePct");
+
+    if (panelCode) panelCode.textContent = code;
+    if (panelName) panelName.textContent = name;
+    if (panelDensity) {
+        panelDensity.textContent = heatLabel;
+        panelDensity.style.color = heatColor;
+        panelDensity.style.borderColor = heatColor;
+        panelDensity.style.background = heatColor + "18";
+    }
+    if (panelTotal) panelTotal.textContent = count;
+    if (panelPsif) panelPsif.textContent = psifCount;
+    if (panelShare) panelShare.textContent = sharePct + "%";
+
+    // Update Pattern Relationship Chain
+    const chainLoc = document.getElementById("chainLocationVal");
+    const chainAct = document.getElementById("chainActivityVal");
+    const chainBar = document.getElementById("chainBarrierVal");
+    const chainObs = document.getElementById("chainObsCount");
+    const chainPsif = document.getElementById("chainPsifCount");
+
+    if (chainLoc) chainLoc.textContent = name;
+    if (chainAct) chainAct.textContent = topAct;
+    if (chainBar) chainBar.textContent = topBar !== "None Observed" ? topBar : (topIogp !== "—" ? topIogp : "General Controls");
+    if (chainObs) chainObs.textContent = count;
+    if (chainPsif) chainPsif.textContent = psifCount;
+
+    // Update View Related Incidents Button href
+    const viewIncBtn = document.getElementById("panelViewIncidentsBtn");
+    if (viewIncBtn) {
+        viewIncBtn.href = "{% url 'admin_flow:incidents' %}?q=" + encodeURIComponent(name);
+    }
+
+    // Populate Detailed Activities & Barriers breakdowns
+    populateZoneDetailLists(name);
+}
+
+function populateZoneDetailLists(locationName) {
+    // Detail sublists (Associated Operations, Critical Controls, Recent Observations)
+    // removed per layout symmetry requirement
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+function focusLocationByName(locName) {
+    // Find matching facility block card
+    const cards = document.querySelectorAll(".facility-block");
+    for (let card of cards) {
+        const cName = card.getAttribute("data-canonical-name") || card.getAttribute("data-zone-name");
+        if (cName && (cName.toLowerCase() === locName.toLowerCase() || cName.toLowerCase().includes(locName.toLowerCase()))) {
+            selectZone(card);
+            card.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
+    }
+}
+
+function switchMatrixTab(tabKey) {
+    const btnIogp = document.getElementById("btnTabIogp");
+    const btnAct = document.getElementById("btnTabAct");
+    const contentIogp = document.getElementById("matrixTabIogpContent");
+    const contentAct = document.getElementById("matrixTabActContent");
+
+    if (tabKey === 'iogp') {
+        btnIogp.classList.add("active");
+        btnAct.classList.remove("active");
+        contentIogp.style.display = "block";
+        contentAct.style.display = "none";
+    } else {
+        btnAct.classList.add("active");
+        btnIogp.classList.remove("active");
+        contentAct.style.display = "block";
+        contentIogp.style.display = "none";
+    }
+}
+
+function zoomIn() {
+    currentZoomLevel = Math.min(Math.round((currentZoomLevel + 0.1) * 10) / 10, 1.4);
+    applyZoom();
+}
+
+function zoomOut() {
+    currentZoomLevel = Math.max(Math.round((currentZoomLevel - 0.1) * 10) / 10, 0.8);
+    applyZoom();
+}
+
+function resetZoom() {
+    currentZoomLevel = 1.0;
+    applyZoom();
+    const vp = document.getElementById("canvasViewport");
+    if (vp) {
+        vp.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+    }
+}
+
+function applyZoom() {
+    const canvas = document.getElementById("siteCanvas");
+    const wrapper = document.getElementById("canvasZoomWrapper");
+    const zoomText = document.getElementById("zoomLevelText");
+
+    if (canvas && wrapper) {
+        canvas.style.transform = `scale(${currentZoomLevel})`;
+        canvas.style.transformOrigin = "top left";
+
+        if (currentZoomLevel > 1.0) {
+            wrapper.style.width = `${(100 * currentZoomLevel).toFixed(1)}%`;
+            const origHeight = canvas.scrollHeight || 380;
+            wrapper.style.minHeight = `${Math.round(origHeight * currentZoomLevel)}px`;
+        } else {
+            wrapper.style.width = "100%";
+            wrapper.style.minHeight = "auto";
+        }
+    }
+    if (zoomText) {
+        zoomText.textContent = `${Math.round(currentZoomLevel * 100)}%`;
+    }
+}
+</script>
+{% endblock %}

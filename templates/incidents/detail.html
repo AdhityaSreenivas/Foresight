@@ -1,0 +1,1178 @@
+{% extends "base.html" %}
+{% load static %}
+{% load methodology_tags %}
+
+{% block title %}Incident Details — Foresight PSIF Platform{% endblock %}
+{% block meta_description %}Detailed view of a workplace safety incident including AI predictions and contributing factors.{% endblock %}
+
+{% block nav_incidents %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.metadata-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem 1.5rem;
+}
+.meta-item { display: flex; flex-direction: column; gap: 0.35rem; }
+.meta-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+.meta-value { font-size: 1rem; color: var(--text-primary); font-family: var(--font-body); font-weight: 500; }
+.meta-value.mono { font-family: var(--font-mono); font-size: 0.95rem; }
+
+.narrative-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 1.5rem;
+    color: var(--black-soft);
+    font-size: 1rem; line-height: 1.7;
+    white-space: pre-wrap; font-weight: 400;
+}
+
+.prediction-stat {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.prediction-stat:last-child { border-bottom: none; padding-bottom: 0; }
+.stat-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); font-weight: 500; }
+.stat-value { font-size: 1rem; font-weight: 600; font-family: var(--font-mono); color: var(--white); }
+
+.factors-list { list-style: none; padding: 0; margin: 0; }
+.factor-item {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    padding: 1rem; background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); margin-bottom: 0.5rem;
+}
+.factor-header { display: flex; justify-content: space-between; align-items: center; }
+.factor-name { color: var(--white); font-weight: 500; font-size: 0.9rem; }
+.factor-score { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; }
+.factor-score.pos { color: var(--risk-critical); }
+.factor-score.neg { color: var(--risk-low); }
+
+.factor-bar-container { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; display: flex; }
+.factor-bar-fill { height: 100%; }
+.factor-bar-fill.pos { background: var(--risk-critical); }
+.factor-bar-fill.neg { background: var(--risk-low); }
+
+/* Layout Adjustments */
+.content-grid { display: grid; grid-template-columns: 1fr 400px; gap: 2.5rem; }
+@media (max-width: 1024px) { .content-grid { grid-template-columns: 1fr; } }
+
+/* Blinded Review Mode & Review UI */
+.blinded-container { position: relative; }
+.model-content-blinded {
+    filter: blur(8px);
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.25;
+    transition: filter 0.4s ease, opacity 0.4s ease;
+}
+.blinded-overlay-card {
+    position: absolute;
+    top: 3rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 20;
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(250, 204, 21, 0.5);
+    border-radius: var(--radius-sm);
+    padding: 1.75rem 1.25rem;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+.review-choice-btn {
+    flex: 1; padding: 0.75rem 0.5rem; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+    text-align: center; background: var(--bg-alt);
+}
+.review-choice-btn:hover { opacity: 0.9; }
+.review-choice-btn.selected { transform: scale(1.02); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'incidents:list' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: color 0.2s;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Back to Incidents
+    </a>
+
+    <div class="page-header" style="margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="page-title">Incident #{{ incident.id }}</h1>
+            <p class="page-subtitle" style="margin-top: 0.5rem;">
+                Logged {{ incident.date_logged|date:"M j, Y, g:i a" }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{% url 'incidents:workspace' incident.id %}" class="btn btn-primary" id="btn-open-workspace" style="display: inline-flex; align-items: center; gap: 0.5rem; background: #3b82f6; color: #fff; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                Investigation Workspace
+            </a>
+            <a href="{% url 'incidents:evidence_break' incident.id %}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-alt); border: 1px solid var(--border); color: var(--text-primary); font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none;">
+                Evidence Break
+            </a>
+        </div>
+    </div>
+
+
+    <div class="content-grid">
+        <!-- Left Column: Details -->
+        <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+            <div class="card">
+                <h2 class="section-title" style="border: none; margin-bottom: 2rem;">Report Details</h2>
+                <div class="metadata-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Date Occurred</span>
+                        <span class="meta-value mono">{{ incident.incident_date|date:"Y-m-d"|default:"Not provided" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Report Type</span>
+                        <span class="meta-value">{{ incident.get_report_type_display|default:incident.report_type|default:"—" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Department</span>
+                        <span class="meta-value">{{ incident.department|default:"Not provided" }}</span>
+                        {% if analytical_assessment.normalized_entities.department and analytical_assessment.normalized_entities.department.canonical_value and analytical_assessment.normalized_entities.department.status != 'unmapped' and analytical_assessment.normalized_entities.department.status != 'unknown' and analytical_assessment.normalized_entities.department.canonical_value != incident.department %}
+                        <span class="badge" style="background: var(--bg-alt); color: var(--text-primary); font-size: 0.72rem; margin-top: 0.25rem; width: fit-content;" title="Standardized canonical taxonomy">
+                            Canonical: {{ analytical_assessment.normalized_entities.department.canonical_value }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Location / Site</span>
+                        <span class="meta-value">{{ incident.location|default:"Not provided" }}</span>
+                        {% if analytical_assessment.normalized_entities.site and analytical_assessment.normalized_entities.site.canonical_value and analytical_assessment.normalized_entities.site.status != 'unmapped' and analytical_assessment.normalized_entities.site.status != 'unknown' and analytical_assessment.normalized_entities.site.canonical_value != incident.location %}
+                        <span class="badge" style="background: var(--bg-alt); color: var(--text-primary); font-size: 0.72rem; margin-top: 0.25rem; width: fit-content;" title="Standardized canonical taxonomy">
+                            Canonical: {{ analytical_assessment.normalized_entities.site.canonical_value }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Actual Severity</span>
+                        <span class="meta-value">{{ incident.severity_actual|default:"—" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Potential Severity</span>
+                        <span class="meta-value">{{ incident.severity_potential|default:"—" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Adjudication Status</span>
+                        <span class="meta-value">
+                            {% if incident.adjudication_status == 'ADJUDICATED' %}
+                                <span class="badge" style="background: rgba(107, 122, 79, 0.15); color: var(--risk-low); border: 1px solid rgba(107, 122, 79, 0.35); font-weight: 700;">Adjudicated</span>
+                            {% elif incident.adjudication_status == 'UNDER_REVIEW' %}
+                                <span class="badge" style="background: rgba(92, 124, 138, 0.15); color: var(--cat-blue); border: 1px solid rgba(92, 124, 138, 0.35); font-weight: 700;">Under Review</span>
+                            {% else %}
+                                <span class="badge" style="background: var(--bg-alt); color: var(--text-secondary); border: 1px solid var(--border-color);">Unreviewed</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Consensus Ground Truth</span>
+                        <span class="meta-value">
+                            {% if incident.adjudicated_human_decision == 'PSIF' %}
+                                <span class="badge" style="background: rgba(156, 59, 50, 0.12); color: var(--risk-critical); font-weight: 700; border: 1px solid rgba(156, 59, 50, 0.35);">PSIF</span>
+                            {% elif incident.adjudicated_human_decision == 'NOT_PSIF' %}
+                                <span class="badge" style="background: rgba(107, 122, 79, 0.12); color: var(--risk-low); font-weight: 700; border: 1px solid rgba(107, 122, 79, 0.35);">NOT PSIF</span>
+                            {% elif incident.adjudicated_human_decision == 'INSUFFICIENT_INFORMATION' %}
+                                <span class="badge" style="background: rgba(176, 138, 46, 0.12); color: var(--risk-medium); font-weight: 700; border: 1px solid rgba(176, 138, 46, 0.35);">Insufficient Info</span>
+                            {% else %}
+                                <span style="color: var(--text-secondary);">—</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Data Provenance</span>
+                        <span class="meta-value">
+                            {% if incident.is_human_approved_synthetic %}
+                                <span class="badge" style="background: rgba(13, 148, 136, 0.12); color: #0f766e; font-weight: 700; border: 1px solid rgba(13, 148, 136, 0.35);">Human-Approved Synthetic</span>
+                            {% elif incident.is_synthetic %}
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #b45309; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.35);">Synthetic</span>
+                            {% elif incident.psif_label_source == 'real_external' %}
+                                <span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #475569; font-weight: 700; border: 1px solid rgba(100, 116, 139, 0.35);">Real External (OSHA)</span>
+                            {% elif incident.psif_label_source == 'real_human' %}
+                                <span class="badge" style="background: rgba(37, 99, 235, 0.12); color: #1d4ed8; font-weight: 700; border: 1px solid rgba(37, 99, 235, 0.35);">Real Human</span>
+                            {% else %}
+                                <span style="color: var(--text-secondary);">Unlabelled / Unknown</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety Context: Energy & Controls -->
+            <div class="card">
+                <h2 class="section-title" style="border: none; margin-bottom: 2rem;">Safety Context &amp; Controls</h2>
+                <div class="metadata-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">High Energy Hazard</span>
+                        <span class="meta-value">{{ incident.get_high_energy_present_display|default:incident.high_energy_present|default:"Unknown" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Energy Type</span>
+                        <span class="meta-value">{{ incident.get_energy_type_display|default:incident.energy_type|default:"—" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Worker in Line of Fire</span>
+                        <span class="meta-value">{{ incident.get_worker_exposed_display|default:incident.worker_exposed|default:"Unknown" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Direct Control Present</span>
+                        <span class="meta-value">{{ incident.get_direct_control_present_display|default:incident.direct_control_present|default:"Unknown" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Control Type</span>
+                        <span class="meta-value">{{ incident.get_control_type_display|default:incident.control_type|default:"—" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Control Condition / Status</span>
+                        <span class="meta-value">{{ incident.get_control_condition_display|default:incident.control_condition|default:"—" }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Control Failed / Bypassed</span>
+                        <span class="meta-value">
+                            {% if incident.control_failed_bypassed is True %}
+                                <span style="color: var(--risk-critical, #dc2626); font-weight: 600;">Yes</span>
+                            {% elif incident.control_failed_bypassed is False %}
+                                <span style="color: var(--risk-low, #16a34a);">No</span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Equipment Involved</span>
+                        <span class="meta-value">{{ incident.equipment_involved|default:"—" }}</span>
+                        {% if analytical_assessment.normalized_entities.equipment and analytical_assessment.normalized_entities.equipment.canonical_value and analytical_assessment.normalized_entities.equipment.status != 'unmapped' and analytical_assessment.normalized_entities.equipment.status != 'unknown' and analytical_assessment.normalized_entities.equipment.canonical_value != incident.equipment_involved %}
+                        <span class="badge" style="background: var(--bg-alt); color: var(--text-primary); font-size: 0.72rem; margin-top: 0.25rem; width: fit-content;" title="Standardized canonical equipment class">
+                            Class: {{ analytical_assessment.normalized_entities.equipment.canonical_value }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title" style="border: none; margin-bottom: 1.5rem;">Narrative</h2>
+                <div class="narrative-box">{{ incident.composite_narrative|default:"No narrative provided." }}</div>
+            </div>
+
+            {% if user.can_predict %}
+            <div class="card" id="human-review-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h2 class="section-title" style="border: none; margin: 0;">HSE Human Review &amp; Adjudication</h2>
+                    {% if incident.adjudication_status == 'ADJUDICATED' %}
+                        <span class="badge" style="background: rgba(107, 122, 79, 0.15); color: var(--risk-low); border: 1px solid rgba(107, 122, 79, 0.35); font-weight: 700;">Adjudicated Consensus</span>
+                    {% elif incident_reviews %}
+                        <span class="badge" style="background: rgba(92, 124, 138, 0.15); color: var(--cat-blue); border: 1px solid rgba(92, 124, 138, 0.35); font-weight: 700;">Under Review ({{ incident_reviews.count }})</span>
+                    {% else %}
+                        <span class="badge" style="background: rgba(176, 138, 46, 0.15); color: var(--risk-medium); border: 1px solid rgba(176, 138, 46, 0.35); font-weight: 700;">Pending Review (Blinded)</span>
+                    {% endif %}
+                </div>
+
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">
+                    Record independent HSE ground truth based on potential for fatal/serious injury. Human reviews establish benchmark ground truth and never overwrite machine prediction records.
+                </p>
+
+                <!-- Current Adjudicated Consensus if present -->
+                {% if incident.adjudication_status == 'ADJUDICATED' or incident.psif_label_source == 'human' %}
+                <div style="background: rgba(107, 122, 79, 0.08); border: 1px solid rgba(107, 122, 79, 0.25); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--risk-low); font-weight: 700;">Adjudicated Ground Truth</span>
+                        <span class="badge" style="font-weight: 700;
+                            {% if incident.adjudicated_human_decision == 'PSIF' %}background: rgba(156, 59, 50, 0.15); color: var(--risk-critical); border: 1px solid rgba(156, 59, 50, 0.3);
+                            {% elif incident.adjudicated_human_decision == 'NOT_PSIF' %}background: rgba(107, 122, 79, 0.15); color: var(--risk-low); border: 1px solid rgba(107, 122, 79, 0.3);
+                            {% else %}background: rgba(176, 138, 46, 0.15); color: var(--risk-medium); border: 1px solid rgba(176, 138, 46, 0.3);{% endif %}">
+                            {{ incident.get_adjudicated_human_decision_display|default:incident.adjudicated_human_decision }}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-primary);">
+                        Adjudicated by <strong>{{ incident.adjudicated_by.username|default:incident.reviewed_by.username|default:"HSE Panel" }}</strong>
+                        {% if incident.adjudicated_at or incident.reviewed_at %} &bull; <span style="color: var(--text-secondary);">{{ incident.adjudicated_at|default:incident.reviewed_at|date:"Y-m-d H:i" }}</span>{% endif %}
+                    </div>
+                    {% if incident.adjudication_rationale or incident.reviewer_rationale %}
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem; font-style: italic; border-left: 3px solid var(--olive-dark); padding-left: 0.75rem;">
+                        Rationale: {{ incident.adjudication_rationale|default:incident.reviewer_rationale }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Previous Independent Reviews Audit Log -->
+                {% if incident_reviews %}
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                        Review History ({{ incident_reviews.count }} Review{{ incident_reviews.count|pluralize }})
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 220px; overflow-y: auto;">
+                        {% for r in incident_reviews %}
+                        <div style="background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <strong style="color: var(--text-primary); font-size: 0.85rem;">{{ r.reviewer.username|default:"HSE Reviewer" }}</strong>
+                                    {% if r.was_blinded %}
+                                    <span class="badge" style="background: rgba(176, 138, 46, 0.15); color: var(--risk-medium); font-size: 0.65rem; font-weight: 600;">Blinded</span>
+                                    {% else %}
+                                    <span class="badge" style="background: #D5D5CD; color: var(--text-secondary); font-size: 0.65rem;">Unblinded</span>
+                                    {% endif %}
+                                </div>
+                                <span class="badge" style="font-size: 0.75rem; font-weight: 700;
+                                    {% if r.decision == 'PSIF' %}background: rgba(156, 59, 50, 0.15); color: var(--risk-critical); border: 1px solid rgba(156, 59, 50, 0.3);
+                                    {% elif r.decision == 'NOT_PSIF' %}background: rgba(107, 122, 79, 0.15); color: var(--risk-low); border: 1px solid rgba(107, 122, 79, 0.3);
+                                    {% else %}background: rgba(176, 138, 46, 0.15); color: var(--risk-medium); border: 1px solid rgba(176, 138, 46, 0.3);{% endif %}">
+                                    {{ r.get_decision_display }}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-primary); margin-top: 0.25rem;">
+                                {{ r.rationale|default:"No rationale recorded." }}
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                {{ r.created_at|date:"Y-m-d H:i" }} &bull; Rubric {{ r.rubric_version }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Post-Review Comparison Banner (populated on submit) -->
+                <div id="post-review-comparison" style="display: none; padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;"></div>
+
+                <!-- 6-Point HSE Review Rubric Guidance (Collapsible) -->
+                <details style="background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1.25rem;">
+                    <summary style="font-size: 0.85rem; font-weight: 700; color: var(--brand); cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                        <span>📋 6-Point HSE Review Rubric Guidance (v1.0)</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Click to view</span>
+                    </summary>
+                    <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-primary); display: flex; flex-direction: column; gap: 0.6rem; line-height: 1.5;">
+                        <div><strong style="color: var(--risk-critical);">A. High-Energy Hazard:</strong> Presence of uncontrolled physical energy capable of severe permanent damage or death (pressurized fluids, gravity/height, electrical, hazardous gases, heavy suspended loads, kinetic rotation).</div>
+                        <div><strong style="color: var(--risk-critical);">B. Worker Exposure:</strong> Personnel in line of fire, unshielded proximity, or direct fall/blast trajectory.</div>
+                        <div><strong style="color: var(--risk-medium);">C. Critical Control Condition:</strong> Direct physical barrier failed, bypassed, missing, or compromised.</div>
+                        <div><strong style="color: var(--risk-medium);">D. SIF Consequence Mechanism:</strong> Injury mechanism is life-threatening (crush, blast, suffocation, electrocution, fatal impact).</div>
+                        <div><strong style="color: var(--cat-blue);">E. Escalation Pathway:</strong> Absence of a lucky break (slight shift in timing, position, or deflection) would realistically cause a fatality.</div>
+                        <div><strong style="color: var(--olive-dark);">F. Evidence Sufficiency:</strong> Does report provide sufficient facts to judge exposure? If hopelessly ambiguous, choose <em>Insufficient Information</em>.</div>
+                    </div>
+                </details>
+
+                <form id="review-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% csrf_token %}
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
+                            Human Decision (3-State Classification)
+                        </label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                            <button type="button" id="btn-choice-psif" class="review-choice-btn"
+                                onclick="selectDecision('PSIF')"
+                                style="border: 2px solid var(--risk-critical); color: var(--risk-critical); background: var(--bg-alt); font-weight: 700;">
+                                PSIF
+                            </button>
+                            <button type="button" id="btn-choice-not-psif" class="review-choice-btn"
+                                onclick="selectDecision('NOT_PSIF')"
+                                style="border: 2px solid var(--risk-low); color: var(--risk-low); background: var(--bg-alt); font-weight: 700;">
+                                NOT PSIF
+                            </button>
+                            <button type="button" id="btn-choice-insufficient" class="review-choice-btn"
+                                onclick="selectDecision('INSUFFICIENT_INFORMATION')"
+                                style="border: 2px solid var(--risk-medium); color: var(--risk-medium); background: var(--bg-alt); font-weight: 700;">
+                                Insufficient Info
+                            </button>
+                        </div>
+                        <input type="hidden" id="review-decision-input" name="decision" value="">
+                    </div>
+
+                    <div>
+                        <label for="review-rationale" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
+                            HSE Rationale
+                            <span id="rationale-required-note" style="color: var(--risk-medium); font-weight: 600; display: none;"> (required for this decision)</span>
+                        </label>
+                        <textarea id="review-rationale" name="rationale" rows="3"
+                            placeholder="Detail your HSE reasoning (energy hazard, barrier state, exposure trajectory)..."
+                            style="width: 100%; background: var(--bg-alt); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.9rem; resize: vertical; font-family: var(--font-body);"></textarea>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-primary);">
+                        <input type="checkbox" id="review-was-blinded" name="was_blinded" {% if is_blinded_mode %}checked{% endif %}>
+                        <label for="review-was-blinded" style="cursor: pointer; font-weight: 500;">Blinded Review: Keep AI prediction masked until submission</label>
+                    </div>
+
+                    <div id="review-error" style="display: none; color: var(--risk-critical); font-size: 0.85rem; padding: 0.6rem 0.85rem; background: rgba(156, 59, 50, 0.1); border: 1px solid rgba(156, 59, 50, 0.3); border-radius: var(--radius-sm); font-weight: 600;"></div>
+                    <div id="review-success" style="display: none; color: var(--risk-low); font-size: 0.85rem; padding: 0.6rem 0.85rem; background: rgba(107, 122, 79, 0.1); border: 1px solid rgba(107, 122, 79, 0.3); border-radius: var(--radius-sm); font-weight: 600;"></div>
+
+                    <button type="button" id="review-submit-btn" onclick="submitReview()"
+                        style="padding: 0.75rem 1.5rem; background: var(--brand); color: var(--white); border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; opacity: 0.5; pointer-events: none; transition: all 0.2s;">
+                        Submit HSE Review
+                    </button>
+                </form>
+            </div>
+
+            <script>
+            (function() {
+                let selectedDecision = null;
+
+                window.selectDecision = function(value) {
+                    selectedDecision = value;
+                    document.getElementById('review-decision-input').value = value;
+
+                    const btnPsif = document.getElementById('btn-choice-psif');
+                    const btnNotPsif = document.getElementById('btn-choice-not-psif');
+                    const btnInsuff = document.getElementById('btn-choice-insufficient');
+
+                    btnPsif.style.background = (value === 'PSIF') ? 'rgba(156,59,50,0.18)' : 'var(--bg-alt)';
+                    btnPsif.style.borderColor = (value === 'PSIF') ? 'var(--risk-critical)' : 'rgba(156,59,50,0.3)';
+                    
+                    btnNotPsif.style.background = (value === 'NOT_PSIF') ? 'rgba(107,122,79,0.18)' : 'var(--bg-alt)';
+                    btnNotPsif.style.borderColor = (value === 'NOT_PSIF') ? 'var(--risk-low)' : 'rgba(107,122,79,0.3)';
+
+                    btnInsuff.style.background = (value === 'INSUFFICIENT_INFORMATION') ? 'rgba(176,138,46,0.18)' : 'var(--bg-alt)';
+                    btnInsuff.style.borderColor = (value === 'INSUFFICIENT_INFORMATION') ? 'var(--risk-medium)' : 'rgba(176,138,46,0.3)';
+
+                    const submitBtn = document.getElementById('review-submit-btn');
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.pointerEvents = 'auto';
+
+                    const reqNote = document.getElementById('rationale-required-note');
+                    if (value === 'INSUFFICIENT_INFORMATION') {
+                        reqNote.style.display = 'inline';
+                        reqNote.textContent = ' (required — explain missing details)';
+                    } else {
+                        reqNote.style.display = 'none';
+                    }
+                };
+
+                window.manualUnblind = function() {
+                    const content = document.getElementById('model-prediction-content');
+                    if (content) content.classList.remove('model-content-blinded');
+                    const mask = document.getElementById('blinded-mask-card');
+                    if (mask) mask.style.display = 'none';
+                    const wasBlinded = document.getElementById('review-was-blinded');
+                    if (wasBlinded) wasBlinded.checked = false;
+                };
+
+                window.submitReview = async function() {
+                    const errorEl = document.getElementById('review-error');
+                    const successEl = document.getElementById('review-success');
+                    errorEl.style.display = 'none';
+                    successEl.style.display = 'none';
+
+                    if (!selectedDecision) {
+                        errorEl.textContent = 'Please select PSIF, NOT PSIF, or Insufficient Info before submitting.';
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+
+                    const rationale = document.getElementById('review-rationale').value.trim();
+                    if (selectedDecision === 'INSUFFICIENT_INFORMATION' && !rationale) {
+                        errorEl.textContent = 'Please provide a rationale explaining what information is missing.';
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const wasBlinded = document.getElementById('review-was-blinded').checked;
+
+                    const body = {
+                        decision: selectedDecision,
+                        rationale: rationale,
+                        was_blinded: wasBlinded,
+                        unblind: true
+                    };
+
+                    const btn = document.getElementById('review-submit-btn');
+                    btn.textContent = 'Submitting…';
+                    btn.style.opacity = '0.6';
+
+                    try {
+                        const resp = await fetch('/api/incidents/{{ incident.id }}/review/?unblind=true', {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify(body)
+                        });
+                        const data = await resp.json();
+                        if (resp.ok) {
+                            successEl.textContent = 'Review successfully recorded.';
+                            successEl.style.display = 'block';
+                            btn.textContent = 'Submitted';
+                            btn.style.opacity = '1';
+
+                            // Unblind right panel immediately
+                            manualUnblind();
+
+                            // Display post-review comparison
+                            const compEl = document.getElementById('post-review-comparison');
+                            if (compEl && data.unblinded_model_prediction) {
+                                const pred = data.unblinded_model_prediction;
+                                const isAgreed = pred.agreement_with_human;
+                                const modelLabel = pred.psif_predicted ? 'PSIF' : 'NOT PSIF';
+                                
+                                compEl.style.display = 'block';
+                                compEl.style.border = isAgreed ? '1px solid rgba(107,122,79,0.4)' : '1px solid rgba(176,138,46,0.4)';
+                                compEl.style.background = isAgreed ? 'rgba(107,122,79,0.1)' : 'rgba(176,138,46,0.1)';
+                                
+                                compEl.innerHTML = `
+                                    <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: ${isAgreed ? 'var(--risk-low)' : 'var(--risk-medium)'}; margin-bottom: 0.5rem;">
+                                        ${isAgreed ? '✓ Concordant (Human & Model Agree)' : (isAgreed === false ? '⚠ Divergent (Human & Model Disagree)' : 'Evaluated with Insufficient Info')}
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">
+                                        <span>Human Ground Truth: <strong>${data.decision}</strong></span>
+                                        <span>Model Prediction: <strong>${modelLabel}</strong> (Score: ${pred.psif_score})</span>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            const msg = data.rationale?.[0] || data.decision?.[0] || data.non_field_errors?.[0] || JSON.stringify(data);
+                            errorEl.textContent = msg;
+                            errorEl.style.display = 'block';
+                            btn.textContent = 'Submit HSE Review';
+                            btn.style.opacity = '1';
+                        }
+                    } catch (err) {
+                        errorEl.textContent = 'Network error. Please try again.';
+                        errorEl.style.display = 'block';
+                        btn.textContent = 'Submit HSE Review';
+                        btn.style.opacity = '1';
+                    }
+                };
+            })();
+            </script>
+            {% endif %}
+
+        </div>
+        <!-- Right Column: Predictions & Intelligence -->
+        <div class="detail-sidebar-col" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- 0. Data Quality -->
+            {% if analytical_assessment.data_quality %}
+                {% with dq=analytical_assessment.data_quality %}
+                <div class="card" style="padding: 1.25rem 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+                    {% if dq.status == 'CRITICAL' %}
+                        background: #FEF2F2; border: 1px solid #FECACA; border-left: 4px solid #DC2626;
+                    {% elif dq.status == 'WARNING' %}
+                        background: #FFFBEB; border: 1px solid #FDE68A; border-left: 4px solid #D97706;
+                    {% else %}
+                        background: #F0FDF4; border: 1px solid #BBF7D0; border-left: 4px solid #16A34A;
+                    {% endif %}">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            {% if dq.status == 'CRITICAL' %}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <h2 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #991B1B; font-family: var(--font-heading); letter-spacing: 0.02em;">Source Data Quality</h2>
+                            {% elif dq.status == 'WARNING' %}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <h2 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #92400E; font-family: var(--font-heading); letter-spacing: 0.02em;">Source Data Quality</h2>
+                            {% else %}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <h2 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #166534; font-family: var(--font-heading); letter-spacing: 0.02em;">Source Data Quality</h2>
+                            {% endif %}
+                            {% methodology_badge "data_quality" %}
+                        </div>
+                        <span class="badge" style="
+                            {% if dq.status == 'CRITICAL' %}
+                                background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; font-weight: 700;
+                            {% elif dq.status == 'WARNING' %}
+                                background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; font-weight: 700;
+                            {% else %}
+                                background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; font-weight: 700;
+                            {% endif %}">{{ dq.status }}</span>
+                    </div>
+                    {% if dq.findings %}
+                        <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+                        {% for finding in dq.findings %}
+                        <div style="font-size: 0.88rem; line-height: 1.45; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm);
+                            {% if dq.status == 'CRITICAL' %}
+                                background: #FFFFFF; border: 1px solid #FECACA; border-left: 3px solid #DC2626; color: #1F2937;
+                            {% elif dq.status == 'WARNING' %}
+                                background: #FFFFFF; border: 1px solid #FDE68A; border-left: 3px solid #D97706; color: #1F2937;
+                            {% else %}
+                                background: #FFFFFF; border: 1px solid #BBF7D0; border-left: 3px solid #16A34A; color: #1F2937;
+                            {% endif %}">
+                            <strong style="font-family: var(--font-mono); font-size: 0.82rem;
+                                {% if dq.status == 'CRITICAL' %}color: #991B1B;{% elif dq.status == 'WARNING' %}color: #92400E;{% else %}color: #166534;{% endif %}">{{ finding.check_id }}:</strong>
+                            <span>{{ finding.message }}</span>
+                        </div>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="font-size: 0.88rem; {% if dq.status == 'CRITICAL' %}color: #991B1B;{% elif dq.status == 'WARNING' %}color: #92400E;{% else %}color: #166534;{% endif %}">
+                            No semantic contradictions found in source data.
+                        </div>
+                    {% endif %}
+                </div>
+                {% endwith %}
+            {% endif %}
+
+            <!-- Limitations Panel -->
+            {% if analytical_assessment.limitations %}
+            <div class="card" style="background: #FEFCE8; border: 1px solid #FEF08A; border-left: 4px solid #CA8A04; border-radius: var(--radius-md); padding: 1.25rem 1.5rem; box-shadow: var(--shadow-sm);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CA8A04" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <h2 style="margin: 0; padding: 0; border: none; font-size: 1.05rem; font-weight: 700; color: #854D0E; font-family: var(--font-heading); letter-spacing: 0.02em;">Analytical Limitations</h2>
+                    </div>
+                    <span class="badge" style="background: #FEF9C3; color: #854D0E; border: 1px solid #FDE047; font-weight: 600;">System Notice</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+                {% for limitation in analytical_assessment.limitations %}
+                    <div style="font-size: 0.88rem; line-height: 1.45; color: #1C1917; background: #FFFFFF; border: 1px solid #FEF08A; border-left: 3px solid #CA8A04; border-radius: var(--radius-sm); padding: 0.55rem 0.75rem;">
+                        <strong style="color: #713F12; font-weight: 700;">{{ limitation.type|title }}:</strong>
+                        <span>{{ limitation.message }}</span>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="prediction-panel">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+                    <h2 style="margin: 0; padding: 0; border: none; font-size: 1.25rem; font-family: var(--font-heading); color: var(--white);">Analytical Assessment</h2>
+                    {% if incident.prediction %}
+                        <span class="badge" style="background:rgba(255,255,255,0.1); color:#fff; border: 1px solid rgba(255,255,255,0.2);">Complete</span>
+                    {% else %}
+                        <span class="badge" style="background:transparent; color:rgba(255,255,255,0.5); border: 1px dashed rgba(255,255,255,0.3);">Pending</span>
+                    {% endif %}
+                </div>
+
+                <!-- 1. PSIF Assessment (Primary Binary Decision & Dedicated SIF Evidence) -->
+                <div class="blinded-container" id="prediction-panel-container">
+                    {% if is_blinded_mode %}
+                    <div class="blinded-overlay-card" id="blinded-mask-card">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+                        <h3 style="color: #facc15; font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 700;">Blinded HSE Evaluation Active</h3>
+                        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.85); line-height: 1.5; margin-bottom: 1rem;">
+                            AI model score, candidate classification, and SHAP contributors are masked during evaluation to eliminate cognitive anchoring bias.
+                        </p>
+                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 1.25rem;">
+                            Submit your ground-truth review on the left to reveal model evaluation and test concordant/divergent agreement.
+                        </p>
+                        <button type="button" onclick="manualUnblind()" style="padding: 0.45rem 0.9rem; font-size: 0.75rem; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; cursor: pointer; transition: background 0.2s;">
+                            Manually Unblind (Auditor Mode)
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    <div id="model-prediction-content" class="{% if is_blinded_mode %}model-content-blinded{% endif %}">
+                        <div class="prediction-panel" style="margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h3 style="margin: 0; color: var(--white); font-size: 1.15rem; font-weight: 600;">PSIF Assessment</h3>
+                            {% methodology_badge "psif_model" %}
+                        </div>
+                        <span class="badge" style="background: {% if analytical_assessment.psif_model.status == 'INSUFFICIENT_EVIDENCE' %}rgba(249,115,22,0.2); color: #fdba74; border: 1px solid rgba(249,115,22,0.4);{% else %}rgba(255,255,255,0.1); color: var(--white);{% endif %}">
+                            {{ analytical_assessment.psif_model.status }}
+                        </span>
+                    </div>
+                    
+                    {% if analytical_assessment.psif_model.status == 'NOT_AVAILABLE' or analytical_assessment.psif_model.status == 'NOT_RUN' %}
+                        <div style="color: #fdba74; font-size: 0.9rem; padding: 0.75rem; background: rgba(249,115,22,0.1); border-left: 2px solid #fdba74; border-radius: var(--radius-sm);">
+                            <strong>Reason:</strong> {{ analytical_assessment.psif_model.reason }}
+                        </div>
+                    {% else %}
+                        {% with assessment=analytical_assessment.psif_model %}
+                        
+                        <!-- Primary Binary Decision Banner -->
+                        <div style="text-align: center; padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; 
+                                    background: {% if assessment.status == 'INSUFFICIENT_EVIDENCE' or assessment.status == 'INSUFFICIENT_INFORMATION' or assessment.is_sparse_input %}rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4);{% elif assessment.binary_decision == 'PSIF' %}rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4);{% else %}rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3);{% endif %}">
+                            <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.7); margin-bottom: 0.35rem;">
+                                Primary Candidate Decision
+                            </div>
+                            <div style="font-size: 1.8rem; font-weight: 700; color: {% if assessment.status == 'INSUFFICIENT_EVIDENCE' or assessment.status == 'INSUFFICIENT_INFORMATION' or assessment.is_sparse_input %}#fde047{% elif assessment.binary_decision == 'PSIF' %}#fca5a5{% else %}#86efac{% endif %}; letter-spacing: 0.05em;">
+                                {% if assessment.status == 'INSUFFICIENT_EVIDENCE' or assessment.status == 'INSUFFICIENT_INFORMATION' or assessment.is_sparse_input %}
+                                    INSUFFICIENT INFORMATION
+                                {% elif assessment.binary_decision == 'PSIF' %}
+                                    PSIF
+                                {% else %}
+                                    NOT PSIF
+                                {% endif %}
+                            </div>
+                            <div style="display: flex; justify-content: center; gap: 0.75rem; margin-top: 0.75rem; align-items: center; flex-wrap: wrap;">
+                                <span class="badge" style="background: rgba(0,0,0,0.3); color: #fff; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.15);">
+                                    PSIF Model Score: {{ assessment.score|floatformat:2 }}
+                                </span>
+                                <span class="badge" style="background: rgba(255,255,255,0.1); color: #fff; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.15);">
+                                    Evidence Strength: <strong>{{ assessment.evidence_strength|default:"Moderate" }}</strong>
+                                </span>
+                                <span class="badge" style="background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); font-size: 0.75rem;">
+                                    Threshold: {{ assessment.threshold }}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem;">
+                                Note: Model score represents precursor pattern strength, not a calibrated injury probability.
+                            </div>
+                        </div>
+
+                        <!-- SIF Precursor Evidence Chain Widget -->
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <h4 style="margin: 0; color: var(--white); font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    SIF Precursor Evidence Chain
+                                </h4>
+                                <a href="{% url 'incidents:evidence_break' incident.id %}" style="color: #93c5fd; font-size: 0.78rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                    Why NOT PSIF Workbench &rarr;
+                                </a>
+                            </div>
+                            <div style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.6); margin-bottom: 0.85rem; font-style: italic;">
+                                This is an evidence representation, not a causal claim.
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+                                {% for link in evidence_break.evidence_chain %}
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0.65rem; background: rgba(0,0,0,0.25); border-radius: 4px; border-left: 3px solid {% if link.state == 'SUPPORTED' %}#22c55e{% elif link.state == 'PARTIAL' %}#f59e0b{% elif link.state == 'MISSING' %}#ef4444{% else %}#64748b{% endif %};">
+                                    <span style="font-size: 0.8rem; color: var(--white); font-weight: 500;">{{ forloop.counter }}. {{ link.title }}</span>
+                                    <span class="badge" style="font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.45rem;
+                                        {% if link.state == 'SUPPORTED' %}background: #dcfce7; color: #166534;
+                                        {% elif link.state == 'PARTIAL' %}background: #fef3c7; color: #92400e;
+                                        {% elif link.state == 'MISSING' %}background: #fee2e2; color: #991b1b;
+                                        {% else %}background: #f1f5f9; color: #334155;{% endif %}">
+                                        {{ link.state }}
+                                    </span>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if evidence_break.evidence_breaks %}
+                            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed rgba(255, 255, 255, 0.1);">
+                                <div style="font-size: 0.75rem; color: #fdba74; font-weight: 600; margin-bottom: 0.35rem; text-transform: uppercase;">
+                                    Key Evidence Break:
+                                </div>
+                                <div style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.85); line-height: 1.4;">
+                                    {{ evidence_break.evidence_breaks.0.title }}: {{ evidence_break.evidence_breaks.0.description }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; text-align: center;">
+                                <a href="{% url 'incidents:adjudicate' incident.id %}" style="display: block; width: 100%; text-align: center; padding: 0.6rem; background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.5); border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; text-decoration: none; transition: background 0.2s;">
+                                    ⚖️ Open Human Adjudication Workbench
+                                </a>
+                                <a href="{% url 'incidents:evidence_break' incident.id %}" style="display: block; width: 100%; text-align: center; padding: 0.6rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: background 0.2s;">
+                                    🔍 Launch Evidence-Break Workbench
+                                </a>
+                            </div>
+                        </div>
+
+                        {% if assessment.status == 'INSUFFICIENT_EVIDENCE' %}
+                        <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(249, 115, 22, 0.12); border-left: 3px solid #f97316; border-radius: var(--radius-sm); font-size: 0.85rem; color: #fdba74;">
+                            <strong>Analytical Status — Insufficient Evidence:</strong> {{ assessment.reason }}
+                        </div>
+                        {% endif %}
+
+                        {% if assessment.status == 'AVAILABLE_WITH_WARNING' %}
+                        <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: var(--radius-sm); font-size: 0.85rem; color: #fdba74;">
+                            <strong>Data Quality Warning:</strong> Score is based on inconsistent source data ({{ assessment.reason }}).
+                        </div>
+                        {% endif %}
+
+                        <!-- Reasoning / Supporting Evidence -->
+                        {% if assessment.supporting_evidence %}
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="color: var(--white); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                                Supporting Evidence
+                            </h4>
+                            <ul style="margin: 0; padding-left: 1.25rem; color: rgba(255,255,255,0.85); font-size: 0.88rem; line-height: 1.6;">
+                                {% for item in assessment.supporting_evidence %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% elif assessment.reasoning %}
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="color: var(--white); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                                Reasoning
+                            </h4>
+                            <ul style="margin: 0; padding-left: 1.25rem; color: rgba(255,255,255,0.85); font-size: 0.88rem; line-height: 1.6;">
+                                {% for item in assessment.reasoning %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Contradicting Evidence -->
+                        {% if assessment.contradicting_evidence %}
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="color: #93c5fd; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                                Contradicting Evidence
+                            </h4>
+                            <ul style="margin: 0; padding-left: 1.25rem; color: rgba(255,255,255,0.85); font-size: 0.88rem; line-height: 1.6;">
+                                {% for item in assessment.contradicting_evidence %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Extracted Narrative Evidence Spans -->
+                        {% if assessment.narrative_evidence %}
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="color: var(--white); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                                Narrative Evidence (Extracted Spans)
+                            </h4>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                {% for quote in assessment.narrative_evidence %}
+                                <div style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-left: 3px solid var(--olive); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.85rem; color: rgba(255,255,255,0.92); font-style: italic;">
+                                    “{{ quote }}”
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Structured Evidence -->
+                        {% if assessment.structured_evidence %}
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="color: var(--white); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                                Structured Evidence
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.5rem;">
+                                {% for struct in assessment.structured_evidence %}
+                                <div style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm);">
+                                    <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6); text-transform: uppercase;">{{ struct.field }}</div>
+                                    <div style="font-size: 0.85rem; color: var(--white); font-weight: 500; margin-top: 2px;">{{ struct.value }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Missing / Uncertain Information -->
+                        {% if assessment.missing_information %}
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="color: #fdba74; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                                Missing / Uncertain Information
+                            </h4>
+                            <ul style="margin: 0; padding-left: 1.25rem; color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.5;">
+                                {% for miss in assessment.missing_information %}
+                                <li>{{ miss }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Model Contributors (Separated SHAP Positive / Negative) -->
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <h4 style="margin: 0; color: var(--white); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    Model Feature Contributors (SHAP)
+                                </h4>
+                                {% methodology_badge "shap" %}
+                            </div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem; font-style: italic; font-weight: 500;">
+                                Model contribution — not causality.
+                            </div>
+
+                            {% if assessment.positive_contributors %}
+                            <div style="margin-bottom: 0.75rem;">
+                                <span style="font-size: 0.75rem; color: #fca5a5; font-weight: 600; text-transform: uppercase;">Pushing Toward PSIF (+)</span>
+                                <ul class="factors-list" style="margin-top: 0.35rem;">
+                                    {% for ev in assessment.positive_contributors %}
+                                    <li class="factor-item" style="padding: 0.5rem 0.75rem; margin-bottom: 0.35rem;">
+                                        <div class="factor-header">
+                                            <span class="factor-name" style="font-size: 0.85rem;">{{ ev.feature }}</span>
+                                            <span class="factor-score pos">+{{ ev.contribution|floatformat:3 }}</span>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if assessment.negative_contributors %}
+                            <div>
+                                <span style="font-size: 0.75rem; color: #86efac; font-weight: 600; text-transform: uppercase;">Pulling Toward NOT PSIF (-)</span>
+                                <ul class="factors-list" style="margin-top: 0.35rem;">
+                                    {% for ev in assessment.negative_contributors %}
+                                    <li class="factor-item" style="padding: 0.5rem 0.75rem; margin-bottom: 0.35rem;">
+                                        <div class="factor-header">
+                                            <span class="factor-name" style="font-size: 0.85rem;">{{ ev.feature }}</span>
+                                            <span class="factor-score neg">{{ ev.contribution|floatformat:3 }}</span>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if evidence_break.model_contributions.suppressed_count > 0 %}
+                            <div style="margin-top: 0.65rem; font-size: 0.72rem; color: rgba(255,255,255,0.5); font-style: italic; padding-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+                                {{ evidence_break.model_contributions.suppressed_count }} negligible zero-influence features suppressed.
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Data Quality & Limitations -->
+                        <div style="padding: 0.75rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius-sm); font-size: 0.8rem; color: rgba(255,255,255,0.6);">
+                            <div style="margin-bottom: 0.25rem;">
+                                <strong style="color: rgba(255,255,255,0.85);">Data Quality Status:</strong> 
+                                <span class="badge" style="background: rgba(255,255,255,0.1); font-size: 0.75rem;">{{ analytical_assessment.data_quality.status }}</span>
+                            </div>
+                            <div style="margin-top: 0.35rem;">
+                                <strong style="color: rgba(255,255,255,0.85);">Human Review Status:</strong>
+                                {% if incident.is_psif_human_label is not None %}
+                                    <span style="color: #86efac; font-weight: 600;">
+                                        Confirmed {% if incident.is_psif_human_label %}PSIF{% else %}NOT PSIF{% endif %}
+                                    </span>
+                                    {% if incident.reviewed_by %}(by {{ incident.reviewed_by.username }}){% endif %}
+                                {% else %}
+                                    <span style="color: #fdba74;">Pending HSE Review</span>
+                                {% endif %}
+                            </div>
+                            <div style="margin-top: 0.35rem; font-size: 0.75rem; color: rgba(255,255,255,0.4);">
+                                Legacy Prioritization Band: {{ assessment.prioritization_band }} (Deprecated) &bull; Model: {{ assessment.model_version }}
+                            </div>
+                        </div>
+
+                        {% endwith %}
+                    {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. IOGP Evidence -->
+                <div class="prediction-panel" style="margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h3 style="margin: 0; color: var(--white); font-size: 1.1rem;">Rule-derived IOGP candidates</h3>
+                            {% methodology_badge "iogp" %}
+                        </div>
+                        <span class="badge" style="background: rgba(255,255,255,0.1);">{{ analytical_assessment.iogp.status }}</span>
+                    </div>
+                    {% if analytical_assessment.iogp.status == 'NOT_AVAILABLE' or analytical_assessment.iogp.status == 'NOT_RUN' %}
+                        <div style="color: #fdba74; font-size: 0.9rem; padding: 0.75rem; background: rgba(249,115,22,0.1); border-left: 2px solid #fdba74;">
+                            <strong>Reason:</strong> {{ analytical_assessment.iogp.reason }}
+                        </div>
+                    {% else %}
+                        {% if analytical_assessment.iogp.status == 'AVAILABLE_WITH_WARNING' %}
+                            <div style="margin-bottom: 1rem; font-size: 0.85rem; color: #fdba74; background: rgba(249, 115, 22, 0.1); padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid rgba(249, 115, 22, 0.2);">
+                                WARNING: Analysis may be affected by data inconsistencies.
+                            </div>
+                        {% endif %}
+                        {% if analytical_assessment.iogp.items %}
+                            {% for tag in analytical_assessment.iogp.items %}
+                            <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <strong style="color: var(--white); font-size: 0.95rem;">{{ tag.rule }}</strong>
+                                    <span class="badge" style="background: rgba(255,255,255,0.08); font-size: 0.75rem;">Match Strength: {{ tag.match_strength|default:1.0 }}</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 0.25rem;">
+                                    <strong>Keywords:</strong> {% for kw in tag.matched_phrases %}<span class="badge" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.9); margin-right: 4px;">{{ kw }}</span>{% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">No IOGP candidate rules matched.</div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- 3. Related Incidents -->
+                <div class="prediction-panel" style="margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h3 style="margin: 0; color: var(--white); font-size: 1.1rem;">Semantic Similarity (Historical Observations)</h3>
+                            {% methodology_badge "similarity" %}
+                        </div>
+                        <span class="badge" style="background: rgba(255,255,255,0.1);">{{ analytical_assessment.similarity.status }}</span>
+                    </div>
+                    {% if analytical_assessment.similarity.status == 'NOT_AVAILABLE' or analytical_assessment.similarity.status == 'NOT_RUN' or analytical_assessment.similarity.status == 'NOT_READY' %}
+                        <div style="color: #fdba74; font-size: 0.9rem; padding: 0.75rem; background: rgba(249,115,22,0.1); border-left: 2px solid #fdba74;">
+                            <strong>Reason:</strong> {{ analytical_assessment.similarity.reason }}
+                        </div>
+                    {% else %}
+                        {% if analytical_assessment.similarity.status == 'AVAILABLE_WITH_WARNING' %}
+                            <div style="margin-bottom: 1rem; font-size: 0.85rem; color: #fdba74; background: rgba(249, 115, 22, 0.1); padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid rgba(249, 115, 22, 0.2);">
+                                WARNING: Similarity based on inconsistent source data.
+                            </div>
+                        {% endif %}
+                        {% if analytical_assessment.similarity.items %}
+                            {% for related in analytical_assessment.similarity.items %}
+                            <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <a href="{% url 'incidents:detail' related.incident_id %}" style="color: var(--white); text-decoration: none; font-weight: 500; font-size: 0.9rem;">Incident {{ related.incident_id|slice:":8" }}</a>
+                                    <span class="badge" style="background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25); font-size: 0.75rem; font-weight: 600;">{{ related.similarity_percent }} Match</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 0.5rem;">
+                                    {{ related.incident_date }} | {{ related.department }}
+                                </div>
+                                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); font-style: italic;">
+                                    "{{ related.short_narrative_snippet }}"
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">No sufficiently similar observations found.</div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- 4. Recurrence Evidence -->
+                <div class="prediction-panel" style="margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h3 style="margin: 0; color: var(--white); font-size: 1.1rem;">Historical Recurrence Flags</h3>
+                            {% methodology_badge "recurrence" %}
+                        </div>
+                        <span class="badge" style="background: rgba(255,255,255,0.1);">{{ analytical_assessment.recurrence.status }}</span>
+                    </div>
+                    {% if analytical_assessment.recurrence.status == 'NOT_AVAILABLE' or analytical_assessment.recurrence.status == 'NOT_RUN' %}
+                        <div style="color: #fdba74; font-size: 0.9rem; padding: 0.75rem; background: rgba(249,115,22,0.1); border-left: 2px solid #fdba74;">
+                            <strong>Reason:</strong> {{ analytical_assessment.recurrence.reason }}
+                        </div>
+                    {% else %}
+                        {% if analytical_assessment.recurrence.items or analytical_assessment.multi_site_recurrence.items %}
+                            {% for p in analytical_assessment.recurrence.items %}
+                                <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius-sm);">
+                                    <strong style="color: #fca5a5; display: block; margin-bottom: 0.25rem;">Active Local Pattern</strong>
+                                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">
+                                        {{ p.incident_count }} incidents linked to <strong>{{ p.rule }}</strong> at <strong>{{ p.site }}</strong>.
+                                        {% if p.dq_warnings_count %}
+                                        <br><span style="color: #fdba74;">Data-quality note: {{ p.dq_warnings_count }} records in this pattern contain source-data warnings.</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            {% for p in analytical_assessment.multi_site_recurrence.items %}
+                                <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); border-radius: var(--radius-sm);">
+                                    <strong style="color: #fdba74; display: block; margin-bottom: 0.25rem;">Multi-Site Systemic Pattern</strong>
+                                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.8);">
+                                        {{ p.incident_count }} incidents linked to <strong>{{ p.rule }}</strong> across {{ p.site_count }} sites.
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">No recurring patterns identified in the selected analysis window.</div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Dataset Context -->
+            {% if incident.dataset %}
+            <div class="card">
+                <h2 class="section-title" style="border: none; margin-bottom: 1.5rem; font-size: 1.1rem;">Source Dataset</h2>
+                <div class="prediction-stat" style="border-bottom-color: var(--border);">
+                    <span class="stat-label" style="color: var(--text-secondary);">Dataset ID</span>
+                    <span class="stat-value" style="font-size: 0.9rem; font-family: var(--font-body);"><a href="/datasets/{{ incident.dataset.id }}/status/" style="color: var(--brand);">{{ incident.dataset.id }}</a></span>
+                </div>
+                <div class="prediction-stat" style="border-bottom-color: var(--border);">
+                    <span class="stat-label" style="color: var(--text-secondary);">Filename</span>
+                    <span class="stat-value" style="font-size: 0.9rem; font-family: var(--font-body); color: var(--black);" title="{{ incident.dataset.original_filename }}">{{ incident.dataset.original_filename|truncatechars:25 }}</span>
+                </div>
+                <div class="prediction-stat" style="border: none; padding-bottom: 0;">
+                    <span class="stat-label" style="color: var(--text-secondary);">Uploaded By</span>
+                    <span class="stat-value" style="font-size: 0.9rem; font-family: var(--font-body); color: var(--black);">{{ incident.dataset.uploaded_by.username }}</span>
+                </div>
+            </div>
+            {% endif %}
+            <!-- Corrective Actions Panel -->
+            <div class="card" id="corrective-actions-panel">
+                <h2 class="section-title" style="border: none; margin-bottom: 1.25rem; font-size: 1.1rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.35rem; opacity:0.7;"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                    Evidence-Grounded Next Steps
+                </h2>
+                <div id="actions-loading" style="text-align:center; padding:1.5rem; color:var(--text-secondary); font-size:0.88rem;">
+                    <div style="display:inline-block; width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--brand); border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:0.5rem;"></div>
+                    <div>Loading action recommendations…</div>
+                </div>
+                <div id="actions-content" style="display:none;"></div>
+                <div style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border); font-size:0.75rem; color:var(--text-secondary); line-height:1.5;">
+                    Actions are selected from the versioned action library (action_library_v1) based on energy type, control condition, and IOGP rule signals. These templates do not replace site-specific risk assessment or regulatory obligations.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    "use strict";
+
+    const INCIDENT_ID = "{{ incident.id }}";
+    const ACTIONS_URL = `/api/incidents/${INCIDENT_ID}/actions/`;
+
+    const TYPE_CONFIG = {
+        "IMMEDIATE_ACTION": { label: "Immediate", color: "#9c3b32", bg: "rgba(156,59,50,0.08)" },
+        "ESCALATION_ACTION": { label: "Escalation", color: "#d97706", bg: "rgba(217,119,6,0.08)" },
+        "CORRECTIVE_ACTION": { label: "Corrective", color: "#1e3a5f", bg: "rgba(30,58,95,0.08)" },
+        "PREVENTIVE_ACTION": { label: "Preventive", color: "#16a34a", bg: "rgba(22,163,74,0.08)" },
+        "VERIFICATION_ACTION": { label: "Verify", color: "#4b5563", bg: "rgba(75,85,99,0.08)" },
+        "POSITIVE_LEARNING_ACTION": { label: "Learning", color: "#7c3aed", bg: "rgba(124,58,237,0.08)" },
+    };
+    const URGENCY_DOTS = { critical: "#9c3b32", high: "#d97706", medium: "#1e3a5f", low: "#6b7280" };
+
+    function renderActions(data) {
+        const container = document.getElementById('actions-content');
+        const loading = document.getElementById('actions-loading');
+        loading.style.display = 'none';
+        container.style.display = 'block';
+
+        if (!data.actions || data.actions.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-secondary); font-size:0.88rem; padding:1rem 0;">No specific action templates matched the evidence state for this incident. Review the incident\'s energy type and control condition fields.</div>';
+            return;
+        }
+
+        let html = '';
+        data.actions.forEach(action => {
+            const cfg = TYPE_CONFIG[action.action_type] || { label: action.action_type, color: "#4b5563", bg: "rgba(75,85,99,0.08)" };
+            const urgencyDot = URGENCY_DOTS[action.urgency] || "#6b7280";
+            const ruleNote = action.applicable_rule ? `<span style="font-size:0.72rem; color:var(--text-secondary); margin-left:0.5rem;">IOGP: ${escH(action.applicable_rule)}</span>` : '';
+
+            html += `<div style="background:${cfg.bg}; border:1px solid ${cfg.color}33; border-left:3px solid ${cfg.color}; border-radius:6px; padding:0.9rem 1rem; margin-bottom:0.75rem;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.35rem;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${urgencyDot}; flex-shrink:0;"></span>
+                        <span style="font-family:var(--font-heading); font-size:0.82rem; font-weight:700; color:${cfg.color};">${escH(cfg.label)}</span>
+                        <span style="font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:${urgencyDot};">${escH(action.urgency)}</span>
+                    </div>
+                    <span style="font-family:var(--font-mono,monospace); font-size:0.7rem; color:var(--text-secondary);">${escH(action.action_id)}</span>
+                </div>
+                <div style="font-family:var(--font-heading); font-size:0.92rem; font-weight:600; color:var(--black); margin-bottom:0.4rem;">${escH(action.title)}${ruleNote}</div>
+                <div style="font-size:0.83rem; color:var(--text-secondary); line-height:1.55; margin-bottom:0.5rem;">${escH(action.description)}</div>
+                ${action.verification_steps && action.verification_steps.length > 0 ? `
+                <details style="margin-top:0.35rem;">
+                    <summary style="font-size:0.78rem; font-weight:600; color:var(--text-secondary); cursor:pointer; user-select:none;">Verification steps (${action.verification_steps.length})</summary>
+                    <ul style="margin:0.5rem 0 0 0; padding-left:1.25rem; font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">
+                        ${action.verification_steps.map(s => `<li>${escH(s)}</li>`).join('')}
+                    </ul>
+                </details>` : ''}
+                ${action.notes ? `<div style="margin-top:0.5rem; font-size:0.75rem; color:var(--text-secondary); font-style:italic; border-top:1px solid ${cfg.color}22; padding-top:0.4rem;">${escH(action.notes)}</div>` : ''}
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function escH(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    async function loadActions() {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        try {
+            const res = await fetch(ACTIONS_URL, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            renderActions(data);
+        } catch(err) {
+            clearTimeout(timeoutId);
+            const loadingEl = document.getElementById('actions-loading');
+            if (loadingEl) {
+                loadingEl.innerHTML = '<div style="color:var(--text-secondary); font-size:0.85rem; padding:0.5rem 0;">No corrective action recommendations currently loaded.</div>';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadActions);
+})();
+</script>
+{% endblock %}
+

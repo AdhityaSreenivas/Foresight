@@ -1,0 +1,23 @@
+# SIF Precursor Console – Runtime & Development Requirements
+# Generated from the working virtual environment (Python 3.14)
+# Install with: pip install -r requirements.txt
+
+# ── Django Web Framework ──────────────────────────────────────
+Django==5.2.17
+
+# ── PostgreSQL Database Driver ────────────────────────────────
+psycopg[binary]==3.3.5
+
+# ── ML / NLP Stack ───────────────────────────────────────────
+torch==2.13.0
+transformers==5.16.1
+tokenizers==0.23.1
+huggingface_hub==1.29.0
+scikit-learn==1.7.2
+xgboost==3.2.0
+joblib==1.6.0
+numpy==2.2.6
+
+# ── File Parsing (PDF / DOCX upload support) ─────────────────
+pypdf==6.16.2
+python-docx==1.2.0

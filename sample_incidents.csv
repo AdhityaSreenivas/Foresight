@@ -1,0 +1,11 @@
+Date,Department,Incident Type,Severity Level,Specific Location,Narrative
+2026-09-01,Maintenance,Fall,Serious,Scaffolding Area B,"Worker fell 3 meters from scaffolding while attempting to secure a loose pipe. Safety harness was not properly engaged."
+2026-09-02,Operations,Equipment Failure,Minor,Pump Station 2,"A minor leak was detected in the secondary cooling pump. The system was temporarily shut down and repaired. No injuries."
+2026-09-03,Logistics,Vehicle Incident,Critical,Loading Dock 4,"Forklift carrying a heavy load tipped over while making a sharp turn. Operator was trapped and suffered a compound fracture."
+2026-09-04,Electrical,Electrical Hazard,Near Miss,Substation Alpha,"Technician noticed exposed high-voltage wiring near a puddle of water before starting work. Area was immediately secured and isolated. A potentially lethal shock was avoided."
+2026-09-05,Maintenance,Slip/Trip,Minor,Walkway C,"Employee slipped on a wet surface in the hallway. Suffered a minor sprain to the wrist. Treated with first aid."
+2026-09-06,Operations,Chemical Spill,Serious,Storage Tank 7,"A valve failed resulting in the release of 50 gallons of corrosive solvent. Two workers inhaled fumes and required medical observation."
+2026-09-07,Administration,Ergonomic,Minor,Office Building,"Employee reported lower back pain after prolonged periods of lifting archive boxes. Advised rest."
+2026-09-08,Logistics,Struck By,Moderate,Warehouse A,"A poorly stacked pallet collapsed, striking a worker on the shoulder. Worker suffered severe bruising but no broken bones."
+2026-09-09,Operations,Fire/Explosion,Critical,Refinery Unit 3,"A sudden pressure buildup caused a localized explosion in Unit 3. Multiple personnel were injured and required emergency evacuation."
+2026-09-10,Maintenance,Laceration,Moderate,Workshop,"While operating a band saw, an operator sustained a deep cut to the left hand. Required stitches but did not involve tendon damage."

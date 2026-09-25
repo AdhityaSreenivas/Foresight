@@ -1,0 +1,3651 @@
+{
+  "total_sampled": 72,
+  "state_counts": {
+    "PSIF_PATHWAY_OPEN": 10,
+    "HIGH_ENERGY_CONTROLLED": 17,
+    "INSUFFICIENT_INFORMATION": 28,
+    "LOW_ENERGY": 17
+  },
+  "category_counts": {
+    "Drilling": 3,
+    "Production": 3,
+    "Unspecified": 62,
+    "Pipeline": 1,
+    "Electrical": 1,
+    "Instrumentation": 1,
+    "Workover": 1
+  },
+  "deep_dive_cases": [
+    {
+      "case_num": 1,
+      "incident_id": "000b38a6-54d4-5890-a002-1f49925c36c9",
+      "raw_narrative": "Gas testing before confined space entry into an overhead crane hook block at Numaligarh Refinery - Tank Farm showed borderline oxygen levels, but the panel operator entered without continuous monitoring; the near miss was reported immediately by the shift supervisor as having high fatal potential. The site HSE officer was informed the same day.",
+      "structured_fields": {
+        "department": "Drilling",
+        "job_task": "Confined Space",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "confined_space",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Confined Space'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "Gas testing before confined space entry into an overhead crane hook block at Numaligarh Refinery - Tank Farm showed borderline oxygen lev...",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": true,
+        "evidence_text": "Gas testing before confined space entry into an overhead crane hook block at Numaligarh Refinery - Tank Farm showed borderline oxygen lev..."
+      },
+      "control_state": "FAILED",
+      "consequence_pathway": {
+        "state": "SUPPORTED",
+        "mechanism": "High energy (confined_space) with worker exposed and critical control compromised",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Confined Space",
+        "Energy Isolation",
+        "Safe Mechanical Lifting",
+        "Work Authorization"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Confined Space'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "Gas testing before confined space entry into an overhead crane hook block at Numaligarh Refinery - Tank Farm showed borderline oxygen lev...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Gas testing before confined space entry into an overhead crane hook block at Numaligarh Refinery - Tank Farm showed borderline oxygen lev...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Failed",
+          "evidence": "Compromised / Ineffective",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Supported",
+          "evidence": "High energy (confined_space) with worker exposed and critical control compromised",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "PSIF",
+        "internal_reasoning_state": "PSIF_PATHWAY_OPEN",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "PSIF"
+      },
+      "policy_decision": "PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Confined Space",
+          "evidence": "Structured job task recorded as 'Confined Space'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "Gas testing before confined space entry into an overhead crane hook block at Numaligarh Refinery - Tank Farm showed borderline oxygen lev..."
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Failed",
+          "evidence": "Gas testing before confined space entry into an overhead crane hook block at Numaligarh Refinery - Tank Farm showed borderline oxygen lev..."
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Supported",
+          "evidence": "High energy (confined_space) with worker exposed and critical control compromised"
+        }
+      ],
+      "actions": {
+        "hazard": "confined_space",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "FAILED",
+        "consequence": "SUPPORTED",
+        "rule": "PSIF-R-05",
+        "evidence_strength": "STRONG",
+        "decision": "PSIF"
+      }
+    },
+    {
+      "case_num": 2,
+      "incident_id": "000c6909-e41c-5998-9f74-0d258c5726e3",
+      "raw_narrative": "The panel operator pointed out that a fire extinguisher near the hot work location at Numaligarh Refinery - CDU Unit was slightly overdue for inspection; replaced before work began. The site HSE officer was informed the same day.",
+      "structured_fields": {
+        "department": "Drilling",
+        "job_task": "Hot Work",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "hot_work_ignition",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Hot Work'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "NEARBY_BUT_PROTECTED",
+        "evidence_text": "replaced before work began",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "replaced before work began"
+      },
+      "control_state": "EFFECTIVE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": "fire"
+      },
+      "iogp_matches": [
+        "Hot Work"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Hot Work'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Nearby But Protected",
+          "evidence": "replaced before work began",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "replaced before work began",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Effective",
+          "evidence": "Effective / Held",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Hot Work Ignition",
+          "evidence": "Structured job task recorded as 'Hot Work'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Nearby But Protected",
+          "evidence": "replaced before work began"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Effective",
+          "evidence": "replaced before work began"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "hot_work_ignition",
+        "exposure": "NEARBY_BUT_PROTECTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "EFFECTIVE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 3,
+      "incident_id": "008214d1-098b-54ee-8816-d918ecae5ed5",
+      "raw_narrative": "The permit for valve replacement at Field HQ Duliajan - Admin Block did not reflect the actual hazards present (an adjacent confined space entry in progress), and work continued as per the outdated permit; no injury resulted, but the potential for a fatality was evident to all who witnessed it. This is the second such observation reported at this location in recent weeks.",
+      "structured_fields": {
+        "department": "Drilling",
+        "job_task": "Work Authorisation",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "confined_space",
+        "energy_present": true,
+        "evidence_text": "The permit for valve replacement at Field HQ Duliajan - Admin Block did not reflect the actual hazards present (an adjacent confined spac...",
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "NEARBY_BUT_PROTECTED",
+        "evidence_text": "no injury resulted, but the potential for a fatality was evident to all who witnessed it",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Confined Space",
+        "Energy Isolation",
+        "Work Authorization"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "The permit for valve replacement at Field HQ Duliajan - Admin Block did not reflect the actual hazards present (an adjacent confined spac...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Nearby But Protected",
+          "evidence": "no injury resulted, but the potential for a fatality was evident to all who witnessed it",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Confined Space",
+          "evidence": "The permit for valve replacement at Field HQ Duliajan - Admin Block did not reflect the actual hazards present (an adjacent confined spac..."
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Nearby But Protected",
+          "evidence": "no injury resulted, but the potential for a fatality was evident to all who witnessed it"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "confined_space",
+        "exposure": "NEARBY_BUT_PROTECTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "MODERATE",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 4,
+      "incident_id": "000ffa08-6f1f-5c9b-a2de-4f73c60bf36f",
+      "raw_narrative": "While inspecting the the pipeline right-of-way at Well Testing Site WT-22, a junior engineer stepped onto a scaffold plank that was not properly secured and the plank snapped; by chance no one was in the immediate impact zone at that exact moment. Photographs of the location were taken for the report.",
+      "structured_fields": {
+        "department": "Production",
+        "job_task": "Working at Height",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "gravity",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Working at Height'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "EXPOSURE_INTERRUPTED",
+        "evidence_text": "[SEP] Work stopped immediately",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "Work stopped and control restored before exposure"
+      },
+      "control_state": "RESTORED_BEFORE_EXPOSURE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Working at Height"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Working at Height'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Exposure Interrupted",
+          "evidence": "[SEP] Work stopped immediately",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Work stopped and control restored before exposure",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Restored Before Exposure",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Gravity",
+          "evidence": "Structured job task recorded as 'Working at Height'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Exposure Interrupted",
+          "evidence": "[SEP] Work stopped immediately"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Restored Before Exposure",
+          "evidence": "Work stopped and control restored before exposure"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "gravity",
+        "exposure": "EXPOSURE_INTERRUPTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "RESTORED_BEFORE_EXPOSURE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-09",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 5,
+      "incident_id": "00676ef3-2959-5163-bc75-2ca5732f61b8",
+      "raw_narrative": "The lockout tag on a cargo tank wagon at Gas Compressor Station Makum was found removed by an unknown person while a maintenance fitter was still working on it; the near miss was reported immediately by the shift supervisor as having high fatal potential. The shift supervisor was made aware before the next round.",
+      "structured_fields": {
+        "department": "Production",
+        "job_task": "Energy Isolation",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "pressure_stored",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Energy Isolation'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "UNKNOWN",
+        "mechanism": "Incomplete facts to establish whether energy could reach worker",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Energy Isolation"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Energy Isolation'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Unknown",
+          "evidence": "Incomplete facts to establish whether energy could reach worker",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Pressure Stored",
+          "evidence": "Structured job task recorded as 'Energy Isolation'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        }
+      ],
+      "actions": {
+        "hazard": "pressure_stored",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "UNKNOWN",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "MODERATE",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 6,
+      "incident_id": "008a16b5-ab3c-5f41-9521-b1b17db27961",
+      "raw_narrative": "A minor pothole on the internal road near the pipeline right-of-way, Field HQ Duliajan - Admin Block was reported as a driving hazard; marked for repair. The site HSE officer was informed the same day.",
+      "structured_fields": {
+        "department": "Production",
+        "job_task": "Driving",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "mobile_equipment",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Driving'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "UNKNOWN",
+        "mechanism": "Incomplete facts to establish whether energy could reach worker",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Driving"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Driving'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Unknown",
+          "evidence": "Incomplete facts to establish whether energy could reach worker",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Mobile Equipment",
+          "evidence": "Structured job task recorded as 'Driving'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        }
+      ],
+      "actions": {
+        "hazard": "mobile_equipment",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "UNKNOWN",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "MODERATE",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 7,
+      "incident_id": "00007355-fc3d-55e5-9082-c9178762db79",
+      "raw_narrative": "Permit review identified the following: The hydraulic valve actuator (C-695) presented stored pneumatic or hydraulic energy in the actuator mechanism for the planned maintenance on a pipeline valve actuator. The intended control, verified bleed-down of stored actuator pressure with mechanical lock-out of the valve position, was incorrectly applied to the wrong isolation point. Required PPE for the task was confirmed present and correctly worn. Given the job's layout, the insulation contractor stood squarely within reach of unexpected actuator movement from residual stored pressure during servicing. The general work permit paperwork was complete and had been signed off. Left unaddressed, the scenario could have resulted in a crush or impact injury from unexpected actuator movement. A wider walk-down of similar equipment on the unit was scheduled as a result. The observation was raised with the area supervisor before the crew continued. The competent person who signed the original permit was asked to clarify the intended scope. The finding was cross-checked against the applicable procedure reference. The shift log was annotated so the incoming crew would be aware of the finding. Similar conditions had reportedly been seen elsewhere on the same work front.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "maintenance on a pipeline valve actuator",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "pressure_stored",
+        "energy_present": true,
+        "evidence_text": "Permit review identified the following: The hydraulic valve actuator (C-695) presented stored pneumatic or hydraulic energy in the actuat...",
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "Left unaddressed, the scenario could have resulted in a crush or impact injury from unexpected actuator movement",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": true,
+        "evidence_text": "The intended control, verified bleed-down of stored actuator pressure with mechanical lock-out of the valve position, was incorrectly app..."
+      },
+      "control_state": "FAILED",
+      "consequence_pathway": {
+        "state": "SUPPORTED",
+        "mechanism": "High energy (pressure_stored) with worker exposed and critical control compromised",
+        "physical_mechanism": "crushing"
+      },
+      "iogp_matches": [
+        "Energy Isolation"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Permit review identified the following: The hydraulic valve actuator (C-695) presented stored pneumatic or hydraulic energy in the actuat...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "Left unaddressed, the scenario could have resulted in a crush or impact injury from unexpected actuator movement",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "The intended control, verified bleed-down of stored actuator pressure with mechanical lock-out of the valve position, was incorrectly app...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Failed",
+          "evidence": "Compromised / Ineffective",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Supported",
+          "evidence": "High energy (pressure_stored) with worker exposed and critical control compromised",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "PSIF",
+        "internal_reasoning_state": "PSIF_PATHWAY_OPEN",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "PSIF"
+      },
+      "policy_decision": "PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Pressure Stored",
+          "evidence": "Permit review identified the following: The hydraulic valve actuator (C-695) presented stored pneumatic or hydraulic energy in the actuat..."
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "Left unaddressed, the scenario could have resulted in a crush or impact injury from unexpected actuator movement"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Failed",
+          "evidence": "The intended control, verified bleed-down of stored actuator pressure with mechanical lock-out of the valve position, was incorrectly app..."
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Supported",
+          "evidence": "High energy (pressure_stored) with worker exposed and critical control compromised"
+        }
+      ],
+      "actions": {
+        "hazard": "pressure_stored",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "FAILED",
+        "consequence": "SUPPORTED",
+        "rule": "PSIF-R-02",
+        "evidence_strength": "STRONG",
+        "decision": "PSIF"
+      }
+    },
+    {
+      "case_num": 8,
+      "incident_id": "0002c502-d690-5ce3-bce7-90b1bae234eb",
+      "raw_narrative": "21:10 \u2014 Mechanic was working on agitator at the electrical substation. Verification was repeated at the actual work point before the next movement at ENE-6189. The maintenance task placed personnel close to moving or energized equipment, but the relevant isolation and physical guarding were established before access to the workface. The workface bordered operating equipment, but the direct control and isolation prevented personnel from entering the movement or energy path.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "maintenance",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "electrical",
+        "energy_present": true,
+        "evidence_text": "21:10 \u2014 Mechanic was working on agitator at the electrical substation",
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "NEARBY_BUT_PROTECTED",
+        "evidence_text": "The workface bordered operating equipment, but the direct control and isolation prevented personnel from entering the movement or energy ...",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "The maintenance task placed personnel close to moving or energized equipment, but the relevant isolation and physical guarding were estab..."
+      },
+      "control_state": "EFFECTIVE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Energy Isolation"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "21:10 \u2014 Mechanic was working on agitator at the electrical substation",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Nearby But Protected",
+          "evidence": "The workface bordered operating equipment, but the direct control and isolation prevented personnel from entering the movement or energy ...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "The maintenance task placed personnel close to moving or energized equipment, but the relevant isolation and physical guarding were estab...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Effective",
+          "evidence": "Effective / Held",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Electrical",
+          "evidence": "21:10 \u2014 Mechanic was working on agitator at the electrical substation"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Nearby But Protected",
+          "evidence": "The workface bordered operating equipment, but the direct control and isolation prevented personnel from entering the movement or energy ..."
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Effective",
+          "evidence": "The maintenance task placed personnel close to moving or energized equipment, but the relevant isolation and physical guarding were estab..."
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "electrical",
+        "exposure": "NEARBY_BUT_PROTECTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "EFFECTIVE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 9,
+      "incident_id": "000310a9-8300-5c09-b761-046ddf48f2dd",
+      "raw_narrative": "At the construction zone, the crew was carrying out mechanical maintenance with a interlock. The observation concerned process or equipment energy and the possible loss of protective function pathway. The interlock remained active throughout testing. A second interacting hazard was moving equipment, and personnel remained outside the movement path. The control was effective before personnel entered the hazard area. The equipment position was reviewed with the operator before the next movement. The field observer recorded the condition and confirmed the intended task sequence with the responsible person. The crew checked the surrounding work area, equipment status, and personnel route before the next step.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "Mechanical Maintenance",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "low_energy_general",
+        "energy_present": false,
+        "evidence_text": null,
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "The control was effective before personnel entered the hazard area",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "The control was effective before personnel entered the hazard area"
+      },
+      "control_state": "EFFECTIVE",
+      "consequence_pathway": {
+        "state": "NOT_ESTABLISHED",
+        "mechanism": "Low energy density; physical SIF consequence not established",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Bypassing Safety Controls"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Not Established",
+          "evidence": "Hazard type: low_energy_general",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "The control was effective before personnel entered the hazard area",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "The control was effective before personnel entered the hazard area",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Effective",
+          "evidence": "Effective / Held",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "LOW_ENERGY",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "The control was effective before personnel entered the hazard area"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Effective",
+          "evidence": "The control was effective before personnel entered the hazard area"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established"
+        }
+      ],
+      "actions": {
+        "hazard": "low_energy_general",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "EFFECTIVE",
+        "consequence": "NOT_ESTABLISHED",
+        "rule": "PSIF-R-10",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 10,
+      "incident_id": "000295cf-6019-5438-ab68-0472eeaa3605",
+      "raw_narrative": "Investigation sequence: crane operator began line breaking at vacuum truck; a mobile crane repositioned beside the pipe rack. The equipment had returned from a recent maintenance campaign while crane operator was at vacuum truck The recorded value was vehicle speed 7 km/h. The work was secured at VEH-4589 after the field arrangement had been rechecked.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "electrical intervention",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "electrical",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'electrical intervention'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "NEARBY_BUT_PROTECTED",
+        "evidence_text": "The work was secured at VEH-4589 after the field arrangement had been rechecked",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Driving",
+        "Safe Mechanical Lifting"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'electrical intervention'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Nearby But Protected",
+          "evidence": "The work was secured at VEH-4589 after the field arrangement had been rechecked",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Electrical",
+          "evidence": "Structured job task recorded as 'electrical intervention'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Nearby But Protected",
+          "evidence": "The work was secured at VEH-4589 after the field arrangement had been rechecked"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "electrical",
+        "exposure": "NEARBY_BUT_PROTECTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "MODERATE",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 11,
+      "incident_id": "000366b1-103a-5566-b800-cbb080bf9fa3",
+      "raw_narrative": "Routine field note: Crane operator was pre-job setup at workboat deck in utility area. The condition developed during a transition between work crews as the crew worked around MAR-8550 Wind 23 knots. The next step proceeded without entering the unchecked side of MAR-8550.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "work at height",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "gravity",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'work at height'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "UNKNOWN",
+        "mechanism": "Incomplete facts to establish whether energy could reach worker",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Working at Height",
+        "Safe Mechanical Lifting"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'work at height'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Unknown",
+          "evidence": "Incomplete facts to establish whether energy could reach worker",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Gravity",
+          "evidence": "Structured job task recorded as 'work at height'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        }
+      ],
+      "actions": {
+        "hazard": "gravity",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "UNKNOWN",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "MODERATE",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 12,
+      "incident_id": "0004eadf-7408-493a-bf6e-00e11ac4f5fd",
+      "raw_narrative": "ROTATING SHAFT / movement control was inadequate while stored pressure/tension energy was present. pressure release.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "Lifting",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "suspended_load",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Lifting'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": true,
+        "evidence_text": "ROTATING SHAFT / movement control was inadequate while stored pressure/tension energy was present"
+      },
+      "control_state": "FAILED",
+      "consequence_pathway": {
+        "state": "PARTIAL",
+        "mechanism": "Potential hazard interaction, but severe consequence pathway not fully substantiated",
+        "physical_mechanism": "pressure release"
+      },
+      "iogp_matches": [
+        "Line of Fire",
+        "Safe Mechanical Lifting"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Lifting'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "ROTATING SHAFT / movement control was inadequate while stored pressure/tension energy was present",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Failed",
+          "evidence": "Compromised / Ineffective",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Partial",
+          "evidence": "Potential hazard interaction, but severe consequence pathway not fully substantiated",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "STRONG",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Suspended Load",
+          "evidence": "Structured job task recorded as 'Lifting'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Failed",
+          "evidence": "ROTATING SHAFT / movement control was inadequate while stored pressure/tension energy was present"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Partial",
+          "evidence": "Potential hazard interaction, but severe consequence pathway not fully substantiated"
+        }
+      ],
+      "actions": {
+        "hazard": "suspended_load",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "FAILED",
+        "consequence": "PARTIAL",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "STRONG",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 13,
+      "incident_id": "0001606c-dde3-5119-9fa2-832ab5a39cee",
+      "raw_narrative": "The supervisor was carrying out temporary works at the process unit with the vehicle at the work point [obs-094754-1]. A previous check had failed to settle a minor administrative point, but that issue was separate from the physical control used for the work [obs-094754-2]. An earlier control had been ineffective during a preliminary check; the team reviewed the physical arrangement again before proceeding [obs-094754-3]. The work note WR-094754 places supervisor outside the movement envelope while the physical separation remained available [obs-094754-4]. The surrounding work position at the lower level was recorded under work reference WR-094754 [obs-094754-5].",
+      "structured_fields": {
+        "department": null,
+        "job_task": "temporary works",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "low_energy_general",
+        "energy_present": false,
+        "evidence_text": null,
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": true,
+        "evidence_text": "A previous check had failed to settle a minor administrative point, but that issue was separate from the physical control used for the wo..."
+      },
+      "control_state": "FAILED",
+      "consequence_pathway": {
+        "state": "NOT_ESTABLISHED",
+        "mechanism": "Low energy density; physical SIF consequence not established",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Driving"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Not Established",
+          "evidence": "Hazard type: low_energy_general",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "A previous check had failed to settle a minor administrative point, but that issue was separate from the physical control used for the wo...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Failed",
+          "evidence": "Compromised / Ineffective",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "LOW_ENERGY",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Failed",
+          "evidence": "A previous check had failed to settle a minor administrative point, but that issue was separate from the physical control used for the wo..."
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established"
+        }
+      ],
+      "actions": {
+        "hazard": "low_energy_general",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "FAILED",
+        "consequence": "NOT_ESTABLISHED",
+        "rule": "PSIF-R-10",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 14,
+      "incident_id": "00026917-0d63-5188-9daa-4f54aad56bed",
+      "raw_narrative": "During the field round at the warehouse, the driver was working with the equipment. Suspended-load energy was present and the credible exposure was struck-by or crush injury. The critical control was not effective. A second interacting hazard was stored energy, and the equipment was isolated before positioning. The condition required correction before exposure could continue. The responsible person checked the task boundary before the work sequence continued.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "Vehicle Movement",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "mobile_equipment",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Vehicle Movement'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "Suspended-load energy was present and the credible exposure was struck-by or crush injury",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "UNKNOWN",
+        "mechanism": "Incomplete facts to establish whether energy could reach worker",
+        "physical_mechanism": "crushing"
+      },
+      "iogp_matches": [
+        "Driving",
+        "Energy Isolation"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Vehicle Movement'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "Suspended-load energy was present and the credible exposure was struck-by or crush injury",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Unknown",
+          "evidence": "Incomplete facts to establish whether energy could reach worker",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Mobile Equipment",
+          "evidence": "Structured job task recorded as 'Vehicle Movement'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "Suspended-load energy was present and the credible exposure was struck-by or crush injury"
+        }
+      ],
+      "actions": {
+        "hazard": "mobile_equipment",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "UNKNOWN",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "MODERATE",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 15,
+      "incident_id": "000413bc-5cfb-57d7-9489-cba7f260c0e2",
+      "raw_narrative": "The shift log noted vehicle movement at the laydown yard. delivery truck DT-6587 was positioned at the work point. The work was coordinated with the operating team. The permit holder was available at the work point. The reversing alarm check at DT-6587 held throughout, and the forklift operator stayed outside the reversing zone. The equipment had last been serviced within the scheduled interval.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "vehicle movement",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "mobile_equipment",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'vehicle movement'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "NEARBY_BUT_PROTECTED",
+        "evidence_text": "The reversing alarm check at DT-6587 held throughout, and the forklift operator stayed outside the reversing zone",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "The reversing alarm check at DT-6587 held throughout, and the forklift operator stayed outside the reversing zone"
+      },
+      "control_state": "EFFECTIVE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Driving"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'vehicle movement'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Nearby But Protected",
+          "evidence": "The reversing alarm check at DT-6587 held throughout, and the forklift operator stayed outside the reversing zone",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "The reversing alarm check at DT-6587 held throughout, and the forklift operator stayed outside the reversing zone",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Effective",
+          "evidence": "Effective / Held",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Mobile Equipment",
+          "evidence": "Structured job task recorded as 'vehicle movement'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Nearby But Protected",
+          "evidence": "The reversing alarm check at DT-6587 held throughout, and the forklift operator stayed outside the reversing zone"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Effective",
+          "evidence": "The reversing alarm check at DT-6587 held throughout, and the forklift operator stayed outside the reversing zone"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "mobile_equipment",
+        "exposure": "NEARBY_BUT_PROTECTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "EFFECTIVE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 16,
+      "incident_id": "0001f9ab-bf92-5cbc-b5c7-bb5dec2abb21",
+      "raw_narrative": "As the equipment was being positioned, electrical testing continued at the control building. switchgear cubicle SG-6468 was positioned at the work point. The work party remained at the agreed hold point. The permit was displayed at the work location. The task followed the planned maintenance sequence. The lockout verification at SG-6468 had degraded, and the energized-panel interface was not closed off from the electrical supervisor. This condition at SG-6468, if uninterrupted, carried a credible risk of arc-flash burn to the electrical supervisor.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "electrical testing",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "electrical",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'electrical testing'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "The lockout verification at SG-6468 had degraded, and the energized-panel interface was not closed off from the electrical supervisor",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": true,
+        "evidence_text": "The lockout verification at SG-6468 had degraded, and the energized-panel interface was not closed off from the electrical supervisor"
+      },
+      "control_state": "FAILED",
+      "consequence_pathway": {
+        "state": "SUPPORTED",
+        "mechanism": "High energy (electrical) with worker exposed and critical control compromised",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Energy Isolation",
+        "Hot Work"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'electrical testing'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "The lockout verification at SG-6468 had degraded, and the energized-panel interface was not closed off from the electrical supervisor",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "The lockout verification at SG-6468 had degraded, and the energized-panel interface was not closed off from the electrical supervisor",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Failed",
+          "evidence": "Compromised / Ineffective",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Supported",
+          "evidence": "High energy (electrical) with worker exposed and critical control compromised",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "PSIF",
+        "internal_reasoning_state": "PSIF_PATHWAY_OPEN",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "PSIF"
+      },
+      "policy_decision": "PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Electrical",
+          "evidence": "Structured job task recorded as 'electrical testing'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "The lockout verification at SG-6468 had degraded, and the energized-panel interface was not closed off from the electrical supervisor"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Failed",
+          "evidence": "The lockout verification at SG-6468 had degraded, and the energized-panel interface was not closed off from the electrical supervisor"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Supported",
+          "evidence": "High energy (electrical) with worker exposed and critical control compromised"
+        }
+      ],
+      "actions": {
+        "hazard": "electrical",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "FAILED",
+        "consequence": "SUPPORTED",
+        "rule": "PSIF-R-03",
+        "evidence_strength": "STRONG",
+        "decision": "PSIF"
+      }
+    },
+    {
+      "case_num": 17,
+      "incident_id": "00028e05-a050-5ca3-8411-46af6eb68e23",
+      "raw_narrative": "The equipment identity was verified against WO-66775, while the field state at MAR-3983 was checked separately.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "electrical intervention",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "electrical",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'electrical intervention'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "UNKNOWN",
+        "mechanism": "Incomplete facts to establish whether energy could reach worker",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Energy Isolation"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'electrical intervention'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Unknown",
+          "evidence": "Incomplete facts to establish whether energy could reach worker",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Electrical",
+          "evidence": "Structured job task recorded as 'electrical intervention'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        }
+      ],
+      "actions": {
+        "hazard": "electrical",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "UNKNOWN",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "MODERATE",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 18,
+      "incident_id": "0003ea57-0ec7-52bd-837a-b05a346ade5e",
+      "raw_narrative": "On post-job review, Work scope: electrical isolation and switching for maintenance on the 11kV switchgear (D-553). Hazard present: stored or residual electrical energy in circuits believed to be de-energized. In practice, lock-out/tag-out with independently verified absence of voltage was not maintained for the duration of the task. Radio communication equipment for the crew was tested and functioning. The layout of the job meant the HSE advisor could not avoid contact with live parts or arc-flash exposure during work believed to be on isolated equipment. Under a slightly different timing, this could have led to electrocution or arc-flash burns to the electrician.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "electrical isolation and switching for maintenance",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "electrical",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'electrical isolation and switching for maintenance'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "On post-job review, Work scope: electrical isolation and switching for maintenance on the 11kV switchgear (D-553)",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": true,
+        "evidence_text": "In practice, lock-out/tag-out with independently verified absence of voltage was not maintained for the duration of the task"
+      },
+      "control_state": "FAILED",
+      "consequence_pathway": {
+        "state": "SUPPORTED",
+        "mechanism": "High energy (electrical) with worker exposed and critical control compromised",
+        "physical_mechanism": "electrical contact"
+      },
+      "iogp_matches": [
+        "Driving",
+        "Energy Isolation",
+        "Hot Work"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'electrical isolation and switching for maintenance'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "On post-job review, Work scope: electrical isolation and switching for maintenance on the 11kV switchgear (D-553)",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "In practice, lock-out/tag-out with independently verified absence of voltage was not maintained for the duration of the task",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Failed",
+          "evidence": "Compromised / Ineffective",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Supported",
+          "evidence": "High energy (electrical) with worker exposed and critical control compromised",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "PSIF",
+        "internal_reasoning_state": "PSIF_PATHWAY_OPEN",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "PSIF"
+      },
+      "policy_decision": "PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Electrical",
+          "evidence": "Structured job task recorded as 'electrical isolation and switching for maintenance'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "On post-job review, Work scope: electrical isolation and switching for maintenance on the 11kV switchgear (D-553)"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Failed",
+          "evidence": "In practice, lock-out/tag-out with independently verified absence of voltage was not maintained for the duration of the task"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Supported",
+          "evidence": "High energy (electrical) with worker exposed and critical control compromised"
+        }
+      ],
+      "actions": {
+        "hazard": "electrical",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "FAILED",
+        "consequence": "SUPPORTED",
+        "rule": "PSIF-R-03",
+        "evidence_strength": "STRONG",
+        "decision": "PSIF"
+      }
+    },
+    {
+      "case_num": 19,
+      "incident_id": "00043109-6e27-4b2b-90a6-6ebf1693bda0",
+      "raw_narrative": "Well Pad: zero-energy verification was skipped while stored pressure/electrical/mechanical/thermal energy was present. residual hydraulic energy.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "Excavation",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "excavation_ground_collapse",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Excavation'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": true,
+        "evidence_text": "Well Pad: zero-energy verification was skipped while stored pressure/electrical/mechanical/thermal energy was present"
+      },
+      "control_state": "FAILED",
+      "consequence_pathway": {
+        "state": "PARTIAL",
+        "mechanism": "Potential hazard interaction, but severe consequence pathway not fully substantiated",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Excavation'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Well Pad: zero-energy verification was skipped while stored pressure/electrical/mechanical/thermal energy was present",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Failed",
+          "evidence": "Compromised / Ineffective",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Partial",
+          "evidence": "Potential hazard interaction, but severe consequence pathway not fully substantiated",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "STRONG",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Excavation Ground Collapse",
+          "evidence": "Structured job task recorded as 'Excavation'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Failed",
+          "evidence": "Well Pad: zero-energy verification was skipped while stored pressure/electrical/mechanical/thermal energy was present"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Partial",
+          "evidence": "Potential hazard interaction, but severe consequence pathway not fully substantiated"
+        }
+      ],
+      "actions": {
+        "hazard": "excavation_ground_collapse",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "FAILED",
+        "consequence": "PARTIAL",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "STRONG",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 20,
+      "incident_id": "000463c5-cbef-5a02-930c-f87c9b047ba2",
+      "raw_narrative": "Pressure reduction to a safe working level with a verified leak-sealing procedure before crew approach was tested and demonstrated to be functioning as intended before installation of a mechanical repair clamp on a pressurized pipeline began on the pipeline defect site (A-415).",
+      "structured_fields": {
+        "department": null,
+        "job_task": "installation of a mechanical repair clamp on a pressurized pipeline",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "pressure_stored",
+        "energy_present": true,
+        "evidence_text": "Pressure reduction to a safe working level with a verified leak-sealing procedure before crew approach was tested and demonstrated to be ...",
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "Pressure reduction to a safe working level with a verified leak-sealing procedure before crew approach was tested and demonstrated to be ..."
+      },
+      "control_state": "EFFECTIVE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Energy Isolation"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Pressure reduction to a safe working level with a verified leak-sealing procedure before crew approach was tested and demonstrated to be ...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Pressure reduction to a safe working level with a verified leak-sealing procedure before crew approach was tested and demonstrated to be ...",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Effective",
+          "evidence": "Effective / Held",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Pressure Stored",
+          "evidence": "Pressure reduction to a safe working level with a verified leak-sealing procedure before crew approach was tested and demonstrated to be ..."
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Effective",
+          "evidence": "Pressure reduction to a safe working level with a verified leak-sealing procedure before crew approach was tested and demonstrated to be ..."
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "pressure_stored",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "EFFECTIVE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 21,
+      "incident_id": "0004c04d-4787-5f5c-8e6a-7bc6b7061a65",
+      "raw_narrative": "During the field round at the mechanical workshop, the inspector was working with the equipment. Stored energy was present and the credible exposure was unexpected energization or release. Zero-energy state was confirmed before hands-on work. The control was effective before personnel entered the hazard area. The field observer recorded the condition and discussed the next safe step. The crew checked the surrounding work area before continuing the operation. The workface team reviewed the equipment status and access route before proceeding. The task sequence and work boundary were reviewed before continuation. The crew checked the surrounding work area, equipment status, and personnel route before the next step.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "Hot Work",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "hot_work_ignition",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Hot Work'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "The control was effective before personnel entered the hazard area",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "The control was effective before personnel entered the hazard area"
+      },
+      "control_state": "EFFECTIVE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Hot Work"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Hot Work'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "The control was effective before personnel entered the hazard area",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "The control was effective before personnel entered the hazard area",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Effective",
+          "evidence": "Effective / Held",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Hot Work Ignition",
+          "evidence": "Structured job task recorded as 'Hot Work'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "The control was effective before personnel entered the hazard area"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Effective",
+          "evidence": "The control was effective before personnel entered the hazard area"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "hot_work_ignition",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "EFFECTIVE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 22,
+      "incident_id": "0000e1b9-3caa-5064-8ea8-782dd1fb5a4b",
+      "raw_narrative": "A ladder used for minor inspection at Rig-21 (Drilling) was found to have a slightly worn rung; replaced before further use. No further work was permitted until the observation was addressed.",
+      "structured_fields": {
+        "department": "Pipeline",
+        "job_task": "Working at Height",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "gravity",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Working at Height'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "NEARBY_BUT_PROTECTED",
+        "evidence_text": "replaced before further use",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "replaced before further use"
+      },
+      "control_state": "EFFECTIVE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Working at Height"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Working at Height'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Nearby But Protected",
+          "evidence": "replaced before further use",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "replaced before further use",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Effective",
+          "evidence": "Effective / Held",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Gravity",
+          "evidence": "Structured job task recorded as 'Working at Height'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Nearby But Protected",
+          "evidence": "replaced before further use"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Effective",
+          "evidence": "replaced before further use"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "gravity",
+        "exposure": "NEARBY_BUT_PROTECTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "EFFECTIVE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-08",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 23,
+      "incident_id": "00019367-614d-5bc7-a0c4-1bfdf12f5b91",
+      "raw_narrative": "Operator log, 23:25: portable lighting unit above a work face at pipeline corridor was being prepared for access setup.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "fabrication",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "low_energy_general",
+        "energy_present": false,
+        "evidence_text": null,
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "NOT_ESTABLISHED",
+        "mechanism": "Low energy density; physical SIF consequence not established",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Not Established",
+          "evidence": "Hazard type: low_energy_general",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "LOW_ENERGY",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established"
+        }
+      ],
+      "actions": {
+        "hazard": "low_energy_general",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "NOT_ESTABLISHED",
+        "rule": "PSIF-R-10",
+        "evidence_strength": "MODERATE",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 24,
+      "incident_id": "0006d399-d1de-5b08-93cb-a487c9f54a91",
+      "raw_narrative": "A pipeline patrolman suggested additional tag-line training after observing a slightly late response during a routine lift at GGS Moran.",
+      "structured_fields": {
+        "department": "Electrical",
+        "job_task": "Safe Mechanical Lifting",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "suspended_load",
+        "energy_present": true,
+        "evidence_text": "Structured job task recorded as 'Safe Mechanical Lifting'",
+        "source": "job_task"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "UNKNOWN",
+        "mechanism": "Incomplete facts to establish whether energy could reach worker",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Safe Mechanical Lifting"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "Structured job task recorded as 'Safe Mechanical Lifting'",
+          "field_or_source": "job_task"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Unknown",
+          "evidence": "Incomplete facts to establish whether energy could reach worker",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Suspended Load",
+          "evidence": "Structured job task recorded as 'Safe Mechanical Lifting'"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        }
+      ],
+      "actions": {
+        "hazard": "suspended_load",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "UNKNOWN",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "MODERATE",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 25,
+      "incident_id": "0006b108-f9dc-5155-ad4a-8c468e738d9a",
+      "raw_narrative": "Work order WO-13760 covered pre-job setup on sump (CON-9777).",
+      "structured_fields": {
+        "department": null,
+        "job_task": "confined-space entry",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "low_energy_general",
+        "energy_present": false,
+        "evidence_text": null,
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "UNKNOWN",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "NOT_ESTABLISHED",
+        "mechanism": "Low energy density; physical SIF consequence not established",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Not Established",
+          "evidence": "Hazard type: low_energy_general",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Unknown",
+          "evidence": "Exposure state: UNKNOWN",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Weak",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "WEAK",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established"
+        }
+      ],
+      "actions": {
+        "hazard": "low_energy_general",
+        "exposure": "UNKNOWN",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "NOT_ESTABLISHED",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "WEAK",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    },
+    {
+      "case_num": 26,
+      "incident_id": "00147dc5-8739-5d55-9274-663e3cd56e2c",
+      "raw_narrative": "11:05 \u2014 Contractor supervisor prepared maintenance mezzanine for confined-space entry at the jetty. The discrepancy was caught before entry to the hazardous route, and the next step waited for physical protection to be restored at WOR-5043.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "confined-space entry",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "low_energy_general",
+        "energy_present": false,
+        "evidence_text": null,
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "POTENTIAL_EXPOSURE",
+        "evidence_text": null,
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "NOT_ESTABLISHED",
+        "mechanism": "Low energy density; physical SIF consequence not established",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Not Established",
+          "evidence": "Hazard type: low_energy_general",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "LOW_ENERGY",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Potential Exposure",
+          "evidence": "Exposure state: POTENTIAL_EXPOSURE"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Not Established",
+          "evidence": "Low energy density; physical SIF consequence not established"
+        }
+      ],
+      "actions": {
+        "hazard": "low_energy_general",
+        "exposure": "POTENTIAL_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "NOT_ESTABLISHED",
+        "rule": "PSIF-R-10",
+        "evidence_strength": "MODERATE",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 27,
+      "incident_id": "0015a0fe-629a-565c-adc9-a96c26ed8f02",
+      "raw_narrative": "Pre-job check: Cargo handler was fit-up at flare knock-out drum in maintenance workshop. The original work location had been changed to avoid a live operating area during fit-up at PRO-4728 Process pressure 29 bar. The observation was carried into the next work phase because the local arrangement around PRO-4728 had changed during fit-up. At 16:05, process pressure 29 bar was recorded and work package WO-90821 remained open for the fit-up step. Entry into the vessel was possible from the work area, while the attendant stayed at the opening, ventilation remained running, and the entrant carried a live atmospheric monitor.",
+      "structured_fields": {
+        "department": null,
+        "job_task": "confined-space entry",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "pressure_stored",
+        "energy_present": true,
+        "evidence_text": "The original work location had been changed to avoid a live operating area during fit-up at PRO-4728 Process pressure 29 bar",
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "EXPOSURE_INTERRUPTED",
+        "evidence_text": "Pre-job check: Cargo handler was fit-up at flare knock-out drum in maintenance workshop",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": "Work stopped and control restored before exposure"
+      },
+      "control_state": "RESTORED_BEFORE_EXPOSURE",
+      "consequence_pathway": {
+        "state": "INTERRUPTED",
+        "mechanism": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+        "physical_mechanism": null
+      },
+      "iogp_matches": [
+        "Confined Space"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "The original work location had been changed to avoid a live operating area during fit-up at PRO-4728 Process pressure 29 bar",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Exposure Interrupted",
+          "evidence": "Pre-job check: Cargo handler was fit-up at flare knock-out drum in maintenance workshop",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Work stopped and control restored before exposure",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Restored Before Exposure",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Strong",
+          "evidence": "Sufficient multi-source corroboration",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "NOT_PSIF",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "NOT_PSIF",
+        "internal_reasoning_state": "HIGH_ENERGY_CONTROLLED",
+        "evidence_strength": "STRONG",
+        "agreement_state": "MODEL_AND_RULE_AGREE",
+        "disagreement_reason": null,
+        "disagreement_type": null,
+        "high_priority_review": false,
+        "policy_final_decision": "NOT_PSIF",
+        "policy_rationale": "Evaluated purely via deterministic domain rules (statistical model result unavailable).",
+        "rule_decision": "NOT_PSIF"
+      },
+      "policy_decision": "NOT_PSIF",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Pressure Stored",
+          "evidence": "The original work location had been changed to avoid a live operating area during fit-up at PRO-4728 Process pressure 29 bar"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Exposure Interrupted",
+          "evidence": "Pre-job check: Cargo handler was fit-up at flare knock-out drum in maintenance workshop"
+        },
+        {
+          "dimension": "Direct Control Condition",
+          "fact": "Control status evaluated as Restored Before Exposure",
+          "evidence": "Work stopped and control restored before exposure"
+        },
+        {
+          "dimension": "Consequence Pathway",
+          "fact": "SIF pathway: Interrupted",
+          "evidence": "Pathway interrupted by effective direct control or safe worker positioning (Capacity)"
+        }
+      ],
+      "actions": {
+        "hazard": "pressure_stored",
+        "exposure": "EXPOSURE_INTERRUPTED",
+        "control": "Unknown / Not Determined",
+        "control_state": "RESTORED_BEFORE_EXPOSURE",
+        "consequence": "INTERRUPTED",
+        "rule": "PSIF-R-09",
+        "evidence_strength": "STRONG",
+        "decision": "NOT_PSIF"
+      }
+    },
+    {
+      "case_num": 28,
+      "incident_id": "0000425e-1120-5dd7-99dc-a0d1f8165424",
+      "raw_narrative": "The ladder access was underway in the scaffold access [obs-028081-1]. operator had moved to the the same task continuing after the condition for the next step [obs-028081-2]. The work record mentions a uncertain in the setup [obs-028081-3]. The decisive sequence came when operator approached the elevated work position; the fall restraint was still under review [obs-028081-4]. The equipment was exposed for inspection, while personnel were positioned according to the current work boundary [obs-028081-5]. Reference WR-028081 records the fall restraint at the work point, but operator reached the elevated work position before the state could be relied upon [obs-028081-6]. The surrounding work position at the lower level was recorded under work reference WR-028081 [obs-028081-7].",
+      "structured_fields": {
+        "department": null,
+        "job_task": "ladder access",
+        "energy_type": "unknown",
+        "control_condition": "unknown",
+        "injury_type": null,
+        "body_part": null,
+        "near_miss": null
+      },
+      "normalized_concepts": {
+        "energy": "Unknown / Not Determined",
+        "control": "Unknown / Not Determined",
+        "control_condition": "Unknown / Not Determined"
+      },
+      "hazard_extraction": {
+        "hazard_type": "gravity",
+        "energy_present": true,
+        "evidence_text": "The ladder access was underway in the scaffold access [obs-028081-1]",
+        "source": "composite_narrative"
+      },
+      "exposure_extraction": {
+        "state": "DIRECT_EXPOSURE",
+        "evidence_text": "The equipment was exposed for inspection, while personnel were positioned according to the current work boundary [obs-028081-5]",
+        "worker_present": true
+      },
+      "control_extraction": {
+        "type": "Unknown / Not Determined",
+        "hierarchy": "DIRECT_ENGINEERED_CONTROL",
+        "is_direct": true,
+        "is_compromised": false,
+        "evidence_text": null
+      },
+      "control_state": "UNKNOWN",
+      "consequence_pathway": {
+        "state": "UNKNOWN",
+        "mechanism": "Incomplete facts to establish whether energy could reach worker",
+        "physical_mechanism": "fall"
+      },
+      "iogp_matches": [
+        "Working at Height"
+      ],
+      "reasoning_matrix": [
+        {
+          "dimension": "High-energy hazard",
+          "result": "Supported",
+          "evidence": "The ladder access was underway in the scaffold access [obs-028081-1]",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Worker exposure",
+          "result": "Direct Exposure",
+          "evidence": "The equipment was exposed for inspection, while personnel were positioned according to the current work boundary [obs-028081-5]",
+          "field_or_source": "composite_narrative"
+        },
+        {
+          "dimension": "Critical control",
+          "result": "Unknown / Not Determined",
+          "evidence": "Control state: UNKNOWN",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "Control state",
+          "result": "Unknown",
+          "evidence": "Uncertain",
+          "field_or_source": "control_condition"
+        },
+        {
+          "dimension": "SIF pathway",
+          "result": "Unknown",
+          "evidence": "Incomplete facts to establish whether energy could reach worker",
+          "field_or_source": "rule_engine"
+        },
+        {
+          "dimension": "Evidence sufficiency",
+          "result": "Moderate",
+          "evidence": "1 missing items identified",
+          "field_or_source": "evidence_extractor"
+        }
+      ],
+      "rule_decision": "INSUFFICIENT_INFORMATION",
+      "ml_prediction": null,
+      "ml_score": null,
+      "reconciliation": {
+        "model_prediction": null,
+        "model_score": null,
+        "rule_assessment": "INSUFFICIENT_INFORMATION",
+        "internal_reasoning_state": "INSUFFICIENT_INFORMATION",
+        "evidence_strength": "MODERATE",
+        "agreement_state": "INSUFFICIENT_EVIDENCE",
+        "disagreement_reason": "Essential facts regarding exposure or barrier condition are missing from the report.",
+        "disagreement_type": null,
+        "high_priority_review": true,
+        "policy_final_decision": "INSUFFICIENT_INFORMATION",
+        "policy_rationale": "Report lacks necessary corroborating evidence to establish or refute the SIF precursor pathway.",
+        "rule_decision": "INSUFFICIENT_INFORMATION"
+      },
+      "policy_decision": "INSUFFICIENT_INFORMATION",
+      "explanation": [
+        {
+          "dimension": "High-Energy Hazard",
+          "fact": "High energy present: Gravity",
+          "evidence": "The ladder access was underway in the scaffold access [obs-028081-1]"
+        },
+        {
+          "dimension": "Worker Proximity / Line of Fire",
+          "fact": "Worker positioning evaluated as Direct Exposure",
+          "evidence": "The equipment was exposed for inspection, while personnel were positioned according to the current work boundary [obs-028081-5]"
+        }
+      ],
+      "actions": {
+        "hazard": "gravity",
+        "exposure": "DIRECT_EXPOSURE",
+        "control": "Unknown / Not Determined",
+        "control_state": "UNKNOWN",
+        "consequence": "UNKNOWN",
+        "rule": "GENERAL_SIF",
+        "evidence_strength": "MODERATE",
+        "decision": "INSUFFICIENT_INFORMATION"
+      }
+    }
+  ]
+}

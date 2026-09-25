@@ -1,0 +1,687 @@
+/**
+ * PSIF Platform — Admin Flow Reference UI Stylesheet
+ * Recreates the visual design system, typography, cards, and interaction patterns
+ * from the 'live-counting-and-iogp-dashboard' reference package.
+ *
+ * Scoped strictly to Admin Flow views.
+ */
+
+:root {
+    /* Reference Color Palette */
+    --ref-bg: var(--bg, #F5F5F0);
+    --ref-surface: #FFFFFF;
+    --ref-surface-sunk: var(--bg-alt, #EAEAE4);
+    --ref-border: #E2E8F0;
+    --ref-border-strong: #CBD5E1;
+    --ref-text-heading: #0F172A;
+    --ref-text-body: #334155;
+    --ref-text-muted: #64748B;
+    --ref-text-dim: #94A3B8;
+
+    /* Semantics */
+    --ref-psif-red: #B91C1C;
+    --ref-psif-red-bg: #FEF2F2;
+    --ref-psif-red-border: #FCA5A5;
+
+    --ref-nonpsif-green: #16A34A;
+    --ref-nonpsif-green-bg: #F0FDF4;
+    --ref-nonpsif-green-border: #BBF7D0;
+
+    --ref-iogp-blue: #0284C7;
+    --ref-iogp-blue-bg: #F0F9FF;
+    --ref-iogp-blue-border: #BAE6FD;
+
+    --ref-amber: #D97706;
+    --ref-amber-bg: #FFFBEB;
+    --ref-amber-border: #FDE68A;
+
+    --ref-teal: #0D9488;
+    --ref-teal-bg: #F0FDFA;
+    --ref-teal-border: #99F6E4;
+
+    --ref-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --ref-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    --ref-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+
+    --ref-radius-sm: 6px;
+    --ref-radius-md: 8px;
+    --ref-radius-lg: 12px;
+}
+
+/* ── Container & Shell Utilities ─────────────────────────────────────────── */
+.admin-ref-shell {
+    background-color: var(--ref-bg);
+    min-height: 100vh;
+    padding-bottom: 5rem;
+}
+
+.admin-ref-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 3rem;
+}
+
+@media (min-width: 768px) {
+    .admin-ref-container {
+        padding: 2rem 2.5rem 4rem;
+    }
+}
+
+/* ── Reference Header Hierarchy ─────────────────────────────────────────── */
+.admin-ref-header {
+    margin-bottom: 2rem;
+}
+
+.admin-ref-title {
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    font-weight: 800;
+    color: var(--ref-text-heading);
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin: 0 0 0.35rem 0;
+}
+
+.admin-ref-subtitle {
+    font-size: 0.95rem;
+    color: var(--ref-text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ── Summary Cards with Top Color Borders ────────────────────────────────── */
+.ref-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .ref-summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .ref-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .ref-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ref-summary-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .ref-summary-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 540px) {
+    .ref-summary-grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ref-summary-card {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-top: 4px solid var(--ref-text-heading);
+    border-radius: var(--ref-radius-md);
+    box-shadow: var(--ref-shadow-sm);
+    padding: 1.25rem 1.25rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 145px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ref-summary-card:hover {
+    box-shadow: var(--ref-shadow-md);
+}
+
+.ref-summary-card.border-black { border-top-color: #0F172A; }
+.ref-summary-card.border-blue  { border-top-color: #0284C7; }
+.ref-summary-card.border-red   { border-top-color: #B91C1C; }
+.ref-summary-card.border-green { border-top-color: #16A34A; }
+.ref-summary-card.border-amber { border-top-color: #D97706; }
+.ref-summary-card.border-teal  { border-top-color: #0D9488; }
+.ref-summary-card.border-purple{ border-top-color: #7C3AED; }
+
+.ref-summary-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ref-text-muted);
+}
+
+.ref-summary-val,
+.metric-value {
+    font-size: clamp(1.75rem, 2.2vw, 2.25rem);
+    font-weight: 800;
+    color: var(--ref-text-heading);
+    line-height: 1.1;
+    margin: 0.4rem 0 0.2rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+.ref-summary-desc {
+    font-size: 0.78rem;
+    color: var(--ref-text-muted);
+    line-height: 1.35;
+}
+
+.ref-summary-footer {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--ref-border);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ref-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ── Primary Action Toolbar ──────────────────────────────────────────────── */
+.ref-action-bar {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-lg);
+    padding: 1.25rem 1.75rem;
+    box-shadow: var(--ref-shadow-sm);
+    margin-bottom: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.ref-action-title-group h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ref-text-heading);
+    margin: 0 0 0.25rem 0;
+}
+
+.ref-action-title-group p {
+    font-size: 0.85rem;
+    color: var(--ref-text-muted);
+    margin: 0;
+}
+
+.ref-action-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.ref-btn {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--ref-radius-sm);
+    border: 1px solid var(--ref-border-strong);
+    background: var(--ref-surface);
+    color: var(--ref-text-heading);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.ref-btn:hover {
+    background: var(--ref-surface-sunk);
+    border-color: var(--ref-text-muted);
+    color: var(--ref-text-heading);
+}
+
+.ref-btn-primary {
+    background: #0F172A;
+    border-color: #0F172A;
+    color: #FFFFFF;
+}
+
+.ref-btn-primary:hover {
+    background: #1E293B;
+    border-color: #1E293B;
+    color: #FFFFFF;
+}
+
+.ref-btn-accent {
+    background: #0284C7;
+    border-color: #0284C7;
+    color: #FFFFFF;
+}
+
+.ref-btn-accent:hover {
+    background: #0369A1;
+    border-color: #0369A1;
+    color: #FFFFFF;
+}
+
+/* ── Live Processing Counter Component (from Live Reference) ─────────────── */
+.ref-live-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.9fr) minmax(320px, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 960px) {
+    .ref-live-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ref-card {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-lg);
+    box-shadow: var(--ref-shadow-sm);
+    padding: 1.5rem;
+}
+
+.ref-live-counter-card {
+    padding: 1.75rem 2rem;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ref-live-counter-card.psif {
+    border-left: 5px solid var(--ref-psif-red);
+}
+
+.ref-live-counter-card.nonpsif {
+    border-left: 5px solid var(--ref-nonpsif-green);
+}
+
+.ref-counter-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ref-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.ref-live-counter-card.psif .ref-counter-head { color: var(--ref-psif-red); }
+.ref-live-counter-card.nonpsif .ref-counter-head { color: var(--ref-nonpsif-green); }
+
+.ref-counter-number-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.ref-counter-number {
+    font-size: clamp(2.5rem, 4vw, 3.75rem);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--ref-text-heading);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    transition: color 0.3s ease;
+}
+
+.ref-counter-number.pulse-red { color: var(--ref-psif-red); }
+.ref-counter-number.pulse-green { color: var(--ref-nonpsif-green); }
+
+.ref-counter-pct {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ref-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.ref-progress-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--ref-surface-sunk);
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.ref-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ref-progress-fill.psif { background: var(--ref-psif-red); }
+.ref-progress-fill.nonpsif { background: var(--ref-nonpsif-green); }
+.ref-progress-fill.blue { background: #0284C7; }
+
+/* ── Live Processing Status Cluster ───────────────────────────────────────── */
+.ref-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.ref-status-badge.processing {
+    background: var(--ref-teal-bg);
+    color: var(--ref-teal);
+    border: 1px solid var(--ref-teal-border);
+}
+
+.ref-status-badge.completed {
+    background: var(--ref-nonpsif-green-bg);
+    color: var(--ref-nonpsif-green);
+    border: 1px solid var(--ref-nonpsif-green-border);
+}
+
+.ref-status-badge.failed {
+    background: var(--ref-psif-red-bg);
+    color: var(--ref-psif-red);
+    border: 1px solid var(--ref-psif-red-border);
+}
+
+.ref-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ref-status-dot.pulse {
+    animation: refPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes refPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.5; }
+}
+
+/* ── Barrier Intelligence Portfolio Metric Cards (from React Reference) ─── */
+.ref-portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+    .ref-portfolio-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .ref-portfolio-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ref-portfolio-card {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-md);
+    box-shadow: var(--ref-shadow-sm);
+    padding: 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.ref-portfolio-card:hover {
+    border-color: var(--ref-border-strong);
+    box-shadow: var(--ref-shadow-md);
+    transform: translateY(-2px);
+}
+
+.ref-portfolio-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.ref-portfolio-rule-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ref-text-heading);
+    line-height: 1.25;
+}
+
+.ref-portfolio-pill {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: var(--ref-psif-red-bg);
+    color: var(--ref-psif-red);
+    border: 1px solid var(--ref-psif-red-border);
+}
+
+.ref-portfolio-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--ref-border);
+    border-bottom: 1px solid var(--ref-border);
+    margin-bottom: 0.85rem;
+}
+
+.ref-portfolio-stat-item .k {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ref-text-muted);
+}
+
+.ref-portfolio-stat-item .v {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--ref-text-heading);
+    margin-top: 0.15rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.ref-portfolio-stat-item.psif-item .v {
+    color: var(--ref-psif-red);
+}
+
+.ref-portfolio-linkage-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+/* ── 2x2 Investigation Panel (from Incident Reference) ────────────────────── */
+.ref-investigation-surface {
+    background: var(--ref-surface);
+    border: 1px solid var(--ref-border);
+    border-radius: var(--ref-radius-lg);
+    box-shadow: var(--ref-shadow-sm);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.ref-investigation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 840px) {
+    .ref-investigation-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ref-panel-cell {
+    padding: 1.75rem 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.ref-panel-cell.cell-border-r { border-right: 1px solid var(--ref-border); }
+.ref-panel-cell.cell-border-b { border-bottom: 1px solid var(--ref-border); }
+
+@media (max-width: 840px) {
+    .ref-panel-cell.cell-border-r { border-right: none; }
+    .ref-panel-cell { border-bottom: 1px solid var(--ref-border); }
+}
+
+.ref-cell-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    color: var(--ref-text-muted);
+}
+
+.ref-cell-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--ref-text-heading);
+    line-height: 1.2;
+    margin: 0 0 0.35rem 0;
+}
+
+.ref-cell-title.psif-color { color: var(--ref-psif-red); }
+.ref-cell-title.nonpsif-color { color: var(--ref-nonpsif-green); }
+.ref-cell-title.iogp-color { color: var(--ref-iogp-blue); }
+
+.ref-reasoning-step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.ref-reasoning-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.ref-reasoning-badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--ref-iogp-blue);
+    background: var(--ref-iogp-blue-bg);
+    border: 1px solid var(--ref-iogp-blue-border);
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--ref-radius-sm);
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.ref-reasoning-step-body {
+    flex: 1;
+}
+
+.ref-reasoning-step-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ref-text-heading);
+}
+
+.ref-reasoning-step-desc {
+    font-size: 0.8rem;
+    color: var(--ref-text-body);
+    line-height: 1.4;
+}
+
+/* ── Modals & Drawers ─────────────────────────────────────────────────────── */
+.ref-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1.5rem;
+}
+
+.ref-modal-backdrop.open {
+    display: flex;
+}
+
+.ref-modal-frame {
+    background: var(--ref-surface);
+    border-radius: var(--ref-radius-lg);
+    box-shadow: var(--ref-shadow-lg);
+    width: 900px;
+    max-width: 96vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ref-modal-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--ref-border);
+}
+
+.ref-modal-scroll {
+    padding: 1.5rem 1.75rem;
+    overflow-y: auto;
+    flex: 1;
+    background: var(--ref-bg);
+}
+
+.ref-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 1.75rem;
+    border-top: 1px solid var(--ref-border);
+    background: var(--ref-surface);
+}
