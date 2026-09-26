@@ -17,6 +17,7 @@ Phase 4 note:
 """
 import logging
 import traceback
+from pathlib import Path
 
 from celery import shared_task
 from django.utils import timezone
