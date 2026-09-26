@@ -71,12 +71,21 @@ class FileUploadView(APIView):
         original_name = uploaded_file.name
         _, ext = os.path.splitext(original_name)
 
+        # Read raw content to store in database payload so any distributed Celery worker can access it
+        raw_bytes = uploaded_file.read()
+        uploaded_file.seek(0)
+        try:
+            raw_text = raw_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            raw_text = raw_bytes.decode("latin-1")
+
         # ── Create the Dataset record (generates the UUID before file save) ──
         dataset = Dataset(
             name=original_name,
             uploaded_by=request.user,
             file_type="csv",   # placeholder; corrected after detection below
             status=Dataset.Status.MAPPING_PENDING,
+            quality_summary={"raw_file_content": raw_text},
         )
         dataset.original_file = uploaded_file
         dataset.save()   # file is written to disk here

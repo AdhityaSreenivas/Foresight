@@ -177,7 +177,30 @@ def process_dataset(self, dataset_id: str) -> dict:
         "recovery_state", "processing_started_at"
     ])
 
-    file_path = dataset.original_file.path
+    try:
+        file_path = dataset.original_file.path
+    except Exception:
+        file_path = None
+
+    if not file_path or not Path(file_path).exists():
+        raw_content = (dataset.quality_summary or {}).get("raw_file_content")
+        if raw_content:
+            from django.conf import settings
+            target_path = Path(settings.MEDIA_ROOT) / str(dataset.original_file.name)
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            target_path.write_text(raw_content, encoding="utf-8")
+            file_path = str(target_path)
+            logger.info("Restored dataset file from database payload to %s", file_path)
+        else:
+            logger.error("Dataset file %s does not exist on worker and no raw payload stored.", file_path)
+            now = timezone.now()
+            dataset.status = Dataset.Status.FAILED
+            dataset.error_log = f"Dataset file not found on worker and no raw payload stored: {file_path}"
+            dataset.completed_at = now
+            dataset.processing_completed_at = now
+            dataset.save(update_fields=["status", "error_log", "completed_at", "processing_completed_at"])
+            return {"status": "failed", "message": "File not found"}
+
     file_type = dataset.file_type
     column_mapping = dataset.column_mapping
 
@@ -441,6 +464,7 @@ def process_dataset(self, dataset_id: str) -> dict:
             total_non_psif = final_ds.incidents.filter(prediction__psif_predicted=False).count()
 
             final_ds.quality_summary = {
+                **(final_ds.quality_summary or {}),
                 "total": final_ds.processed_rows,
                 "accepted": total_accepted,
                 "accepted_with_warnings": total_warnings,
