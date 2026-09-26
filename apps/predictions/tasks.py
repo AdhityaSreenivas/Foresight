@@ -3,7 +3,6 @@ import traceback
 from celery import shared_task
 from django.utils import timezone
 from apps.predictions.models import ModelVersion
-from ml_engine.training.trainer import run_training_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +13,7 @@ def retrain_model_task(self, model_version_id, training_source=None, sample_limi
     Celery task to retrain the ML model asynchronously.
     Produces an inactive candidate model in READY status.
     """
+    from ml_engine.training.trainer import run_training_pipeline
     try:
         model_version = ModelVersion.objects.get(id=model_version_id)
     except ModelVersion.DoesNotExist:

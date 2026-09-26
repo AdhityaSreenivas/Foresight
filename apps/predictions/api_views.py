@@ -144,10 +144,10 @@ class PredictView(APIView):
                 pass
         else:
             # Serverless edge runtime (e.g. Vercel) -> Delegate to Celery ML Worker
-            from apps.predictions.tasks import run_incident_prediction_task
             import time
 
             try:
+                from apps.predictions.tasks import run_incident_prediction_task
                 task_res = run_incident_prediction_task.delay(str(incident.id))
             except Exception as exc:
                 logger.exception("Failed to dispatch prediction task to Celery broker.")
