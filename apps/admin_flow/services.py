@@ -396,9 +396,8 @@ def get_admin_flow_iogp_metrics() -> Dict[str, Any]:
     chart_matched = [b["matched_observations"] for b in barriers]
     chart_psif = [b["psif_linked_observations"] for b in barriers]
     total_rule_matches = sum(chart_matched)
-    # Count distinct PSIF-predicted incidents matched to at least one rule (not a per-rule sum,
-    # which overcounts incidents matched to multiple rules).
-    total_psif_linked = Incident.objects.filter(
+    total_psif_linked = sum(chart_psif)
+    distinct_psif_incidents = Incident.objects.filter(
         workspace_id=ADMIN_FLOW_WORKSPACE,
         iogp_rules__isnull=False,
         prediction__psif_predicted=True,

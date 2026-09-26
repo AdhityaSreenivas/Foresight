@@ -532,7 +532,7 @@ BARRIER_EXTRACTION_RULES = [
             r"\b(?:ventilation\s+(?:failed|stopped|absent|insufficient|inadequate|lacking))\b",
             r"\b(?:without\s+(?:adequate\s+)?ventilation)\b",
         ],
-        "default_state": BarrierState.FAILED,
+        "default_state": BarrierState.UNKNOWN,
     },
     {
         "category": BarrierCategory.FIRE_WATCH,
@@ -998,6 +998,8 @@ def extract_incident_barriers(
                 state = BarrierState.PARTIALLY_EFFECTIVE
             elif ctrl_cond in ["effective", "intact"]:
                 state = BarrierState.EFFECTIVE
+            elif ctrl_cond in ["unknown", "indeterminate", "na", "n/a", "none"]:
+                state = BarrierState.UNKNOWN
             else:
                 # Fallback state based on rule definition
                 state = rule.get("default_state", BarrierState.UNKNOWN)
@@ -1027,5 +1029,47 @@ def extract_incident_barriers(
 
         extracted_barriers.append(barrier_obs)
         seen_categories.add(category)
+
+    if not extracted_barriers and ctrl_type and ctrl_type.lower() not in ["", "none", "unknown", "n/a", "na"]:
+        ctrl_cond = str(getattr(incident, "control_condition", "") or "").lower().strip()
+        bypassed = bool(getattr(incident, "control_failed_bypassed", False))
+        if bypassed or ctrl_cond in ["failed", "fail"]:
+            state = BarrierState.FAILED
+        elif ctrl_cond in ["bypassed", "override", "overridden"]:
+            state = BarrierState.BYPASSED
+        elif ctrl_cond in ["absent", "missing"]:
+            state = BarrierState.ABSENT
+        elif ctrl_cond in ["effective", "intact"]:
+            state = BarrierState.EFFECTIVE
+        elif ctrl_cond in ["partially_effective", "partial"]:
+            state = BarrierState.PARTIALLY_EFFECTIVE
+        elif ctrl_cond in ["not_verified", "unverified"]:
+            state = BarrierState.NOT_VERIFIED
+        else:
+            state = None
+
+        if state is not None and state != BarrierState.UNKNOWN:
+            is_effective = state in EFFECTIVE_BARRIER_STATES
+            is_deficient = state in DEFICIENT_BARRIER_STATES
+            extracted_barriers.append(
+                BarrierObservation(
+                    incident_id=inc_id,
+                    workspace=workspace,
+                    barrier_category=ctrl_type,
+                    barrier_name=ctrl_type,
+                    barrier_state=state,
+                    barrier_role=BarrierRole.PREVENTIVE,
+                    is_effective=is_effective,
+                    is_deficient=is_deficient,
+                    source_field="control_type",
+                    evidence_span=narrative or ctrl_type,
+                    hazard=default_hazard,
+                    activity=act_val,
+                    location=loc_val,
+                    iogp_rule=iogp_val,
+                    psif_state=psif_val,
+                    barrier_raw_text=ctrl_type,
+                )
+            )
 
     return extracted_barriers

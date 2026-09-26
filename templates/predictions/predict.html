@@ -183,16 +183,120 @@
             </div>
 
             <div id="result-content" style="display: none;">
-                <div id="binary-badge" class="badge" style="width: 100%; display: block; text-align: center; margin-bottom: 1.5rem; padding: 0.75rem; font-size: 1.1rem; font-weight: 700; border: none; letter-spacing: 0.05em;"></div>
                 
-                <div id="sparse-warning" class="badge" style="display: none; width: 100%; text-align: center; margin-bottom: 1.5rem; padding: 0.75rem; font-size: 0.85rem; border: none; background: #facc15; color: #000; line-height: 1.4;">
-                    <strong>INSUFFICIENT INFORMATION:</strong> Narrative contains sparse or limited information (< 10 words). This score indicates insufficient data, NOT strong evidence that this incident is genuinely non-PSIF.
+                <div id="sparse-warning" class="badge" style="display: none; width: 100%; text-align: center; margin-bottom: 1rem; padding: 0.75rem; font-size: 0.85rem; border: none; background: #facc15; color: #000; line-height: 1.4;">
+                    <strong>INSUFFICIENT INFORMATION:</strong> Narrative contains sparse or limited information (&lt; 10 words). This score indicates insufficient data, NOT strong evidence that this incident is genuinely non-PSIF.
                 </div>
-                
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <div class="prediction-panel-title" style="color: rgba(255,255,255,0.7); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; margin-bottom: 0.25rem;">PSIF Model Score</div>
-                    <div id="res-prob" class="prediction-score tabular-nums" style="font-size: 2.75rem; font-weight: 700;"></div>
-                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.25rem;">(PSIF Model Score — not a calibrated probability)</div>
+
+                <!-- 3-STAGE SAFETY INFORMATION HIERARCHY -->
+                <div style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    
+                    <!-- STAGE 1 — MODEL OUTPUT -->
+                    <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.35); border-left: 4px solid #6366f1; border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #a5b4fc;">
+                                STAGE 1 &mdash; MODEL OUTPUT
+                            </span>
+                            <span class="badge" style="background: rgba(99, 102, 241, 0.25); color: #c7d2fe; font-size: 0.68rem; border: 1px solid rgba(99, 102, 241, 0.4);">
+                                ML CANDIDATE
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <div id="stage1-candidate-label" style="font-size: 1.25rem; font-weight: 800; color: #e0e7ff; letter-spacing: 0.02em;">
+                                    PSIF CANDIDATE
+                                </div>
+                                <div style="font-size: 0.75rem; color: #a5b4fc; margin-top: 2px;">
+                                    Model candidate &mdash; not the final triage decision.
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.68rem; font-weight: 700; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    PSIF MODEL SCORE
+                                </div>
+                                <div id="res-prob" class="prediction-score tabular-nums" style="font-size: 1.4rem; font-weight: 800; font-family: monospace; color: #ffffff;">
+                                    —
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flow Connector -->
+                    <div style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.9rem; line-height: 1; margin: -0.3rem 0;">&darr;</div>
+
+                    <!-- STAGE 2 — EVIDENCE ASSESSMENT -->
+                    <div style="background: rgba(20, 184, 166, 0.08); border: 1px solid rgba(20, 184, 166, 0.3); border-left: 4px solid #14b8a6; border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #5eead4;">
+                                STAGE 2 &mdash; EVIDENCE ASSESSMENT
+                            </span>
+                            <span class="badge" style="background: rgba(20, 184, 166, 0.25); color: #99f6e4; font-size: 0.68rem; border: 1px solid rgba(20, 184, 166, 0.4);">
+                                SAFETY REASONING
+                            </span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 0.5rem;">
+                            Evidence assessment determines whether conditions support an open PSIF pathway.
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; font-size: 0.78rem;">
+                            <div style="background: rgba(0,0,0,0.3); padding: 0.35rem 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Hazard:</span>
+                                <div id="stage2-hazard" style="font-weight: 600; color: #fff;">Stored Pressure</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 0.35rem 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Worker Exposure:</span>
+                                <div id="stage2-exposure" style="font-weight: 600; color: #fff;">Direct</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 0.35rem 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Barrier:</span>
+                                <div id="stage2-barrier" style="font-weight: 600; color: #fff;">Isolation Valve</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 0.35rem 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Barrier State:</span>
+                                <div id="stage2-barrier-state" style="font-weight: 600; color: #86efac;">Effective</div>
+                            </div>
+                            <div style="grid-column: 1 / -1; background: rgba(0,0,0,0.3); padding: 0.35rem 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Consequence Pathway:</span>
+                                <div id="stage2-pathway" style="font-weight: 600; color: #86efac;">Interrupted</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flow Connector -->
+                    <div style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.9rem; line-height: 1; margin: -0.3rem 0;">&darr;</div>
+
+                    <!-- STAGE 3 — FINAL TRIAGE STATUS (Visually Dominant) -->
+                    <div id="stage3-container" style="border-radius: var(--radius-sm); padding: 1.15rem 1rem; text-align: center;
+                                background: rgba(34, 197, 94, 0.15); border: 2px solid rgba(34, 197, 94, 0.5); border-left: 5px solid #22c55e;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                            <span id="stage3-heading-label" style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #86efac;">
+                                STAGE 3 &mdash; FINAL TRIAGE STATUS
+                            </span>
+                            <span class="badge" style="background: rgba(0,0,0,0.3); font-size: 0.68rem; font-weight: 700; color: #fff;">
+                                DECISION
+                            </span>
+                        </div>
+                        <div id="stage3-status" style="font-size: 1.85rem; font-weight: 900; letter-spacing: 0.06em; line-height: 1.1; margin: 0.35rem 0; color: #4ade80;">
+                            NOT PSIF
+                        </div>
+                        <div id="stage3-reason" style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.88); line-height: 1.4; margin-top: 0.4rem; padding: 0.45rem; background: rgba(0,0,0,0.25); border-radius: 4px;">
+                            Evidence indicates the serious-consequence pathway was interrupted by an effective control.
+                        </div>
+                    </div>
+
+                    <!-- Reconciliation Logic Line -->
+                    <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 0.55rem 0.75rem; font-size: 0.74rem; color: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;">
+                        <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                            <strong style="color: #a5b4fc;">MODEL:</strong> <span id="recon-model">PSIF CANDIDATE</span>
+                            <span style="color: rgba(255,255,255,0.3);">+</span>
+                            <strong style="color: #5eead4;">EVIDENCE:</strong> <span id="recon-evidence">Interrupted</span>
+                            <span style="color: rgba(255,255,255,0.3);">&rarr;</span>
+                            <strong style="color: #86efac;">FINAL:</strong> <span id="recon-final" style="font-weight: 700; color: #fff;">NOT PSIF</span>
+                        </div>
+                        <div style="font-size: 0.68rem; color: rgba(255,255,255,0.45); font-style: italic;">
+                            Safety Reasoning Engine
+                        </div>
+                    </div>
+
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
@@ -342,27 +446,89 @@ document.addEventListener('DOMContentLoaded', () => {
                 resEmpty.style.display = 'none';
                 resContent.style.display = 'block';
                 
-                // Binary Badge
-                const binaryBadge = document.getElementById('binary-badge');
-                const isInsufficient = data.analytical_status === 'INSUFFICIENT_EVIDENCE' || data.analytical_status === 'INSUFFICIENT_INFORMATION' || data.is_sparse_input;
-                if (isInsufficient) {
-                    binaryBadge.style.background = '#ca8a04';
-                    binaryBadge.style.color = '#FFFFFF';
-                    binaryBadge.textContent = 'INSUFFICIENT INFORMATION';
-                } else if (data.psif_predicted) {
-                    binaryBadge.style.background = 'var(--risk-critical)';
-                    binaryBadge.style.color = '#FFFFFF';
-                    binaryBadge.textContent = 'PSIF';
-                } else {
-                    binaryBadge.style.background = 'var(--risk-low)';
-                    binaryBadge.style.color = '#FFFFFF';
-                    binaryBadge.textContent = 'NOT PSIF';
-                }
-                
+                // Populate 3-Stage Information Hierarchy
+                const stages = data.triage_stages || {};
+                const mOutput = stages.model_output || {};
+                const eAssess = stages.evidence_assessment || {};
+                const fTriage = stages.final_triage || {};
+
+                const isSparse = data.is_sparse_input || mOutput.is_sparse;
                 const sparseWarning = document.getElementById('sparse-warning');
                 if (sparseWarning) {
-                    sparseWarning.style.display = isInsufficient ? 'block' : 'none';
+                    sparseWarning.style.display = isSparse ? 'block' : 'none';
                 }
+
+                // Stage 1 - Model Output
+                const isCand = mOutput.is_candidate !== undefined ? mOutput.is_candidate : data.psif_predicted;
+                const candLabel = mOutput.candidate_label || (isCand ? 'PSIF CANDIDATE' : 'NOT PSIF CANDIDATE');
+                const rawScore = data.psif_score !== undefined ? data.psif_score : data.probability;
+                const scoreFormatted = mOutput.score_formatted || (rawScore !== undefined ? parseFloat(rawScore).toFixed(3) : '—');
+                
+                const stage1CandEl = document.getElementById('stage1-candidate-label');
+                if (stage1CandEl) stage1CandEl.textContent = candLabel;
+                resProb.textContent = scoreFormatted;
+
+                // Stage 2 - Evidence Assessment
+                const hEl = document.getElementById('stage2-hazard');
+                if (hEl) hEl.textContent = eAssess.hazard || (data.iogp_rules && data.iogp_rules.length ? data.iogp_rules[0].rule : 'Stored Energy / Pressure');
+                const expEl = document.getElementById('stage2-exposure');
+                if (expEl) expEl.textContent = eAssess.exposure || 'Direct Exposure';
+                const barEl = document.getElementById('stage2-barrier');
+                if (barEl) barEl.textContent = eAssess.barrier || 'Safeguard / Barrier';
+                const bStateEl = document.getElementById('stage2-barrier-state');
+                if (bStateEl) {
+                    const bState = eAssess.barrier_state || (data.control_condition === 'effective' ? 'Effective' : (data.control_condition === 'failed' ? 'Failed' : 'Effective'));
+                    bStateEl.textContent = bState;
+                    bStateEl.style.color = (bState === 'Effective' || bState === 'Intact / Held') ? '#86efac' : ((bState === 'Failed' || bState === 'Absent') ? '#fca5a5' : '#fde047');
+                }
+                const pathEl = document.getElementById('stage2-pathway');
+                if (pathEl) {
+                    const pathway = eAssess.consequence_pathway || (fTriage.status === 'PSIF' ? 'Open' : (fTriage.status === 'NOT PSIF' ? 'Interrupted' : 'Uncertain'));
+                    pathEl.textContent = pathway;
+                    pathEl.style.color = pathway === 'Interrupted' ? '#86efac' : (pathway === 'Open' ? '#fca5a5' : '#fde047');
+                }
+
+                // Stage 3 - Final Triage Status
+                const finalStatus = fTriage.status || (isSparse ? 'INSUFFICIENT INFORMATION' : (data.psif_predicted ? 'PSIF' : 'NOT PSIF'));
+                const stage3El = document.getElementById('stage3-container');
+                const statusEl = document.getElementById('stage3-status');
+                const reasonEl = document.getElementById('stage3-reason');
+                const headLabel = document.getElementById('stage3-heading-label');
+
+                if (statusEl) statusEl.textContent = finalStatus;
+                if (reasonEl) {
+                    reasonEl.textContent = fTriage.reason || (finalStatus === 'NOT PSIF' ? 'Evidence indicates the serious-consequence pathway was interrupted by an effective control.' : (finalStatus === 'PSIF' ? 'Evidence confirms an uncontained high-energy hazard pathway with direct worker exposure.' : 'Available evidence is insufficient to establish or exclude a serious-consequence pathway.'));
+                }
+
+                if (stage3El) {
+                    if (finalStatus === 'NOT PSIF') {
+                        stage3El.style.background = 'rgba(34, 197, 94, 0.15)';
+                        stage3El.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+                        stage3El.style.borderLeft = '5px solid #22c55e';
+                        if (statusEl) statusEl.style.color = '#4ade80';
+                        if (headLabel) headLabel.style.color = '#86efac';
+                    } else if (finalStatus === 'PSIF') {
+                        stage3El.style.background = 'rgba(239, 68, 68, 0.18)';
+                        stage3El.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                        stage3El.style.borderLeft = '5px solid #ef4444';
+                        if (statusEl) statusEl.style.color = '#f87171';
+                        if (headLabel) headLabel.style.color = '#fca5a5';
+                    } else {
+                        stage3El.style.background = 'rgba(234, 179, 8, 0.15)';
+                        stage3El.style.borderColor = 'rgba(234, 179, 8, 0.5)';
+                        stage3El.style.borderLeft = '5px solid #eab308';
+                        if (statusEl) statusEl.style.color = '#fde047';
+                        if (headLabel) headLabel.style.color = '#fde047';
+                    }
+                }
+
+                // Reconciliation Line
+                const rModel = document.getElementById('recon-model');
+                const rEvid = document.getElementById('recon-evidence');
+                const rFinal = document.getElementById('recon-final');
+                if (rModel) rModel.textContent = candLabel;
+                if (rEvid) rEvid.textContent = eAssess.consequence_pathway || (finalStatus === 'NOT PSIF' ? 'Interrupted' : (finalStatus === 'PSIF' ? 'Open' : 'Uncertain'));
+                if (rFinal) rFinal.textContent = finalStatus;
                 
                 // Score & Strength
                 const score = data.psif_score !== undefined ? data.psif_score : data.probability;

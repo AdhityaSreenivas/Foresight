@@ -472,13 +472,19 @@
                         {% if incident.prediction %}
                             <div style="margin-bottom: 0.75rem;">
                                 {% if incident.prediction.psif_predicted %}
-                                    <span class="adj-badge adj-badge-psif" style="font-size: 0.85rem;">
-                                        MODEL: PSIF ({{ incident.prediction.psif_probability|default:0|floatformat:4 }})
+                                    <span class="adj-badge" style="font-size: 0.85rem; background: rgba(99, 102, 241, 0.2); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.4); padding: 0.35rem 0.65rem; border-radius: 4px; display: inline-block;">
+                                        MODEL OUTPUT: PSIF CANDIDATE (Score: {{ incident.prediction.psif_probability|default:0|floatformat:3 }})
                                     </span>
+                                    <div style="font-size: 0.72rem; color: #a5b4fc; margin-top: 0.25rem;">
+                                        ML candidate &mdash; not final triage decision.
+                                    </div>
                                 {% else %}
-                                    <span class="adj-badge adj-badge-not-psif" style="font-size: 0.85rem;">
-                                        MODEL: NOT PSIF ({{ incident.prediction.psif_probability|default:0|floatformat:4 }})
+                                    <span class="adj-badge adj-badge-not-psif" style="font-size: 0.85rem; padding: 0.35rem 0.65rem; border-radius: 4px; display: inline-block;">
+                                        MODEL OUTPUT: NOT PSIF (Score: {{ incident.prediction.psif_probability|default:0|floatformat:3 }})
                                     </span>
+                                    <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
+                                        ML assessment &mdash; not final triage decision.
+                                    </div>
                                 {% endif %}
                             </div>
                             <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 0.5rem;">

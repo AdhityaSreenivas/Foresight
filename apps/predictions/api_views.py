@@ -162,6 +162,11 @@ class PredictView(APIView):
                 confidence=res["confidence"]
             )
 
+        # 5.6 Build canonical triage stages
+        from apps.incidents.services.decision_trace import build_analytical_assessment
+        assessment = build_analytical_assessment(incident)
+        triage_stages = assessment.get("triage_stages")
+
         # 6. Return response
         return Response({
             "incident_id": str(incident.id),
@@ -175,7 +180,8 @@ class PredictView(APIView):
             "explanation": prediction_result.explanation_detail,
             "is_sparse_input": prediction_result.is_sparse_input,
             "threshold_used": active_version.metrics.get("selected_threshold", active_version.metrics.get("optimal_threshold", 0.5)),
-            "iogp_rules": iogp_results
+            "iogp_rules": iogp_results,
+            "triage_stages": triage_stages,
         }, status=status.HTTP_200_OK)
 
 

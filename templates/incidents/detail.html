@@ -503,7 +503,7 @@
                             if (compEl && data.unblinded_model_prediction) {
                                 const pred = data.unblinded_model_prediction;
                                 const isAgreed = pred.agreement_with_human;
-                                const modelLabel = pred.psif_predicted ? 'PSIF' : 'NOT PSIF';
+                                const modelLabel = pred.psif_predicted ? 'PSIF CANDIDATE' : 'NOT PSIF CANDIDATE';
                                 
                                 compEl.style.display = 'block';
                                 compEl.style.border = isAgreed ? '1px solid rgba(107,122,79,0.4)' : '1px solid rgba(176,138,46,0.4)';
@@ -515,7 +515,7 @@
                                     </div>
                                     <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-primary); font-weight: 500;">
                                         <span>Human Ground Truth: <strong>${data.decision}</strong></span>
-                                        <span>Model Prediction: <strong>${modelLabel}</strong> (Score: ${pred.psif_score})</span>
+                                        <span>Model Candidate: <strong>${modelLabel}</strong> (PSIF Model Score: ${pred.psif_score})</span>
                                     </div>
                                 `;
                             }
@@ -676,36 +676,126 @@
                     {% else %}
                         {% with assessment=analytical_assessment.psif_model %}
                         
-                        <!-- Primary Binary Decision Banner -->
-                        <div style="text-align: center; padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; 
-                                    background: {% if assessment.status == 'INSUFFICIENT_EVIDENCE' or assessment.status == 'INSUFFICIENT_INFORMATION' or assessment.is_sparse_input %}rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4);{% elif assessment.binary_decision == 'PSIF' %}rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4);{% else %}rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3);{% endif %}">
-                            <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.7); margin-bottom: 0.35rem;">
-                                Primary Candidate Decision
+                        <!-- 3-STAGE SAFETY INFORMATION HIERARCHY -->
+                        {% with stages=analytical_assessment.triage_stages|default:assessment.triage_stages %}
+                        <div style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                            
+                            <!-- STAGE 1 — MODEL OUTPUT -->
+                            <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.35); border-left: 4px solid #6366f1; border-radius: var(--radius-sm); padding: 0.9rem 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                    <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #a5b4fc;">
+                                        STAGE 1 &mdash; MODEL OUTPUT
+                                    </span>
+                                    <span class="badge" style="background: rgba(99, 102, 241, 0.25); color: #c7d2fe; font-size: 0.68rem; border: 1px solid rgba(99, 102, 241, 0.4);">
+                                        ML CANDIDATE
+                                    </span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+                                    <div>
+                                        <div style="font-size: 1.35rem; font-weight: 800; color: #e0e7ff; letter-spacing: 0.02em;">
+                                            {{ stages.model_output.candidate_label|default:"PSIF CANDIDATE" }}
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: #a5b4fc; margin-top: 2px;">
+                                            Model candidate &mdash; not the final triage decision.
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 0.68rem; font-weight: 700; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.05em;">
+                                            PSIF MODEL SCORE
+                                        </div>
+                                        <div style="font-size: 1.4rem; font-weight: 800; font-family: monospace; color: #ffffff;">
+                                            {{ stages.model_output.score_formatted|default:assessment.score|floatformat:3 }}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div style="font-size: 1.8rem; font-weight: 700; color: {% if assessment.status == 'INSUFFICIENT_EVIDENCE' or assessment.status == 'INSUFFICIENT_INFORMATION' or assessment.is_sparse_input %}#fde047{% elif assessment.binary_decision == 'PSIF' %}#fca5a5{% else %}#86efac{% endif %}; letter-spacing: 0.05em;">
-                                {% if assessment.status == 'INSUFFICIENT_EVIDENCE' or assessment.status == 'INSUFFICIENT_INFORMATION' or assessment.is_sparse_input %}
-                                    INSUFFICIENT INFORMATION
-                                {% elif assessment.binary_decision == 'PSIF' %}
-                                    PSIF
-                                {% else %}
-                                    NOT PSIF
-                                {% endif %}
+
+                            <!-- Flow Connector -->
+                            <div style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.9rem; line-height: 1; margin: -0.3rem 0;">&darr;</div>
+
+                            <!-- STAGE 2 — EVIDENCE ASSESSMENT -->
+                            <div style="background: rgba(20, 184, 166, 0.08); border: 1px solid rgba(20, 184, 166, 0.3); border-left: 4px solid #14b8a6; border-radius: var(--radius-sm); padding: 0.9rem 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                    <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #5eead4;">
+                                        STAGE 2 &mdash; EVIDENCE ASSESSMENT
+                                    </span>
+                                    <span class="badge" style="background: rgba(20, 184, 166, 0.25); color: #99f6e4; font-size: 0.68rem; border: 1px solid rgba(20, 184, 166, 0.4);">
+                                        SAFETY REASONING
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 0.6rem;">
+                                    Evidence assessment determines whether conditions support an open PSIF pathway.
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; font-size: 0.78rem;">
+                                    <div style="background: rgba(0,0,0,0.3); padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Hazard:</span>
+                                        <div style="font-weight: 600; color: #fff;">{{ stages.evidence_assessment.hazard|default:"Stored Energy / Pressure" }}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.3); padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Worker Exposure:</span>
+                                        <div style="font-weight: 600; color: #fff;">{{ stages.evidence_assessment.exposure|default:"Direct Exposure" }}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.3); padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Barrier:</span>
+                                        <div style="font-weight: 600; color: #fff;">{{ stages.evidence_assessment.barrier|default:"Physical Barrier" }}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.3); padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Barrier State:</span>
+                                        <div style="font-weight: 600; color: {% if stages.evidence_assessment.barrier_state == 'Effective' or stages.evidence_assessment.barrier_state == 'Intact / Held' %}#86efac{% elif stages.evidence_assessment.barrier_state == 'Failed' or stages.evidence_assessment.barrier_state == 'Absent' %}#fca5a5{% else %}#fde047{% endif %};">
+                                            {{ stages.evidence_assessment.barrier_state|default:"Unspecified" }}
+                                        </div>
+                                    </div>
+                                    <div style="grid-column: 1 / -1; background: rgba(0,0,0,0.3); padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <span style="color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase;">Consequence Pathway:</span>
+                                        <div style="font-weight: 600; color: {% if stages.evidence_assessment.consequence_pathway == 'Interrupted' %}#86efac{% elif stages.evidence_assessment.consequence_pathway == 'Open' %}#fca5a5{% else %}#fde047{% endif %};">
+                                            {{ stages.evidence_assessment.consequence_pathway|default:"Controlled" }}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div style="display: flex; justify-content: center; gap: 0.75rem; margin-top: 0.75rem; align-items: center; flex-wrap: wrap;">
-                                <span class="badge" style="background: rgba(0,0,0,0.3); color: #fff; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.15);">
-                                    PSIF Model Score: {{ assessment.score|floatformat:2 }}
-                                </span>
-                                <span class="badge" style="background: rgba(255,255,255,0.1); color: #fff; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.15);">
-                                    Evidence Strength: <strong>{{ assessment.evidence_strength|default:"Moderate" }}</strong>
-                                </span>
-                                <span class="badge" style="background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); font-size: 0.75rem;">
-                                    Threshold: {{ assessment.threshold }}
-                                </span>
+
+                            <!-- Flow Connector -->
+                            <div style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.9rem; line-height: 1; margin: -0.3rem 0;">&darr;</div>
+
+                            <!-- STAGE 3 — FINAL TRIAGE STATUS (Visually Dominant) -->
+                            <div style="border-radius: var(--radius-sm); padding: 1.25rem 1rem; text-align: center;
+                                        background: {% if stages.final_triage.status == 'NOT PSIF' %}rgba(34, 197, 94, 0.15); border: 2px solid rgba(34, 197, 94, 0.5); border-left: 5px solid #22c55e;{% elif stages.final_triage.status == 'PSIF' %}rgba(239, 68, 68, 0.18); border: 2px solid rgba(239, 68, 68, 0.5); border-left: 5px solid #ef4444;{% else %}rgba(234, 179, 8, 0.15); border: 2px solid rgba(234, 179, 8, 0.5); border-left: 5px solid #eab308;{% endif %}">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                    <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; 
+                                                 color: {% if stages.final_triage.status == 'NOT PSIF' %}#86efac{% elif stages.final_triage.status == 'PSIF' %}#fca5a5{% else %}#fde047{% endif %};">
+                                        STAGE 3 &mdash; FINAL TRIAGE STATUS
+                                    </span>
+                                    <span class="badge" style="background: rgba(0,0,0,0.3); font-size: 0.68rem; font-weight: 700;
+                                                 color: {% if stages.final_triage.status == 'NOT PSIF' %}#86efac{% elif stages.final_triage.status == 'PSIF' %}#fca5a5{% else %}#fde047{% endif %};">
+                                        DECISION
+                                    </span>
+                                </div>
+                                <div style="font-size: 2rem; font-weight: 900; letter-spacing: 0.06em; line-height: 1.1; margin: 0.4rem 0;
+                                            color: {% if stages.final_triage.status == 'NOT PSIF' %}#4ade80{% elif stages.final_triage.status == 'PSIF' %}#f87171{% else %}#fde047{% endif %};">
+                                    {{ stages.final_triage.status|default:assessment.binary_decision }}
+                                </div>
+                                <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.88); line-height: 1.4; margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.25); border-radius: 4px;">
+                                    {{ stages.final_triage.reason|default:assessment.reason }}
+                                </div>
                             </div>
-                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem;">
-                                Note: Model score represents precursor pattern strength, not a calibrated injury probability.
+
+                            <!-- Reconciliation Logic Line -->
+                            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 0.6rem 0.8rem; font-size: 0.75rem; color: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;">
+                                <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                                    <strong style="color: #a5b4fc;">MODEL:</strong> <span>{{ stages.model_output.candidate_label|default:"CANDIDATE" }}</span>
+                                    <span style="color: rgba(255,255,255,0.3);">+</span>
+                                    <strong style="color: #5eead4;">EVIDENCE:</strong> <span>{{ stages.evidence_assessment.consequence_pathway }}</span>
+                                    <span style="color: rgba(255,255,255,0.3);">&rarr;</span>
+                                    <strong style="color: {% if stages.final_triage.status == 'NOT PSIF' %}#86efac{% elif stages.final_triage.status == 'PSIF' %}#fca5a5{% else %}#fde047{% endif %};">FINAL:</strong>
+                                    <span style="font-weight: 700; color: #fff;">{{ stages.final_triage.status }}</span>
+                                </div>
+                                <div style="font-size: 0.68rem; color: rgba(255,255,255,0.45); font-style: italic;">
+                                    Reconciled via Safety Reasoning Engine
+                                </div>
                             </div>
+
                         </div>
+                        {% endwith %}
 
                         <!-- SIF Precursor Evidence Chain Widget -->
                         <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem;">

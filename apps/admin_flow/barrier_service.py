@@ -282,12 +282,14 @@ class BarrierPatternService:
 
             portfolio_cards.append({
                 "barrier_category": cat,
+                "barrier_domain": g["name"] or cat,
                 "barrier_name": g["name"],
                 "barrier_role": g["role"],
                 "associated_incidents_count": total_assoc,
                 "share_of_dataset": share_pct,
                 "effective_count": eff_count,
                 "deficient_count": def_count,
+                "deficiency_linked_count": def_count,
                 "psif_linked_count": psif_count,
                 "psif_rate": psif_rate,
                 "dominant_state": dominant_state,
@@ -365,7 +367,7 @@ class BarrierPatternService:
             "top_deficient_barrier": top_deficient_barrier,
             "state_distribution": dict(state_distribution),
             "portfolio_cards": portfolio_cards,
-            "barriers": portfolio_cards,  # Alias for backward compatibility
+            "barriers": [c for c in portfolio_cards if c["deficient_count"] > 0],  # Failure / deficiency barrier signals for backward compatibility
             "chart_labels": chart_labels,
             "chart_total_counts": chart_total_counts,
             "chart_effective_counts": chart_effective_counts,

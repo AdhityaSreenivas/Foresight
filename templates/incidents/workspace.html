@@ -686,10 +686,10 @@
         <div class="ws-tripartite-banner" id="tripartite-decision-banner">
             <!-- 1. Model Decision -->
             <div class="ws-decision-cell" id="cell-model-decision">
-                <div class="ws-decision-label">Statistical Model Assessment</div>
+                <div class="ws-decision-label">STAGE 1 &mdash; MODEL OUTPUT</div>
                 <div class="ws-decision-val">
                     {% if workspace.prediction.is_psif %}
-                        <span style="color: var(--ws-psif-critical);">PSIF</span>
+                        <span style="color: #a5b4fc;">PSIF CANDIDATE</span>
                     {% elif workspace.prediction.binary_decision == "NOT_PSIF" %}
                         <span style="color: var(--ws-psif-safe);">NOT PSIF</span>
                     {% else %}
@@ -697,6 +697,7 @@
                     {% endif %}
                 </div>
                 <div class="ws-decision-subtext">
+                    <span style="color: #c7d2fe; display: block; margin-bottom: 2px;">ML candidate &mdash; not final triage decision.</span>
                     PSIF Model Score: <strong>{{ workspace.prediction.score|default:"N/A" }}</strong>
                     (Threshold: {{ workspace.prediction.threshold }})
                     · {{ workspace.prediction.evidence_strength }} Evidence
@@ -705,7 +706,7 @@
 
             <!-- 2. Rule Decision -->
             <div class="ws-decision-cell" id="cell-rule-decision">
-                <div class="ws-decision-label">Rule-Grounded Engineering (EEI Capacity)</div>
+                <div class="ws-decision-label">STAGE 2 &amp; 3 &mdash; SAFETY EVIDENCE &amp; TRIAGE</div>
                 <div class="ws-decision-val">
                     {% if workspace.header.rule_decision == "PSIF" %}
                         <span style="color: var(--ws-psif-critical);">PSIF (Pathway Open)</span>
@@ -716,7 +717,7 @@
                     {% endif %}
                 </div>
                 <div class="ws-decision-subtext">
-                    State: {{ workspace.reasoning.internal_reasoning_state|default:"UNKNOWN" }}
+                    Evidence State: {{ workspace.reasoning.internal_reasoning_state|default:"UNKNOWN" }}
                     · psif_kb_v1.0
                 </div>
             </div>

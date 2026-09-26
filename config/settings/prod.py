@@ -7,16 +7,22 @@ from .base import *  # noqa: F401, F403
 
 DEBUG = False
 
-# In production, ALLOWED_HOSTS must be set explicitly via .env
-# ALLOWED_HOSTS = env("ALLOWED_HOSTS")  # already loaded by base.py
+# Reverse proxy / edge router SSL termination header (Vercel, AWS ALB, Cloudflare, etc.)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Security headers
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=True)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=True)
 
-# Use SMTP in production — configure via env vars
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# HTTP Strict Transport Security (HSTS)
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=31536000)  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
+SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=True)
+
+# Email configuration
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+

@@ -85,8 +85,8 @@
                     <th>Date</th>
                     <th>Location</th>
                     <th>Activity</th>
-                    <th>PSIF</th>
-                    <th>Model Score</th>
+                    <th>ML Candidate</th>
+                    <th>PSIF Model Score</th>
                     <th>IOGP</th>
                     <th>Evidence State</th>
                     <th>Action</th>
@@ -106,8 +106,8 @@
                     <td>
                         {% if incident.prediction %}
                             {% if incident.prediction.psif_predicted %}
-                            <span class="badge" style="background: var(--risk-critical); color: #fff; font-weight: 700;">
-                                PSIF
+                            <span class="badge" style="background: #4F46E5; color: #fff; font-weight: 700;">
+                                PSIF CANDIDATE
                             </span>
                             {% else %}
                             <span class="badge" style="background: var(--risk-low); color: #fff;">

@@ -490,11 +490,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 } else if (inc.prediction.psif_predicted) {
                     predHtml = `
-                        <div style="color: var(--risk-critical); font-weight: 700; font-size: 0.85rem; margin-bottom:0.25rem; display:flex; align-items:center; gap:0.25rem;">
+                        <div style="color: #6366f1; font-weight: 700; font-size: 0.85rem; margin-bottom:0.25rem; display:flex; align-items:center; gap:0.25rem;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            PSIF
+                            PSIF CANDIDATE
                         </div>
-                        <span class="prediction-pill" title="PSIF Model Score — not a calibrated probability" style="background: rgba(156, 59, 50, 0.1); color: var(--risk-critical); font-weight: 600;">${scoreFmt}</span>
+                        <span class="prediction-pill" title="PSIF Model Score — not a calibrated probability" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600;">${scoreFmt}</span>
                     `;
                 } else {
                     predHtml = `

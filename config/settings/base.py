@@ -22,7 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # ── Environment loading ───────────────────────────────────────────────────────
 env = environ.Env(
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1", "testserver"]),
+    CSRF_TRUSTED_ORIGINS=(list, []),
+    DATABASE_URL=(str, ""),
     MAX_UPLOAD_SIZE_MB=(int, 250),
     BERT_BATCH_SIZE=(int, 32),
     PSIF_THRESHOLD=(float, 0.5),
@@ -35,9 +37,12 @@ env = environ.Env(
 environ.Env.read_env(BASE_DIR / ".env", overwrite=True)
 
 # ── Core ──────────────────────────────────────────────────────────────────────
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env("SECRET_KEY", default="django-insecure-production-must-override-this-secret-key-properly")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+if "testserver" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("testserver")
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
 # ── Application definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -91,21 +96,29 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # ── Database — PostgreSQL 15 + psycopg 3 ─────────────────────────────────────
-DATABASES = {
-    "default": {
-        "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": env("DB_HOST", default="localhost"),
-        "PORT": env("DB_PORT", default="5432"),
-        "OPTIONS": {
-            # psycopg 3 client-side cursor factory (improves streaming perf)
-            "cursor_factory": None,
-        },
-        "CONN_MAX_AGE": 60,  # persistent connections for 60s
+database_url = env("DATABASE_URL", default="")
+if database_url:
+    DATABASES = {
+        "default": env.db("DATABASE_URL")
     }
-}
+    DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
+    DATABASES["default"].setdefault("OPTIONS", {})["cursor_factory"] = None
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
+            "NAME": env("DB_NAME", default="psif_platform"),
+            "USER": env("DB_USER", default="sas"),
+            "PASSWORD": env("DB_PASSWORD", default=""),
+            "HOST": env("DB_HOST", default="localhost"),
+            "PORT": env("DB_PORT", default="5432"),
+            "OPTIONS": {
+                # psycopg 3 client-side cursor factory (improves streaming perf)
+                "cursor_factory": None,
+            },
+            "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=60),
+        }
+    }
 
 # ── Custom User model ─────────────────────────────────────────────────────────
 AUTH_USER_MODEL = "accounts.User"

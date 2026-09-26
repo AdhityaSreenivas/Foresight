@@ -165,21 +165,35 @@ class AdminFlowUploadDatasetView(AdminFlowRequiredMixin, TemplateView):
             dataset.column_mapping = mapping
             dataset.save(update_fields=["total_rows", "column_mapping", "status"])
 
-            # Launch processing in a background thread so we can redirect to the
-            # live counter page immediately — the whole point of the live display.
-            import threading
+            # Launch processing: in test environment, run synchronously so test database transactions
+            # are accessible; in production, dispatch via Celery background worker (or fallback thread in dev).
+            from django.conf import settings
+            is_testing = getattr(settings, "IS_TESTING", False) or "test" in sys.argv or "pytest" in sys.modules
 
-            def _run_processing(ds_id):
+            if is_testing:
+                from apps.datasets.tasks import process_dataset
+                process_dataset(str(dataset.id))
+                invalidate_admin_flow_pattern_cache()
+                invalidate_admin_flow_barrier_portfolio_cache()
+            else:
                 try:
                     from apps.datasets.tasks import process_dataset
-                    process_dataset(ds_id)
-                    invalidate_admin_flow_pattern_cache()
-                    invalidate_admin_flow_barrier_portfolio_cache()
-                except Exception as bg_err:
-                    logger.exception("Admin Flow background process_dataset error: %s", bg_err)
+                    process_dataset.delay(str(dataset.id))
+                except Exception as broker_err:
+                    logger.warning("Celery broker dispatch failed in Admin Flow (%s) — using fallback thread", broker_err)
+                    import threading
 
-            t = threading.Thread(target=_run_processing, args=(str(dataset.id),), daemon=True)
-            t.start()
+                    def _run_processing(ds_id):
+                        try:
+                            from apps.datasets.tasks import process_dataset
+                            process_dataset(ds_id)
+                            invalidate_admin_flow_pattern_cache()
+                            invalidate_admin_flow_barrier_portfolio_cache()
+                        except Exception as bg_err:
+                            logger.exception("Admin Flow background process_dataset error: %s", bg_err)
+
+                    t = threading.Thread(target=_run_processing, args=(str(dataset.id),), daemon=True)
+                    t.start()
 
         except Exception as e:
             logger.exception("Admin Flow dataset upload error: %s", e)
@@ -831,26 +845,52 @@ class AdminFlowIncidentReasoningView(AdminFlowRequiredMixin, DetailView):
 
         assessment = build_analytical_assessment(inc)
         psif_reasoning = assessment.get("psif_reasoning") or {}
+        triage_stages = assessment.get("triage_stages") or {}
 
         hazard_val = (
-            psif_reasoning.get("hazard_type")
+            triage_stages.get("evidence_assessment", {}).get("hazard")
+            or psif_reasoning.get("hazard_type")
             or evidence_summary.get("hazard_type")
             or inc.energy_type
             or ("High Energy Present" if inc.high_energy_present == "yes" else "Mechanical / Pressurized / Elevation energy evaluated")
         )
         exposure_val = (
-            psif_reasoning.get("exposure_state")
+            triage_stages.get("evidence_assessment", {}).get("exposure")
+            or psif_reasoning.get("exposure_state")
             or evidence_summary.get("exposure_state")
             or ("Personnel Exposed" if inc.worker_exposed == "yes" else "Personnel in line of fire / active work zone")
         )
         control_val = (
-            psif_reasoning.get("control_assessment")
+            triage_stages.get("evidence_assessment", {}).get("barrier")
+            or psif_reasoning.get("control_assessment")
             or evidence_summary.get("control_state")
             or inc.control_condition
             or inc.control_type
             or "Barrier condition evaluated against canonical controls"
         )
-        if pred and pred.psif_predicted:
+        
+        # Use final triage reason to prevent contradiction between model candidate and final safety decision
+        final_status = triage_stages.get("final_triage", {}).get("status")
+        if final_status == "NOT PSIF":
+            rationale_val = (
+                triage_stages.get("final_triage", {}).get("reason")
+                or psif_reasoning.get("why_not_psif")
+                or constrained.get("why_not_psif")
+                or "Fatal sequence interrupted; safeguards held or insufficient energy for life-altering harm."
+            )
+        elif final_status == "PSIF":
+            rationale_val = (
+                triage_stages.get("final_triage", {}).get("reason")
+                or psif_reasoning.get("why_psif")
+                or constrained.get("why_psif")
+                or "Identified as high-energy precursor with compromised direct control safeguards."
+            )
+        elif final_status == "INSUFFICIENT INFORMATION":
+            rationale_val = (
+                triage_stages.get("final_triage", {}).get("reason")
+                or "Available evidence is insufficient to establish or exclude a serious-consequence pathway."
+            )
+        elif pred and pred.psif_predicted:
             rationale_val = (
                 psif_reasoning.get("why_psif")
                 or constrained.get("why_psif")
@@ -873,6 +913,7 @@ class AdminFlowIncidentReasoningView(AdminFlowRequiredMixin, DetailView):
             })
 
         context["analytical_assessment"] = assessment
+        context["triage_stages"] = triage_stages
         context["evidence_break"] = analyze_evidence_break(inc)
         context["all_incidents"] = get_admin_flow_incidents().order_by("-incident_date", "-created_at")[:20]
         context["is_admin_flow"] = True

@@ -571,5 +571,246 @@ def build_analytical_assessment(incident: Incident) -> Dict[str, Any]:
     except Exception:
         assessment["psif_reasoning"] = None
 
+    # Canonical 3-Stage Information Hierarchy
+    # Stage 1: MODEL OUTPUT
+    # Stage 2: EVIDENCE ASSESSMENT
+    # Stage 3: FINAL TRIAGE STATUS
+    stages_payload = build_triage_stages(
+        incident=incident,
+        prediction=prediction,
+        psif_reasoning=assessment.get("psif_reasoning"),
+        dq_record=dq_record,
+    )
+    assessment["triage_stages"] = stages_payload
+    if "psif_model" in assessment and isinstance(assessment["psif_model"], dict):
+        assessment["psif_model"]["triage_stages"] = stages_payload
+
     return assessment
+
+
+def build_triage_stages(
+    incident: Incident,
+    prediction=None,
+    psif_reasoning=None,
+    dq_record=None,
+) -> Dict[str, Any]:
+    """
+    Canonical 3-stage information hierarchy builder:
+    1. MODEL OUTPUT: ML model candidate & score before evidence-based safety reconciliation.
+    2. EVIDENCE ASSESSMENT: Physical controls, exposure, hazard energy, and pathway state.
+    3. FINAL TRIAGE STATUS: Authoritative system decision (PSIF, NOT PSIF, or INSUFFICIENT INFORMATION).
+    """
+    # ── 1. STAGE 1: MODEL OUTPUT ───────────────────────────────────────────────
+    is_sparse = bool(
+        getattr(prediction, "is_sparse_input", False)
+        or (dq_record and dq_record.status == IncidentDataQuality.Status.CRITICAL)
+    )
+    is_model_candidate = bool(prediction and prediction.psif_predicted and not is_sparse)
+
+    if is_sparse:
+        candidate_label = "INSUFFICIENT INFORMATION"
+    elif is_model_candidate:
+        candidate_label = "PSIF CANDIDATE"
+    elif prediction:
+        candidate_label = "NOT PSIF"
+    else:
+        candidate_label = "PENDING INFERENCE"
+
+    score_val = prediction.psif_probability if prediction and prediction.psif_probability is not None else None
+    score_formatted = f"{score_val:.3f}" if score_val is not None else "—"
+
+    model_output = {
+        "heading": "MODEL OUTPUT",
+        "candidate_label": candidate_label,
+        "is_candidate": is_model_candidate,
+        "score": score_val,
+        "score_formatted": score_formatted,
+        "score_label": "PSIF MODEL SCORE",
+        "explanation": "ML model assessment before evidence-based safety reconciliation.",
+        "candidate_note": "Model candidate — not the final triage decision.",
+        "evidence_strength": getattr(prediction, "evidence_strength", "Moderate") if prediction else "Moderate",
+        "is_sparse": is_sparse,
+    }
+
+    # ── 2. STAGE 2: EVIDENCE ASSESSMENT ────────────────────────────────────────
+    ev_summary = psif_reasoning.get("evidence_summary", {}) if isinstance(psif_reasoning, dict) else {}
+    recon = psif_reasoning.get("reconciliation") if isinstance(psif_reasoning, dict) else None
+
+    # Hazard
+    raw_hazard = ev_summary.get("hazard_type") or incident.energy_type
+    if raw_hazard:
+        hazard_fmt = str(raw_hazard).replace("_", " ").title()
+        if "pressure" in str(raw_hazard).lower():
+            hazard_fmt = "Stored Pressure / Pneumatic"
+        elif "gravity" in str(raw_hazard).lower() or "fall" in str(raw_hazard).lower():
+            hazard_fmt = "Fall from Elevation / Gravity"
+        elif "motion" in str(raw_hazard).lower() or "kinetic" in str(raw_hazard).lower():
+            hazard_fmt = "Mobile Equipment / Kinetic"
+        elif "electrical" in str(raw_hazard).lower():
+            hazard_fmt = "Electrical / High Voltage"
+    elif incident.high_energy_present == "yes":
+        hazard_fmt = "High Energy Present"
+    else:
+        hazard_fmt = "Low / Contained Energy Evaluated"
+
+    # Worker Exposure
+    raw_exposure = ev_summary.get("exposure_state")
+    if raw_exposure:
+        raw_exp_str = str(raw_exposure).replace("_", " ").title()
+        if "Direct" in raw_exp_str:
+            exposure_fmt = "Direct Exposure (Line of Fire)"
+        elif "Interrupted" in raw_exp_str or "Segregated" in raw_exp_str or "Isolated" in raw_exp_str:
+            exposure_fmt = "Segregated / Safeguarded Zone"
+        else:
+            exposure_fmt = raw_exp_str
+    elif incident.worker_exposed == "yes":
+        exposure_fmt = "Direct Exposure"
+    else:
+        exposure_fmt = "No Direct Line of Fire Identified"
+
+    # Barrier / Control
+    raw_control = ev_summary.get("control_type") or incident.control_type
+    if raw_control:
+        barrier_fmt = str(raw_control).replace("_", " ").title()
+    elif incident.control_condition:
+        barrier_fmt = f"Primary Safeguard ({incident.control_condition.title()})"
+    else:
+        barrier_fmt = "Physical / Engineering Barrier"
+
+    # Barrier State
+    raw_state = ev_summary.get("control_state") or incident.control_condition
+    if raw_state:
+        state_str = str(raw_state).upper()
+        if "EFFECTIVE" in state_str or "HELD" in state_str or "INTACT" in state_str:
+            barrier_state_fmt = "Effective / Intact"
+        elif "FAILED" in state_str or "COMPROMISED" in state_str or "BYPASS" in state_str:
+            barrier_state_fmt = "Compromised / Failed"
+        elif "ABSENT" in state_str or "MISSING" in state_str:
+            barrier_state_fmt = "Absent / Not Deployed"
+        else:
+            barrier_state_fmt = str(raw_state).replace("_", " ").title()
+    else:
+        barrier_state_fmt = "Evaluated via Safety Rules"
+
+    # Consequence Pathway
+    raw_pathway = ev_summary.get("consequence_pathway")
+    if raw_pathway:
+        p_str = str(raw_pathway).upper()
+        if "INTERRUPTED" in p_str or "CONTAINED" in p_str:
+            pathway_fmt = "Interrupted"
+        elif "OPEN" in p_str or "ESCALAT" in p_str:
+            pathway_fmt = "Open"
+        elif "UNKNOWN" in p_str or "INSUFFICIENT" in p_str:
+            pathway_fmt = "Undetermined"
+        else:
+            pathway_fmt = str(raw_pathway).replace("_", " ").title()
+    else:
+        pathway_fmt = "Under Verification"
+
+    evidence_assessment = {
+        "heading": "EVIDENCE ASSESSMENT",
+        "hazard": hazard_fmt,
+        "exposure": exposure_fmt,
+        "barrier": barrier_fmt,
+        "barrier_state": barrier_state_fmt,
+        "consequence_pathway": pathway_fmt,
+        "explanation": "Evidence assessment determines whether the conditions support an open PSIF pathway.",
+        "why_psif": psif_reasoning.get("WHY_PSIF") if isinstance(psif_reasoning, dict) else "",
+        "why_not_psif": psif_reasoning.get("WHY_NOT_PSIF") if isinstance(psif_reasoning, dict) else "",
+        "what_is_missing": psif_reasoning.get("WHAT_IS_MISSING") if isinstance(psif_reasoning, dict) else "",
+    }
+
+    # ── 3. STAGE 3: FINAL TRIAGE STATUS ────────────────────────────────────────
+    raw_final = None
+    if isinstance(psif_reasoning, dict) and psif_reasoning.get("final_policy_decision"):
+        raw_final = psif_reasoning.get("final_policy_decision")
+    elif is_sparse:
+        raw_final = "INSUFFICIENT INFORMATION"
+    elif prediction:
+        raw_final = "PSIF" if prediction.psif_predicted else "NOT PSIF"
+
+    # Canonical normalization to ONE and ONLY ONE of: PSIF, NOT PSIF, INSUFFICIENT INFORMATION
+    if raw_final:
+        norm = str(raw_final).replace("_", " ").strip().upper()
+        if "INSUFFICIENT" in norm:
+            final_status = "INSUFFICIENT INFORMATION"
+        elif norm == "PSIF":
+            final_status = "PSIF"
+        else:
+            final_status = "NOT PSIF"
+    else:
+        final_status = "PENDING INFERENCE"
+
+    # Rationale derivation
+    recon_rationale = (
+        getattr(recon, "policy_rationale", None)
+        or (recon.get("policy_rationale") if isinstance(recon, dict) else None)
+    )
+
+    if final_status == "NOT PSIF":
+        if pathway_fmt != "Interrupted" and raw_pathway is None:
+            evidence_assessment["consequence_pathway"] = "Interrupted"
+        final_reason = (
+            evidence_assessment["why_not_psif"]
+            or recon_rationale
+            or "Evidence indicates the serious-consequence pathway was interrupted by an effective control or contained energy."
+        )
+    elif final_status == "PSIF":
+        if pathway_fmt != "Open" and raw_pathway is None:
+            evidence_assessment["consequence_pathway"] = "Open"
+        final_reason = (
+            evidence_assessment["why_psif"]
+            or recon_rationale
+            or "Evidence confirms an open serious-consequence pathway with direct personnel exposure and compromised barriers."
+        )
+    elif final_status == "INSUFFICIENT INFORMATION":
+        if pathway_fmt == "Under Verification":
+            evidence_assessment["consequence_pathway"] = "Undetermined"
+        final_reason = (
+            evidence_assessment["what_is_missing"]
+            or "Available evidence is insufficient to establish or exclude a serious-consequence pathway."
+        )
+    else:
+        final_reason = "Awaiting model prediction and evidence evaluation."
+
+    # Reconciliation Progression Summary
+    if is_model_candidate and final_status == "NOT PSIF":
+        reconciliation_summary = (
+            "ML model flagged precursor patterns, but evidence assessment verified that the serious-consequence "
+            "pathway was interrupted by effective safeguards."
+        )
+    elif is_model_candidate and final_status == "PSIF":
+        reconciliation_summary = (
+            "ML model flagged precursor signals, and safety evidence confirmed an active, unmitigated "
+            "high-energy exposure pathway."
+        )
+    elif not is_model_candidate and final_status == "PSIF":
+        reconciliation_summary = (
+            "Rule-grounded safety engineering identified an open serious-consequence pathway despite lower "
+            "statistical model scoring."
+        )
+    elif final_status == "INSUFFICIENT INFORMATION":
+        reconciliation_summary = (
+            "Narrative information is insufficient to confirm or exclude a serious-consequence pathway. "
+            "Quarantined from binary classification."
+        )
+    else:
+        reconciliation_summary = (
+            "Model score and evidence assessment concordantly indicate a routine / controlled observation."
+        )
+
+    final_triage = {
+        "heading": "FINAL TRIAGE STATUS",
+        "status": final_status,
+        "reason": final_reason,
+        "reconciliation_summary": reconciliation_summary,
+        "internal_state": getattr(recon, "internal_reasoning_state", None) or (psif_reasoning.get("internal_reasoning_state") if isinstance(psif_reasoning, dict) else None),
+    }
+
+    return {
+        "model_output": model_output,
+        "evidence_assessment": evidence_assessment,
+        "final_triage": final_triage,
+    }
+
 

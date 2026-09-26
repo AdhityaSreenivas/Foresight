@@ -233,6 +233,7 @@ ACTIVITY_ALIASES: Dict[str, str] = {
     "bus transit": ActivityCategory.VEHICLE_PARKING_OPERATIONS,
     "crew transport": ActivityCategory.VEHICLE_PARKING_OPERATIONS,
     "light vehicle transit": ActivityCategory.VEHICLE_PARKING_OPERATIONS,
+    "forklift transit": ActivityCategory.VEHICLE_PARKING_OPERATIONS,
 
     # Equipment Maintenance
     "equipment maintenance": ActivityCategory.EQUIPMENT_MAINTENANCE,
@@ -251,6 +252,8 @@ ACTIVITY_ALIASES: Dict[str, str] = {
     "greasing": ActivityCategory.EQUIPMENT_MAINTENANCE,
     "seal replacement": ActivityCategory.EQUIPMENT_MAINTENANCE,
     "machining": ActivityCategory.EQUIPMENT_MAINTENANCE,
+    "pump alignment": ActivityCategory.EQUIPMENT_MAINTENANCE,
+    "machine setup": ActivityCategory.EQUIPMENT_MAINTENANCE,
 
     # Lifting Operation / Crane Work
     "lifting operation": ActivityCategory.LIFTING_OPERATION,
@@ -276,6 +279,7 @@ ACTIVITY_ALIASES: Dict[str, str] = {
     "hot work in classified area": ActivityCategory.WELDING_HOT_WORK,
     "pipe welding": ActivityCategory.WELDING_HOT_WORK,
     "structural welding": ActivityCategory.WELDING_HOT_WORK,
+    "grinding pipe welds": ActivityCategory.WELDING_HOT_WORK,
 
     # Work at Height / Scaffolding
     "work at height": ActivityCategory.ELEVATED_WORK_SCAFFOLDING,
@@ -294,6 +298,7 @@ ACTIVITY_ALIASES: Dict[str, str] = {
     "internal vessel work": ActivityCategory.INTERNAL_VESSEL_WORK,
     "internal vessel cleaning & inspection": ActivityCategory.INTERNAL_VESSEL_WORK,
     "confined space vessel entry": ActivityCategory.INTERNAL_VESSEL_WORK,
+    "confined space entry": ActivityCategory.INTERNAL_VESSEL_WORK,
     "vessel descaling": ActivityCategory.INTERNAL_VESSEL_WORK,
     "tank entry work": ActivityCategory.INTERNAL_VESSEL_WORK,
     "tank internal cleaning": ActivityCategory.INTERNAL_VESSEL_WORK,
@@ -367,6 +372,7 @@ ACTIVITY_ALIASES: Dict[str, str] = {
     "chemical handling & transfer": ActivityCategory.CHEMICAL_HANDLING,
     "chemical dosing": ActivityCategory.CHEMICAL_HANDLING,
     "acid transfer": ActivityCategory.CHEMICAL_HANDLING,
+    "chemical transfer": ActivityCategory.CHEMICAL_HANDLING,
     "inhibitor replenishment": ActivityCategory.CHEMICAL_HANDLING,
     "biocide injection": ActivityCategory.CHEMICAL_HANDLING,
 
@@ -393,7 +399,7 @@ TEMPORAL_SEQUENCE_PATTERNS = [
 ACTIVE_NARRATIVE_ACTIVITY_PATTERNS = [
     r"\bwhile\s+(?:performing|conducting|carrying out|undertaking|doing)\s+([^,.;]+?)(?:\s+(?:in|at|on|near|with|during|inside)\b|,|\.|$)",
     r"\bwhile\s+([a-z]+ing(?:\s+[a-z]+)?)\b(?:\s+(?:equipment|line|tank|floor|pipe|vessel|spool|bay|area)\b)?",
-    r"\bduring\s+([a-z\s/]+?(?:maintenance|repair|servicing|cleaning|inspection|overhaul|painting|excavation|digging|testing|sampling|lifting|welding|movement|transit|drilling|operation|handling|transfer|alignment|loading|unloading|delivery|survey|installation|commissioning))\b",
+    r"\bduring\s+([a-z\s/]+?(?:maintenance|repair|servicing|cleaning|inspection|overhaul|painting|excavation|digging|testing|sampling|lifting|welding|movement|transit|drilling|operation|handling|transfer|alignment|loading|unloading|delivery|survey|installation|commissioning|pulling|setup|entry|welds))\b",
     r"\bengaged in\s+([^,.;]+?)(?:\s+(?:in|at|on|near|with|during|inside)\b|,|\.|$)",
     r"\bworking on\s+([^,.;]+?)(?:\s+(?:in|at|near|with|during|inside|reported|experienced|resulted|sustained|suffered|when)\b|,|\.|$)",
     r"\bworkers?\s+(?:were|was)\s+([a-z]+ing(?:\s+[a-z]+)?)\b",
@@ -568,10 +574,10 @@ def normalize_admin_flow_activity(
     if is_contaminated:
         if raw_lower in ["driving"]:
             cat = ActivityCategory.VEHICLE_PARKING_OPERATIONS
-            return (ACTIVITY_DISPLAY_NAMES[cat], cat, "operational_remapping_driving")
+            return ("Driving", cat, "operational_remapping_driving")
         if raw_lower in ["safe mechanical lifting"]:
             cat = ActivityCategory.LIFTING_OPERATION
-            return (ACTIVITY_DISPLAY_NAMES[cat], cat, "operational_remapping_lifting")
+            return ("Safe Mechanical Lifting", cat, "operational_remapping_lifting")
         if raw_lower in ["energy isolation"]:
             cat = ActivityCategory.EQUIPMENT_MAINTENANCE
             return (ACTIVITY_DISPLAY_NAMES[cat], cat, "operational_remapping_maintenance")

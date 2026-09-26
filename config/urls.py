@@ -7,8 +7,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from django.shortcuts import redirect
+from config.views import health_check
 
 urlpatterns = [
+    # Health check for load balancers / deployment monitoring
+    path("health/", health_check, name="health_check"),
+
     # Django admin (superuser management)
     path("admin/", admin.site.urls),
 

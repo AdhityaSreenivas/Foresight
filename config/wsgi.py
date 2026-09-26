@@ -9,6 +9,10 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE",
+    "config.settings.prod" if os.environ.get("VERCEL") or os.environ.get("ENV") == "production" else "config.settings.dev",
+)
 
 application = get_wsgi_application()
+app = application
