@@ -235,6 +235,23 @@ if "rediss://" in CELERY_BROKER_URL:
 if "rediss://" in CELERY_RESULT_BACKEND:
     CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": None}
 
+# Upstash / remote Redis keepalive and resilience options
+CELERY_REDIS_SOCKET_KEEPALIVE = True
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "socket_keepalive": True,
+    "retry_on_timeout": True,
+    "socket_timeout": 30.0,
+    "socket_connect_timeout": 30.0,
+    "health_check_interval": 25,
+}
+CELERY_REDIS_BACKEND_TRANSPORT_OPTIONS = {
+    "socket_keepalive": True,
+    "retry_on_timeout": True,
+    "socket_timeout": 30.0,
+    "socket_connect_timeout": 30.0,
+    "health_check_interval": 25,
+}
+
 # Reliability & crash resilience
 CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_REJECT_ON_WORKER_LOST = True

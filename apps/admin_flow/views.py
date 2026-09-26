@@ -135,6 +135,14 @@ class AdminFlowUploadDatasetView(AdminFlowRequiredMixin, TemplateView):
         else:
             file_type = "csv"
 
+        # Read raw content to store in database payload so any distributed Celery worker can access it
+        raw_bytes = uploaded_file.read()
+        uploaded_file.seek(0)
+        try:
+            raw_text = raw_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            raw_text = raw_bytes.decode("latin-1")
+
         # Create dataset scoped strictly to Admin Flow
         dataset = Dataset.objects.create(
             name=uploaded_file.name,
@@ -144,6 +152,7 @@ class AdminFlowUploadDatasetView(AdminFlowRequiredMixin, TemplateView):
             workspace_id=ADMIN_FLOW_WORKSPACE,
             is_synthetic=True,
             status=Dataset.Status.PROCESSING,
+            quality_summary={"raw_file_content": raw_text},
         )
 
         try:
@@ -711,8 +720,6 @@ class AdminFlowLiveProcessingView(AdminFlowRequiredMixin, TemplateView):
         # Compute real counts for this dataset or overall Admin Flow
         if dataset:
             incidents_qs = get_admin_flow_incidents().filter(dataset=dataset)
-            if not incidents_qs.exists():
-                incidents_qs = get_admin_flow_incidents()
         else:
             incidents_qs = get_admin_flow_incidents()
 
@@ -740,19 +747,19 @@ class AdminFlowLiveProcessingView(AdminFlowRequiredMixin, TemplateView):
                 "id": str(d.id),
                 "name": d.name,
                 "status": d.status,
-                "total_rows": d.total_rows or d_inc.count(),
-                "processed_rows": d.processed_rows or d_inc.count(),
+                "total_rows": d.total_rows if d.total_rows is not None else d_inc.count(),
+                "processed_rows": d.processed_rows if d.processed_rows is not None else d_inc.count(),
                 "psif_count": d_psif,
                 "non_psif_count": d_non,
                 "created_at": d.created_at,
             })
 
-        total_rows = dataset.total_rows if dataset and dataset.total_rows else total_incidents
-        processed_rows = dataset.processed_rows if dataset and dataset.processed_rows else total_incidents
-        status_val = dataset.status if dataset else ("completed" if total_incidents > 0 else "queued")
+        total_rows = dataset.total_rows if (dataset and dataset.total_rows is not None) else total_incidents
+        processed_rows = dataset.processed_rows if (dataset and dataset.processed_rows is not None) else total_incidents
+        status_val = dataset.status if dataset else ("completed" if total_rows > 0 else "queued")
 
         context["active_dataset"] = dataset
-        context["has_data"] = (total_incidents > 0 or dataset is not None)
+        context["has_data"] = (total_rows > 0 or dataset is not None)
         context["live_stats"] = {
             "dataset_id": str(dataset.id) if dataset else None,
             "dataset_name": dataset.name if dataset else "Batch Processing Run",
@@ -765,7 +772,7 @@ class AdminFlowLiveProcessingView(AdminFlowRequiredMixin, TemplateView):
             "accepted_count": accepted_count,
             "warning_count": warning_count,
             "rejected_count": rejected_count,
-            "progress_pct": round((processed_rows / total_rows * 100) if total_rows > 0 else 100, 1),
+            "progress_pct": round((processed_rows / total_rows * 100) if total_rows > 0 else 0.0, 1),
         }
         context["recent_datasets"] = dataset_list
         context["is_admin_flow"] = True
@@ -791,8 +798,6 @@ class AdminFlowLiveStatusAPI(APIView):
 
         if dataset:
             incidents_qs = get_admin_flow_incidents().filter(dataset=dataset)
-            if not incidents_qs.exists():
-                incidents_qs = get_admin_flow_incidents()
         else:
             incidents_qs = get_admin_flow_incidents()
 
@@ -801,9 +806,9 @@ class AdminFlowLiveStatusAPI(APIView):
         non_psif_cnt = incidents_qs.filter(prediction__psif_predicted=False, prediction__is_sparse_input=False).count()
         sparse_cnt = incidents_qs.filter(prediction__is_sparse_input=True).count()
 
-        tot_rows = dataset.total_rows if dataset and dataset.total_rows else total_inc
-        proc_rows = dataset.processed_rows if dataset and dataset.processed_rows else total_inc
-        stat = dataset.status if dataset else ("completed" if total_inc > 0 else "queued")
+        tot_rows = dataset.total_rows if (dataset and dataset.total_rows is not None) else total_inc
+        proc_rows = dataset.processed_rows if (dataset and dataset.processed_rows is not None) else total_inc
+        stat = dataset.status if dataset else ("completed" if tot_rows > 0 else "queued")
 
         return Response({
             "dataset_id": str(dataset.id) if dataset else None,
@@ -814,7 +819,7 @@ class AdminFlowLiveStatusAPI(APIView):
             "psif_count": psif_cnt,
             "non_psif_count": non_psif_cnt,
             "insufficient_count": sparse_cnt,
-            "progress_pct": round((proc_rows / tot_rows * 100) if tot_rows > 0 else 100, 1),
+            "progress_pct": round((proc_rows / tot_rows * 100) if tot_rows > 0 else 0.0, 1),
             "is_complete": stat in ["completed", "failed", "canceled"],
         }, status=status.HTTP_200_OK)
 
