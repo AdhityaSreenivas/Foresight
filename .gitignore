@@ -41,3 +41,8 @@ htmlcov/
 Thumbs.db
 chrome-headless-shell/
 hint/SIF-Precursor-Console.zip
+.neon
+node_modules/
+.env.*
+!.env.example
+.agents/
