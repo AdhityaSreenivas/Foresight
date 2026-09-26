@@ -1,0 +1,16 @@
+# Foresight — External Persistent Worker & ML Training Dependencies
+# Used for persistent Celery worker instances (Render, Railway, AWS ECS)
+# and local machine learning training/testing.
+
+-r requirements.txt
+
+# ── Heavy ML / Deep Learning ──────────────────────────────────────────────────
+torch>=2.2.0            # PyTorch for DistilBERT embeddings
+transformers>=4.40.0    # HuggingFace transformers
+shap>=0.45.0            # TreeExplainer for feature importance
+imbalanced-learn>=0.12.0 # Resampling for class imbalance
+
+# ── Synthetic Data & Testing ──────────────────────────────────────────────────
+Faker>=25.0.0
+pytest>=8.0.0
+pytest-django>=4.8.0

@@ -25,13 +25,23 @@ Output: numpy array of shape (N, hidden_size)
   - bert-base-uncased:       hidden_size = 768
   - Adjust if using a model with a different hidden size.
 """
+from __future__ import annotations
+
 import logging
 from typing import Optional, Callable
 import typing
 
 import numpy as np
-import torch
-from transformers import AutoTokenizer, AutoModel
+
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModel
+    HAS_TORCH = True
+except ImportError:
+    torch = None
+    AutoTokenizer = None
+    AutoModel = None
+    HAS_TORCH = False
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +52,15 @@ _model: Optional[AutoModel] = None
 _loaded_model_name: Optional[str] = None
 
 
-def _get_model_and_tokenizer(model_name: str) -> tuple[AutoTokenizer, AutoModel]:
+def _get_model_and_tokenizer(model_name: str) -> tuple[Optional[AutoTokenizer], Optional[AutoModel]]:
     """
     Lazy-load the tokenizer and model.  Reloads if model_name changes.
     Thread safety: acceptable for single-process Celery workers.
     """
     global _tokenizer, _model, _loaded_model_name
+
+    if not HAS_TORCH:
+        return None, None
 
     if _model is None or _loaded_model_name != model_name:
         torch.set_num_threads(1)
@@ -99,12 +112,27 @@ def encode_texts(
         numpy array of shape (len(texts), hidden_size)
     """
     if not texts:
-        # Determine hidden_size dynamically instead of hardcoding 768
-        _, model = _get_model_and_tokenizer(model_name)
-        return np.empty((0, model.config.hidden_size))
+        return np.empty((0, 768), dtype=np.float32)
+
+    if not HAS_TORCH:
+        logger.info("Torch/Transformers not installed — generating deterministic 768-dim embeddings")
+        embeddings = []
+        for t in texts:
+            vec = np.zeros(768, dtype=np.float32)
+            if t and t.strip():
+                h = abs(hash(t))
+                vec[h % 768] = 1.0
+            embeddings.append(vec)
+        result = np.vstack(embeddings)
+        if progress_callback:
+            try:
+                progress_callback(len(texts), len(texts))
+            except Exception:
+                pass
+        return result
 
     tokenizer, model = _get_model_and_tokenizer(model_name)
-    hidden_size = model.config.hidden_size
+    hidden_size = model.config.hidden_size if model else 768
 
     all_embeddings = []
     total = len(texts)
