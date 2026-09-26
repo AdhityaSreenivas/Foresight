@@ -10,7 +10,10 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE",
+        "config.settings.prod" if os.environ.get("VERCEL") or os.environ.get("ENV") == "production" else "config.settings.dev",
+    )
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

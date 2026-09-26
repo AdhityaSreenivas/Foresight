@@ -19,6 +19,20 @@ if sys.platform == "darwin":
 # BASE_DIR points to the project root (where manage.py lives)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# Read the .env file at project root (silently ignored if absent in prod)
+environ.Env.read_env(BASE_DIR / ".env", overwrite=True)
+
+# ── Clean up and normalize environment variables ──────────────────────────────
+# Strip surrounding quotes and pop empty strings so defaults take effect
+# rather than throwing ValueError on type conversion.
+for _k, _v in list(os.environ.items()):
+    _stripped = _v.strip()
+    if (_stripped.startswith('"') and _stripped.endswith('"')) or (_stripped.startswith("'") and _stripped.endswith("'")):
+        _stripped = _stripped[1:-1].strip()
+        os.environ[_k] = _stripped
+    if _stripped == "":
+        os.environ.pop(_k, None)
+
 # ── Environment loading ───────────────────────────────────────────────────────
 env = environ.Env(
     DEBUG=(bool, False),
@@ -33,16 +47,24 @@ env = environ.Env(
     RISK_HIGH_MAX=(float, 0.75),
 )
 
-# Read the .env file at project root (silently ignored if absent in prod)
-environ.Env.read_env(BASE_DIR / ".env", overwrite=True)
-
 # ── Core ──────────────────────────────────────────────────────────────────────
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-production-must-override-this-secret-key-properly")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
-if "testserver" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append("testserver")
+for host in [".vercel.app", ".now.sh", "localhost", "127.0.0.1", "testserver"]:
+    if host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
+if os.environ.get("VERCEL_URL") and os.environ["VERCEL_URL"] not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(os.environ["VERCEL_URL"])
+
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
+for origin in ["https://*.vercel.app", "https://*.now.sh", "http://localhost:8000", "http://127.0.0.1:8000"]:
+    if origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(origin)
+if os.environ.get("VERCEL_URL"):
+    v_origin = f"https://{os.environ['VERCEL_URL']}"
+    if v_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(v_origin)
 
 # ── Application definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -96,13 +118,15 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # ── Database — PostgreSQL 15 + psycopg 3 ─────────────────────────────────────
-database_url = env("DATABASE_URL", default="")
+database_url = env("DATABASE_URL", default="").strip("\"' ")
 if database_url:
     DATABASES = {
-        "default": env.db("DATABASE_URL")
+        "default": env.db_url_config(database_url)
     }
     DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
     DATABASES["default"].setdefault("OPTIONS", {})["cursor_factory"] = None
+    if not DATABASES["default"].get("ENGINE"):
+        DATABASES["default"]["ENGINE"] = "django.db.backends.postgresql"
 else:
     DATABASES = {
         "default": {
@@ -187,7 +211,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=bool(os.environ.get("VERCEL")))
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
@@ -198,16 +222,18 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_POOL = env("CELERY_WORKER_POOL", default="solo" if sys.platform == "darwin" else "prefork")
 CELERY_WORKER_CONCURRENCY = env.int("CELERY_WORKER_CONCURRENCY", default=1 if sys.platform == "darwin" else 4)
 
-DEV_SYNC_FALLBACK = env.bool("DEV_SYNC_FALLBACK", default=False)
+DEV_SYNC_FALLBACK = env.bool("DEV_SYNC_FALLBACK", default=bool(os.environ.get("VERCEL")))
 
 # ── Cache Configuration (Redis) ──────────────────────────────────────────────
 IS_TESTING = "test" in sys.argv or "pytest" in sys.modules or env.bool("TESTING", default=False)
+redis_url = env("REDIS_URL", default="")
+is_local_redis = (not redis_url) or ("127.0.0.1" in redis_url) or ("localhost" in redis_url)
 
-if IS_TESTING:
+if IS_TESTING or (os.environ.get("VERCEL") and is_local_redis):
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "test-cache",
+            "LOCATION": "default-cache",
             "TIMEOUT": 300,
         }
     }

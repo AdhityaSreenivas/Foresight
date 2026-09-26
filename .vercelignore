@@ -1,0 +1,26 @@
+# Vercel Deployment Ignore
+venv/
+.venv/
+env/
+hint/
+scratch/
+media/
+chrome-headless-shell/
+live-counting-and-iogp-dashboard/
+tests/
+.git/
+.pytest_cache/
+*.sqlite3
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.coverage
+htmlcov/
+.DS_Store
+.neon/
+node_modules/
+.vscode/
+.idea/
+.agents/
