@@ -26,6 +26,8 @@ inference):
 
 The feature list is recorded in ModelVersion.metrics["feature_list"].
 """
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Optional
@@ -33,9 +35,18 @@ from typing import Optional
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
+
+try:
+    from sklearn.preprocessing import OneHotEncoder, StandardScaler
+    from sklearn.impute import SimpleImputer
+    from sklearn.pipeline import Pipeline
+    HAS_SKLEARN = True
+except ImportError:
+    OneHotEncoder = None
+    StandardScaler = None
+    SimpleImputer = None
+    Pipeline = None
+    HAS_SKLEARN = False
 
 logger = logging.getLogger(__name__)
 

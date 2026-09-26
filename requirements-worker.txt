@@ -4,7 +4,9 @@
 
 -r requirements.txt
 
-# ── Heavy ML / Deep Learning ──────────────────────────────────────────────────
+# ── Heavy ML & Explainability (Worker Only) ───────────────────────────────────
+xgboost>=2.0.0
+scikit-learn>=1.4.0
 torch>=2.2.0            # PyTorch for DistilBERT embeddings
 transformers>=4.40.0    # HuggingFace transformers
 shap>=0.45.0            # TreeExplainer for feature importance

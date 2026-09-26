@@ -29,13 +29,21 @@ SHAP explainability:
       factor for human display.
     - Top 5 factors (by |contribution|) are stored in PredictionResult.top_factors.
 """
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 import numpy as np
-import xgboost as xgb
+
+try:
+    import xgboost as xgb
+    HAS_XGBOOST = True
+except ImportError:
+    xgb = None
+    HAS_XGBOOST = False
 
 from .bert_encoder import encode_texts
 from .feature_encoder import StructuredFeatureEncoder
@@ -72,8 +80,10 @@ class PredictionOutput:
         return "PSIF" if self.psif_predicted else "NOT PSIF"
 
 
-def _load_xgboost_model(artifact_path: str | Path) -> xgb.Booster:
+def _load_xgboost_model(artifact_path: str | Path) -> Optional[xgb.Booster]:
     """Load an XGBoost model from its native .json format."""
+    if not HAS_XGBOOST or xgb is None:
+        return None
     booster = xgb.Booster()
     booster.load_model(str(artifact_path))
     return booster
@@ -447,10 +457,15 @@ def reset_active_predictor() -> None:
 def get_active_predictor(force_reload: bool = False) -> Optional[PSIFPredictor]:
     """
     Return the module-level PSIFPredictor loaded from the active ModelVersion.
-    Returns None if no active model version exists yet.
+    Returns None if no active model version exists yet or if running in a serverless
+    environment without XGBoost installed.
     Reloads if the active model version has changed or force_reload is True.
     """
     global _active_predictor, _active_model_id
+
+    if not HAS_XGBOOST:
+        logger.info("XGBoost not installed in serverless environment — predictions served by external worker")
+        return None
 
     from django.conf import settings
     from apps.predictions.models import ModelVersion  # avoid circular import at module load
