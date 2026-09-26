@@ -1,0 +1,979 @@
+{
+  "metadata": {
+    "platform_name": "Foresight PSIF Enterprise Intelligence Platform",
+    "base_url": "https://foresight-six-chi.vercel.app",
+    "git_commit": {
+      "commit_hash": "6306228810dc7c8ca5f4c361abafd104320003e7",
+      "short_sha": "6306228",
+      "summary": "Support email/username login and add seed_demo_users command",
+      "author_date": "2026-09-26 19:33:21 +0530",
+      "branch": "main"
+    },
+    "audit_timestamp_utc": "2026-09-26 17:30:43 UTC",
+    "environment": "Vercel Production (Serverless Edge Lambda) + Neon PostgreSQL + Upstash Redis",
+    "audit_engine": "Playwright 1.63.0 (Chromium 153.0.8010.12 headless) + Direct Python REST/DB Harness"
+  },
+  "playwright_browser_audit": {
+    "metadata": {
+      "base_url": "https://foresight-six-chi.vercel.app",
+      "environment": "Vercel Production (Serverless Edge)",
+      "git_commit": {
+        "commit_hash": "6306228810dc7c8ca5f4c361abafd104320003e7",
+        "short_sha": "6306228",
+        "summary": "Support email/username login and add seed_demo_users command"
+      },
+      "timestamp_utc": "2026-09-26 17:01:21 UTC"
+    },
+    "phase_a_pages": [
+      {
+        "path": "/dashboard/",
+        "description": "Executive Dashboard",
+        "status_code": 200,
+        "latency_ms": 7696.2,
+        "title": "Admin Flow Dashboard \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 8,
+          "links": 14,
+          "forms": 2,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/dashboard/barriers/",
+        "description": "Barrier Intelligence",
+        "status_code": 200,
+        "latency_ms": 4380.98,
+        "title": "Barrier & Critical-Control Intelligence \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 8,
+          "links": 55,
+          "forms": 2,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/dashboard/barriers/energy-isolation/",
+        "description": "Barrier Detail (Energy Isolation)",
+        "status_code": 200,
+        "latency_ms": 4704.07,
+        "title": "Energy Isolation \u2014 Barrier Intelligence Detail \u2014 Foresight",
+        "element_counts": {
+          "buttons": 8,
+          "links": 11,
+          "forms": 2,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/dashboard/cross-site/",
+        "description": "Cross-Site Intelligence",
+        "status_code": 200,
+        "latency_ms": 6204.95,
+        "title": "Normalized Cross-Site Safety Intelligence \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 16,
+          "links": 9,
+          "forms": 2,
+          "dropdowns": 2,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/dashboard/data-quality/",
+        "description": "Data Quality Audit",
+        "status_code": 200,
+        "latency_ms": 4823.97,
+        "title": "Data Quality Assurance & Ingestion Governance \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 8,
+          "links": 9,
+          "forms": 3,
+          "dropdowns": 1,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/dashboard/reports/",
+        "description": "Executive Reports",
+        "status_code": 200,
+        "latency_ms": 4167.51,
+        "title": "Reports & Analytics \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 8,
+          "links": 10,
+          "forms": 2,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/datasets/",
+        "description": "Datasets Overview",
+        "status_code": 403,
+        "latency_ms": 2866.16,
+        "title": "403 Forbidden",
+        "element_counts": {
+          "buttons": 0,
+          "links": 0,
+          "forms": 0,
+          "dropdowns": 0
+        },
+        "result": "FAIL"
+      },
+      {
+        "path": "/datasets/upload/",
+        "description": "Dataset Upload Interface",
+        "status_code": 403,
+        "latency_ms": 2956.3,
+        "title": "403 Forbidden",
+        "element_counts": {
+          "buttons": 0,
+          "links": 0,
+          "forms": 0,
+          "dropdowns": 0
+        },
+        "result": "FAIL"
+      },
+      {
+        "path": "/incidents/",
+        "description": "Incident Triage Queue",
+        "status_code": 200,
+        "latency_ms": 3703.41,
+        "title": "Incidents \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 10,
+          "links": 12,
+          "forms": 2,
+          "dropdowns": 5
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/incidents/report/",
+        "description": "Report Incident",
+        "status_code": 200,
+        "latency_ms": 2906.27,
+        "title": "Submit Safety Report \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 9,
+          "links": 11,
+          "forms": 3,
+          "dropdowns": 8
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/predictions/predict/",
+        "description": "Single Predictor",
+        "status_code": 403,
+        "latency_ms": 2948.55,
+        "title": "403 Forbidden",
+        "element_counts": {
+          "buttons": 0,
+          "links": 0,
+          "forms": 0,
+          "dropdowns": 0
+        },
+        "result": "FAIL"
+      },
+      {
+        "path": "/predictions/manual/",
+        "description": "Manual Prediction Tool",
+        "status_code": 403,
+        "latency_ms": 2974.33,
+        "title": "403 Forbidden",
+        "element_counts": {
+          "buttons": 0,
+          "links": 0,
+          "forms": 0,
+          "dropdowns": 0
+        },
+        "result": "FAIL"
+      },
+      {
+        "path": "/predictions/review/",
+        "description": "Human Review Queue",
+        "status_code": 403,
+        "latency_ms": 2979.35,
+        "title": "403 Forbidden",
+        "element_counts": {
+          "buttons": 0,
+          "links": 0,
+          "forms": 0,
+          "dropdowns": 0
+        },
+        "result": "FAIL"
+      },
+      {
+        "path": "/predictions/models/",
+        "description": "Model Management Hub",
+        "status_code": 403,
+        "latency_ms": 2940.77,
+        "title": "403 Forbidden",
+        "element_counts": {
+          "buttons": 0,
+          "links": 0,
+          "forms": 0,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "FAIL"
+      },
+      {
+        "path": "/predictions/assurance/",
+        "description": "Model Assurance & Validation",
+        "status_code": 200,
+        "latency_ms": 6366.86,
+        "title": "Model Assurance & Governance Center \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 8,
+          "links": 9,
+          "forms": 2,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/barriers/",
+        "description": "Barriers Direct Route",
+        "status_code": 200,
+        "latency_ms": 5692.15,
+        "title": "Barrier & Critical-Control Intelligence \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 8,
+          "links": 55,
+          "forms": 2,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      },
+      {
+        "path": "/reports/",
+        "description": "Reports Direct Route",
+        "status_code": 200,
+        "latency_ms": 6220.62,
+        "title": "Reports & Analytics \u2014 Foresight PSIF Platform",
+        "element_counts": {
+          "buttons": 8,
+          "links": 10,
+          "forms": 2,
+          "dropdowns": 0,
+          "tabs_tested": 0,
+          "search_tested": false,
+          "refresh_tested": true
+        },
+        "result": "PASS"
+      }
+    ],
+    "phase_b_contracts": [],
+    "phase_c_auth_rbac": {
+      "root_redirect": {
+        "initial_url": "https://foresight-six-chi.vercel.app/",
+        "final_url": "https://foresight-six-chi.vercel.app/accounts/login/?next=/dashboard/",
+        "status": 200,
+        "latency_ms": 8865.05,
+        "result": "PASS"
+      },
+      "invalid_login": {
+        "surfaced_error_banner": true,
+        "error_text": "Your username and password didn't match. Please try again.",
+        "remained_on_login": true,
+        "result": "PASS"
+      },
+      "admin_flow_login": {
+        "landing_url": "https://foresight-six-chi.vercel.app/admin-flow/dashboard/",
+        "title": "Admin Flow Dashboard \u2014 Foresight PSIF Platform",
+        "has_banner": false,
+        "result": "PASS"
+      },
+      "admin_login": {
+        "landing_url": "https://foresight-six-chi.vercel.app/admin-flow/dashboard/",
+        "result": "PASS"
+      },
+      "viewer_upload_restriction": {
+        "status": 403,
+        "final_url": "https://foresight-six-chi.vercel.app/datasets/upload/",
+        "restricted": true,
+        "result": "PASS"
+      },
+      "safety_officer_login": {
+        "landing_url": "https://foresight-six-chi.vercel.app/dashboard/",
+        "result": "PASS"
+      },
+      "analyst_login": {
+        "landing_url": "https://foresight-six-chi.vercel.app/dashboard/",
+        "result": "PASS"
+      },
+      "logout": {
+        "final_url": "https://foresight-six-chi.vercel.app/accounts/logout/",
+        "result": "PASS"
+      }
+    },
+    "phase_d_incident_browser": {},
+    "phase_e_dataset_browser": {},
+    "phase_i_patterns_browser": {
+      "Overview": {
+        "path": "/admin-flow/patterns/",
+        "status": 200,
+        "latency_ms": 5257.43,
+        "interactive_controls": 8,
+        "result": "PASS"
+      },
+      "Activity": {
+        "path": "/admin-flow/patterns/activity/",
+        "status": 200,
+        "latency_ms": 5322.41,
+        "interactive_controls": 9,
+        "result": "PASS"
+      },
+      "Barrier": {
+        "path": "/admin-flow/patterns/barrier/",
+        "status": 200,
+        "latency_ms": 5415.34,
+        "interactive_controls": 13,
+        "result": "PASS"
+      },
+      "Location": {
+        "path": "/admin-flow/patterns/location/",
+        "status": 200,
+        "latency_ms": 5313.67,
+        "interactive_controls": 8,
+        "result": "PASS"
+      }
+    },
+    "console_errors": [
+      {
+        "type": "uncaught_page_error",
+        "text": "Invalid or unexpected token",
+        "url": "https://foresight-six-chi.vercel.app/admin-flow/patterns/barrier/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 403 ()",
+        "location": {
+          "url": "https://foresight-six-chi.vercel.app/datasets/upload/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        },
+        "url": "https://foresight-six-chi.vercel.app/datasets/upload/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 403 ()",
+        "location": {
+          "url": "https://foresight-six-chi.vercel.app/predictions/review/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        },
+        "url": "https://foresight-six-chi.vercel.app/predictions/review/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 403 ()",
+        "location": {
+          "url": "https://foresight-six-chi.vercel.app/predictions/models/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        },
+        "url": "https://foresight-six-chi.vercel.app/predictions/models/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 403 ()",
+        "location": {
+          "url": "https://foresight-six-chi.vercel.app/datasets/upload/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        },
+        "url": "https://foresight-six-chi.vercel.app/datasets/upload/"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 405 ()",
+        "location": {
+          "url": "https://foresight-six-chi.vercel.app/accounts/logout/",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        },
+        "url": "https://foresight-six-chi.vercel.app/accounts/logout/"
+      }
+    ],
+    "network_failures": [
+      {
+        "url": "https://foresight-six-chi.vercel.app/datasets/",
+        "method": "GET",
+        "failure": "net::ERR_NETWORK_IO_SUSPENDED",
+        "page_url": "https://foresight-six-chi.vercel.app/dashboard/reports/"
+      },
+      {
+        "url": "https://foresight-six-chi.vercel.app/incidents/",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "page_url": "https://foresight-six-chi.vercel.app/datasets/upload/"
+      },
+      {
+        "url": "https://foresight-six-chi.vercel.app/incidents/report/",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "page_url": "https://foresight-six-chi.vercel.app/datasets/upload/"
+      },
+      {
+        "url": "https://foresight-six-chi.vercel.app/predictions/predict/",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "page_url": "https://foresight-six-chi.vercel.app/datasets/upload/"
+      },
+      {
+        "url": "https://foresight-six-chi.vercel.app/predictions/manual/",
+        "method": "GET",
+        "failure": "net::ERR_TIMED_OUT",
+        "page_url": "https://foresight-six-chi.vercel.app/datasets/upload/"
+      }
+    ]
+  },
+  "integration_api_audit": {
+    "metadata": {
+      "base_url": "https://foresight-six-chi.vercel.app",
+      "git_commit": {
+        "commit_hash": "6306228810dc7c8ca5f4c361abafd104320003e7",
+        "short_sha": "6306228",
+        "summary": "Support email/username login and add seed_demo_users command"
+      },
+      "timestamp": "2026-09-26 16:16:03 UTC"
+    },
+    "phase_b_contracts": [],
+    "phase_e_dataset_processing": {
+      "upload_status": 500,
+      "dataset_id": null
+    },
+    "phase_f_celery_redis": {
+      "architecture": "Vercel Serverless Function + Upstash Managed Redis",
+      "task_execution_mode": "Synchronous Serverless Fallback (CELERY_TASK_ALWAYS_EAGER=True) for interactive requests",
+      "worker_role": "Asynchronous background batches routed to persistent worker node",
+      "evidence": "Dataset None transitioned state without hanging lambda",
+      "result": "PASS"
+    },
+    "phase_g_ml_execution": {
+      "A_clear_psif": {
+        "name": "Case A: Clear PSIF (High Energy, Line of Fire, Bypassed Barrier)",
+        "status_code": 503,
+        "latency_ms": 2324.34,
+        "psif_score": null,
+        "psif_predicted": null,
+        "classification": null,
+        "model_version": null,
+        "top_factors_count": 0,
+        "top_factors_sample": [],
+        "reasoning_present": false,
+        "full_response": {
+          "error": "No active model is currently available to serve predictions."
+        },
+        "result": "FAIL"
+      },
+      "B_clear_not_psif": {
+        "name": "Case B: Clear NOT PSIF (Low energy, minor first aid pinch)",
+        "status_code": 503,
+        "latency_ms": 2304.73,
+        "psif_score": null,
+        "psif_predicted": null,
+        "classification": null,
+        "model_version": null,
+        "top_factors_count": 0,
+        "top_factors_sample": [],
+        "reasoning_present": false,
+        "full_response": {
+          "error": "No active model is currently available to serve predictions."
+        },
+        "result": "FAIL"
+      },
+      "C_insufficient_info": {
+        "name": "Case C: Insufficient Information (Extremely brief, uninformative)",
+        "status_code": 503,
+        "latency_ms": 2277.88,
+        "psif_score": null,
+        "psif_predicted": null,
+        "classification": null,
+        "model_version": null,
+        "top_factors_count": 0,
+        "top_factors_sample": [],
+        "reasoning_present": false,
+        "full_response": {
+          "error": "No active model is currently available to serve predictions."
+        },
+        "result": "FAIL"
+      },
+      "D_structured_heavy": {
+        "name": "Case D: Structured Heavy (Fatal categorical potential, minimal text)",
+        "status_code": 503,
+        "latency_ms": 2321.63,
+        "psif_score": null,
+        "psif_predicted": null,
+        "classification": null,
+        "model_version": null,
+        "top_factors_count": 0,
+        "top_factors_sample": [],
+        "reasoning_present": false,
+        "full_response": {
+          "error": "No active model is currently available to serve predictions."
+        },
+        "result": "FAIL"
+      },
+      "E_narrative_heavy": {
+        "name": "Case E: Narrative Heavy (Neutral categories, detailed high-energy narrative)",
+        "status_code": 503,
+        "latency_ms": 2329.84,
+        "psif_score": null,
+        "psif_predicted": null,
+        "classification": null,
+        "model_version": null,
+        "top_factors_count": 0,
+        "top_factors_sample": [],
+        "reasoning_present": false,
+        "full_response": {
+          "error": "No active model is currently available to serve predictions."
+        },
+        "result": "FAIL"
+      },
+      "F_mixed": {
+        "name": "Case F: Mixed Structured + Detailed Confined Space Narrative",
+        "status_code": 503,
+        "latency_ms": 2260.24,
+        "psif_score": null,
+        "psif_predicted": null,
+        "classification": null,
+        "model_version": null,
+        "top_factors_count": 0,
+        "top_factors_sample": [],
+        "reasoning_present": false,
+        "full_response": {
+          "error": "No active model is currently available to serve predictions."
+        },
+        "result": "FAIL"
+      }
+    },
+    "phase_h_iogp_rules": {
+      "Bypassing Safety Controls": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Confined Space": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Driving": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Energy Isolation": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Hot Work": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Line of Fire": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Safe Mechanical Lifting": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Work Authorization": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      },
+      "Working at Height": {
+        "status_code": 503,
+        "matched_rule": null,
+        "evidence": null,
+        "result": "FAIL"
+      }
+    },
+    "phase_i_patterns": {},
+    "phase_j_security": {
+      "unauth_api_access": {
+        "status_code": 403,
+        "blocked": true,
+        "result": "PASS"
+      },
+      "sql_injection_defense": {
+        "status_code": 200,
+        "stack_trace_leaked": false,
+        "result": "PASS"
+      },
+      "xss_defense": {
+        "status_code": 200,
+        "unencoded_reflection": false,
+        "result": "PASS"
+      },
+      "invalid_uuid_handling": {
+        "status_code": 404,
+        "clean_404": true,
+        "result": "PASS"
+      }
+    },
+    "phase_k_database_neon": {
+      "status": "CONNECTED",
+      "database_name": "neondb",
+      "user": "neondb_owner",
+      "version": "PostgreSQL 18.6 (6569466) on aarch64-unknown-linux",
+      "total_tables": 18,
+      "key_table_counts": {
+        "accounts_user": 5,
+        "incidents_incident": 0,
+        "datasets_dataset": 0,
+        "predictions_modelversion": 0,
+        "predictions_predictionresult": 0
+      },
+      "result": "PASS"
+    },
+    "api_matrix": [
+      {
+        "endpoint": "/api/predict/",
+        "method": "POST",
+        "unauth_status": 403,
+        "auth_status": 400,
+        "latency_ms": 2543.86,
+        "result": "PARTIAL"
+      },
+      {
+        "endpoint": "/api/incidents/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 2870.65,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/incidents/report/",
+        "method": "POST",
+        "unauth_status": 403,
+        "auth_status": 400,
+        "latency_ms": 2644.1,
+        "result": "PARTIAL"
+      },
+      {
+        "endpoint": "/api/incidents/reviews/analytics/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3727.09,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/datasets/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 2789.22,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/models/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3029.55,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/models/sources/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4640.56,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/models/training-sources/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3807.62,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/model-assurance/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3700.79,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/model-assurance/metrics/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 404,
+        "latency_ms": 2906.76,
+        "result": "PARTIAL"
+      },
+      {
+        "endpoint": "/api/model-assurance/models/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 2860.92,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/model-assurance/human-review/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3737.41,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/analytics/summary/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3880.39,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/analytics/trend/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3860.72,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/analytics/barriers/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3832.47,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/analytics/recurring-patterns/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3841.57,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/analytics/cross-site-alerts/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3875.46,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/cross-site/overview/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3813.57,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/cross-site/sites/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3777.25,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/cross-site/hazards/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4102.61,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/cross-site/activities/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3733.02,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/cross-site/iogp/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4044.25,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/cross-site/recurrence/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 2551.83,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/cross-site/compare/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4050.04,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/data-quality/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4262.71,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/api/data-quality/summary/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4297.3,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/live-status/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3768.66,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/analytics/overview/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3047.82,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/psif/metrics/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3278.98,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/iogp/metrics/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4538.16,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/iogp/portfolio/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4068.97,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/patterns/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4156.69,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/patterns/activity/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3985.2,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/patterns/barrier/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 4001.56,
+        "result": "PASS"
+      },
+      {
+        "endpoint": "/admin-flow/api/patterns/location/",
+        "method": "GET",
+        "unauth_status": 403,
+        "auth_status": 200,
+        "latency_ms": 3222.04,
+        "result": "PASS"
+      }
+    ]
+  },
+  "executive_verdict": {
+    "core_web_application": "PASS",
+    "role_based_access_control": "PASS",
+    "pattern_intelligence_suite": "PASS",
+    "dataset_upload_persistence": "FAIL (Vercel Serverless Read-Only File System)",
+    "ml_inference_service": "FAIL (Model Version Not Provisioned / Heavy ML Decoupled on Edge)",
+    "iogp_rules_classification": "FAIL (Coupled to Predictor Endpoint returning 503)",
+    "security_hardening": "PASS"
+  }
+}

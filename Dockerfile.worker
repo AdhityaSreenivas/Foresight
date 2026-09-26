@@ -1,0 +1,43 @@
+# Foresight PSIF Platform — Dedicated ML & Celery Worker Dockerfile
+# Executes DistilBERT, XGBoost, SHAP, and asynchronous batch processing.
+# Target: Render, Railway, AWS ECS, Fly.io, or standalone container.
+
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    OMP_NUM_THREADS=1 \
+    KMP_DUPLICATE_LIB_OK=TRUE \
+    DJANGO_SETTINGS_MODULE=config.settings.prod
+
+# Install essential system dependencies (libgomp1 is required for XGBoost OpenMP runtime)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgomp1 \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Upgrade pip and install wheel
+RUN pip install --no-cache-dir --upgrade pip wheel setuptools
+
+# Copy requirements
+COPY requirements.txt requirements-worker.txt /app/
+
+# Install CPU-optimized PyTorch first to keep Docker image lean and fast, then worker requirements
+RUN pip install --no-cache-dir torch==2.2.2 --extra-index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements-worker.txt
+
+# Pre-download DistilBERT tokenizer and weights so the worker starts instantly without cold-start delay
+RUN python -c "from transformers import AutoTokenizer, AutoModel; AutoTokenizer.from_pretrained('distilbert-base-uncased'); AutoModel.from_pretrained('distilbert-base-uncased')"
+
+# Copy application source code and model artifacts into container
+COPY . /app/
+
+# Ensure media and tmp directories exist with appropriate permissions
+RUN mkdir -p /app/media /tmp/media /app/ml_engine/artifacts
+
+# Default worker startup command: Celery worker listening on all registered queues
+CMD ["celery", "-A", "config", "worker", "--loglevel=info", "--concurrency=2", "-P", "solo"]

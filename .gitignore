@@ -17,8 +17,8 @@ media/
 staticfiles/
 *.sqlite3
 
-# ML artifacts (large model files)
-ml_engine/artifacts/
+# ML artifacts: ignore large training snapshots, keep inference artifacts (model.json, encoder.joblib, metadata.json)
+ml_engine/artifacts/**/training_snapshot.json
 
 # Virtual environments
 venv/
@@ -48,3 +48,4 @@ node_modules/
 .agents/
 .vercel
 .env*
+scratch/

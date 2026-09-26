@@ -98,3 +98,111 @@ def retrain_model_task(self, model_version_id, training_source=None, sample_limi
         timing_fail = calculate_retraining_timing(model_version, current_metrics=model_version.metrics)
         model_version.metrics.update(timing_fail)
         model_version.save(update_fields=["status", "metrics"])
+
+
+@shared_task(bind=True, max_retries=2, default_retry_delay=3)
+def run_incident_prediction_task(self, incident_id: str) -> dict:
+    """
+    Dedicated Celery task executed by the ML worker to run DistilBERT + XGBoost + SHAP
+    inference for an incident and persist the PredictionResult into PostgreSQL.
+    """
+    from apps.incidents.models import Incident, IOGPRuleTag
+    from apps.predictions.models import ModelVersion, PredictionResult
+    from ml_engine.model_inference import get_active_predictor
+    from apps.incidents.services.embedding import generate_and_persist_embeddings
+    from apps.predictions.iogp_classifier import classify_iogp_rules
+
+    try:
+        incident = Incident.objects.get(id=incident_id)
+    except Incident.DoesNotExist:
+        logger.error("run_incident_prediction_task: Incident %s not found.", incident_id)
+        return {"status": "error", "message": f"Incident {incident_id} not found."}
+
+    # 1. Retrieve active predictor and model version
+    predictor = get_active_predictor()
+    active_version = (
+        ModelVersion.objects.filter(is_active=True, status=ModelVersion.Status.ACTIVE)
+        .exclude(xgboost_artifact_path="")
+        .first()
+    )
+    if not active_version:
+        active_version = (
+            ModelVersion.objects.filter(is_active=True)
+            .exclude(xgboost_artifact_path="")
+            .first()
+        )
+    if not active_version:
+        active_version = ModelVersion.objects.filter(is_active=True).first()
+
+    if not active_version or not predictor:
+        logger.error("run_incident_prediction_task: No active model or predictor available on worker.")
+        return {"status": "error", "message": "No active model or predictor available."}
+
+    # 2. Execute inference
+    record = incident.to_prediction_record()
+    try:
+        pred_output = predictor.predict(record)
+    except Exception as exc:
+        logger.exception("run_incident_prediction_task: ML inference failed for incident %s", incident_id)
+        raise self.retry(exc=exc)
+
+    # 3. Persist PredictionResult
+    pred_res, created = PredictionResult.objects.update_or_create(
+        incident=incident,
+        defaults={
+            "model_version": active_version,
+            "psif_probability": pred_output.psif_probability,
+            "psif_predicted": pred_output.psif_predicted,
+            "risk_level": pred_output.risk_level,
+            "top_factors": pred_output.top_factors,
+            "is_sparse_input": getattr(pred_output, "is_sparse_input", False),
+            "evidence_strength": getattr(pred_output, "evidence_strength", "MODERATE"),
+            "explanation_detail": getattr(pred_output, "explanation", {}),
+        },
+    )
+
+    # 4. Generate and persist embeddings
+    try:
+        generate_and_persist_embeddings([incident])
+    except Exception as e:
+        logger.warning("Embedding generation failed for incident %s: %s", incident_id, e)
+
+    # 5. IOGP classification
+    try:
+        fields_to_check = {
+            "description": incident.description,
+            "job_task": incident.job_task,
+            "equipment_involved": incident.equipment_involved,
+            "immediate_cause": incident.immediate_cause,
+            "corrective_actions": incident.corrective_actions,
+            "location": incident.location,
+            "composite_narrative": incident.composite_narrative,
+        }
+        iogp_results = classify_iogp_rules(fields_to_check)
+        for res in iogp_results:
+            IOGPRuleTag.objects.get_or_create(
+                incident=incident,
+                rule=res["rule"],
+                defaults={
+                    "matched_keywords": res["matched_keywords"],
+                    "matched_fields": res["matched_fields"],
+                    "classification_method": res["classification_method"],
+                },
+            )
+    except Exception as e:
+        logger.warning("IOGP classification failed for incident %s: %s", incident_id, e)
+
+    logger.info(
+        "run_incident_prediction_task: Successfully predicted incident %s | score=%.4f predicted=%s",
+        incident.id, pred_output.psif_probability, pred_output.psif_predicted
+    )
+
+    return {
+        "status": "success",
+        "incident_id": str(incident.id),
+        "prediction_id": str(pred_res.id),
+        "psif_score": pred_output.psif_probability,
+        "psif_predicted": pred_output.psif_predicted,
+        "risk_level": pred_output.risk_level,
+        "model_version": active_version.version_label,
+    }

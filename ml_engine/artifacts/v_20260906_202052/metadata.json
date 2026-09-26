@@ -1,0 +1,392 @@
+{
+  "model_version": "v_20260906_202052",
+  "training_source": "SYNTHETIC",
+  "validation_basis": "SYNTHETIC DATASET EVALUATION",
+  "disclaimer": "This candidate was trained using synthetic dataset benchmark labels and is intended for development and comparative experimentation. The results do not establish real-world HSE predictive validity.",
+  "provenance_composition": {
+    "training_source": "SYNTHETIC",
+    "total_eligible": 150582,
+    "human_approved_synthetic_count": 0,
+    "synthetic_count": 150582,
+    "human_count": 0,
+    "heuristic_count": 0,
+    "positive_count": 80384,
+    "negative_count": 70198,
+    "insufficient_info_excluded": 0,
+    "critical_excluded": 37,
+    "unknown_excluded": 10500
+  },
+  "bert_model_name": "distilbert-base-uncased",
+  "bert_hidden_dimension": 768,
+  "training_timestamp": "20260907_041947",
+  "random_seed": 42,
+  "is_candidate": true,
+  "training_status": "READY",
+  "progress_pct": 100,
+  "current_stage": "Retraining complete \u2014 candidate model ready for review.",
+  "train_row_count": 127994,
+  "test_row_count": 22588,
+  "total_labeled_rows": 150582,
+  "positive_count": 80384,
+  "negative_count": 70198,
+  "train_positive": 68326,
+  "train_negative": 59668,
+  "structured_feature_names": [
+    "near_miss",
+    "department=Assembly",
+    "department=Chemical Processing",
+    "department=Construction",
+    "department=Electrical",
+    "department=Fabrication",
+    "department=Logistics",
+    "department=Maintenance",
+    "department=Packaging",
+    "department=Painting",
+    "department=Quality Control",
+    "department=Utilities",
+    "department=Welding",
+    "department=_MISSING_",
+    "injury_type=Abrasion",
+    "injury_type=Amputation",
+    "injury_type=Chemical Burn",
+    "injury_type=Contusion/Bruise",
+    "injury_type=Crush Injury",
+    "injury_type=Electric Shock",
+    "injury_type=Eye Injury",
+    "injury_type=Fracture",
+    "injury_type=Hearing Loss",
+    "injury_type=Inhalation",
+    "injury_type=Laceration",
+    "injury_type=None",
+    "injury_type=Puncture",
+    "injury_type=Sprain/Strain",
+    "injury_type=Thermal Burn",
+    "injury_type=_MISSING_",
+    "body_part=Abdomen",
+    "body_part=Chest",
+    "body_part=Head",
+    "body_part=Left Eye",
+    "body_part=Left Foot",
+    "body_part=Left Forearm",
+    "body_part=Left Hand",
+    "body_part=Left Knee",
+    "body_part=Left Leg",
+    "body_part=Left Shoulder",
+    "body_part=Lower Back",
+    "body_part=Neck",
+    "body_part=None",
+    "body_part=Right Eye",
+    "body_part=Right Foot",
+    "body_part=Right Forearm",
+    "body_part=Right Hand",
+    "body_part=Right Knee",
+    "body_part=Right Leg",
+    "body_part=Right Shoulder",
+    "body_part=Upper Back",
+    "body_part=_MISSING_",
+    "immediate_cause=Chemical splash",
+    "immediate_cause=Defective wire sling",
+    "immediate_cause=Distraction",
+    "immediate_cause=Electrical fault",
+    "immediate_cause=Equipment malfunction",
+    "immediate_cause=Excess speed around blind corner",
+    "immediate_cause=Failure to follow procedure",
+    "immediate_cause=Falling object",
+    "immediate_cause=Fatigue",
+    "immediate_cause=Gasket failure under pressure",
+    "immediate_cause=Improper PPE usage",
+    "immediate_cause=Improper tool for task",
+    "immediate_cause=Inadequate lockout/tagout",
+    "immediate_cause=Lifting heavy object with poor posture",
+    "immediate_cause=Obstructed view",
+    "immediate_cause=Pinch point exposure",
+    "immediate_cause=Poor housekeeping",
+    "immediate_cause=Pressure release failure",
+    "immediate_cause=Slipped while holding workpiece",
+    "immediate_cause=Tripping hazard",
+    "immediate_cause=Unsecured load",
+    "immediate_cause=Wet/slippery surface",
+    "immediate_cause=_MISSING_",
+    "root_cause_category=Communication Failure",
+    "root_cause_category=Design Deficiency",
+    "root_cause_category=Equipment Failure",
+    "root_cause_category=Ergonomic",
+    "root_cause_category=Inadequate Guarding",
+    "root_cause_category=Inadequate Maintenance",
+    "root_cause_category=Management System",
+    "root_cause_category=PPE Failure",
+    "root_cause_category=Procedure Violation",
+    "root_cause_category=Supervision Gap",
+    "root_cause_category=Training Deficiency",
+    "root_cause_category=Unsafe Behavior",
+    "root_cause_category=_MISSING_"
+  ],
+  "structured_feature_count": 88,
+  "bert_embedding_dimension": 768,
+  "fused_feature_dimension": 856,
+  "scale_pos_weight": 0.8733,
+  "selected_threshold": 0.2,
+  "risk_bands": {
+    "low_max": 0.25,
+    "medium_max": 0.5,
+    "high_max": 0.75
+  },
+  "xgboost_best_params": {
+    "learning_rate": 0.2,
+    "max_depth": 7,
+    "min_child_weight": 5,
+    "n_estimators": 300
+  },
+  "split_methodology": "85% train / 15% test, stratified",
+  "threshold_methodology": "F2-optimal from 5-fold stratified OOF on training data",
+  "label_audit": {
+    "total_incidents_in_db": 161270,
+    "training_source": "SYNTHETIC",
+    "provenance_counts": {
+      "human_approved_synthetic": 0,
+      "human_approved_synthetic_psif": 0,
+      "human_approved_synthetic_not_psif": 0,
+      "human_insufficient_information": 1,
+      "synthetic_simulation": 150,
+      "real_external": 0,
+      "heuristic_psif": 0,
+      "heuristic_not_psif": 0,
+      "synthetic_evaluation": 150,
+      "unknown_unlabelled": 0
+    },
+    "composition": {
+      "training_source": "SYNTHETIC",
+      "total_eligible": 150582,
+      "human_approved_synthetic_count": 0,
+      "synthetic_count": 150582,
+      "human_count": 0,
+      "heuristic_count": 0,
+      "positive_count": 80384,
+      "negative_count": 70198,
+      "insufficient_info_excluded": 0,
+      "critical_excluded": 37,
+      "unknown_excluded": 10500
+    },
+    "human_approved_eligible": 0,
+    "human_eligible": 0,
+    "heuristic_eligible": 0,
+    "training_eligible": 150582,
+    "training_excluded": 151,
+    "final_positive_count": 80384,
+    "final_negative_count": 70198,
+    "positive_pct": 53.38,
+    "class_ratio_neg_pos": 0.87,
+    "synthetic_evaluation_excluded": true
+  },
+  "training_snapshot_id": "4baba9d6-9522-4440-a271-431db853c46d",
+  "training_snapshot_path": "/Users/sas/Developer/prototype_165/ml_engine/artifacts/v_20260906_202052/training_snapshot.json",
+  "dataset_hash": "8c71a5ec3e014efa2954c9f4ac4a5cc10f2cb7adb3c7049e82b7aaf6244096fe",
+  "metric_provenance": {
+    "validation_basis": "SYNTHETIC DATASET EVALUATION",
+    "training_source": "SYNTHETIC",
+    "disclaimer": "This candidate was trained using synthetic dataset benchmark labels and is intended for development and comparative experimentation. The results do not establish real-world HSE predictive validity.",
+    "provenance_composition": {
+      "training_source": "SYNTHETIC",
+      "total_eligible": 150582,
+      "human_approved_synthetic_count": 0,
+      "synthetic_count": 150582,
+      "human_count": 0,
+      "heuristic_count": 0,
+      "positive_count": 80384,
+      "negative_count": 70198,
+      "insufficient_info_excluded": 0,
+      "critical_excluded": 37,
+      "unknown_excluded": 10500
+    },
+    "real_human_ground_truth_metrics": null,
+    "synthetic_benchmark_metrics": {
+      "metrics_oof": {
+        "precision": 0.9146,
+        "recall": 0.9841,
+        "f2": 0.9694,
+        "f1": 0.9481,
+        "roc_auc": 0.9929,
+        "pr_auc": 0.9941,
+        "confusion_matrix": [
+          [
+            53393,
+            6275
+          ],
+          [
+            1083,
+            67243
+          ]
+        ],
+        "threshold": 0.2,
+        "support": {
+          "positive": 68326,
+          "negative": 59668
+        }
+      },
+      "metrics_final_test": {
+        "precision": 0.9143,
+        "recall": 0.9862,
+        "f2": 0.971,
+        "f1": 0.9489,
+        "roc_auc": 0.9936,
+        "pr_auc": 0.9947,
+        "confusion_matrix": [
+          [
+            9416,
+            1114
+          ],
+          [
+            166,
+            11892
+          ]
+        ],
+        "threshold": 0.2,
+        "support": {
+          "positive": 12058,
+          "negative": 10530
+        }
+      },
+      "metrics_baseline_structured": {
+        "precision": 0.5353,
+        "recall": 0.9991,
+        "f2": 0.8515,
+        "f1": 0.6971,
+        "roc_auc": 0.5037,
+        "pr_auc": 0.5357,
+        "confusion_matrix": [
+          [
+            72,
+            10458
+          ],
+          [
+            11,
+            12047
+          ]
+        ],
+        "threshold": 0.2,
+        "support": {
+          "positive": 12058,
+          "negative": 10530
+        }
+      },
+      "metrics_baseline_text": {
+        "precision": 0.916,
+        "recall": 0.9844,
+        "f2": 0.9699,
+        "f1": 0.949,
+        "roc_auc": 0.9934,
+        "pr_auc": 0.9945,
+        "confusion_matrix": [
+          [
+            9441,
+            1089
+          ],
+          [
+            188,
+            11870
+          ]
+        ],
+        "threshold": 0.2,
+        "support": {
+          "positive": 12058,
+          "negative": 10530
+        }
+      },
+      "test_sample_size": 22588
+    },
+    "notes": "This candidate was trained using synthetic dataset benchmark labels and is intended for development and comparative experimentation. The results do not establish real-world HSE predictive validity."
+  },
+  "metrics_oof": {
+    "precision": 0.9146,
+    "recall": 0.9841,
+    "f2": 0.9694,
+    "f1": 0.9481,
+    "roc_auc": 0.9929,
+    "pr_auc": 0.9941,
+    "confusion_matrix": [
+      [
+        53393,
+        6275
+      ],
+      [
+        1083,
+        67243
+      ]
+    ],
+    "threshold": 0.2,
+    "support": {
+      "positive": 68326,
+      "negative": 59668
+    }
+  },
+  "metrics_final_test": {
+    "precision": 0.9143,
+    "recall": 0.9862,
+    "f2": 0.971,
+    "f1": 0.9489,
+    "roc_auc": 0.9936,
+    "pr_auc": 0.9947,
+    "confusion_matrix": [
+      [
+        9416,
+        1114
+      ],
+      [
+        166,
+        11892
+      ]
+    ],
+    "threshold": 0.2,
+    "support": {
+      "positive": 12058,
+      "negative": 10530
+    }
+  },
+  "metrics_baseline_structured": {
+    "precision": 0.5353,
+    "recall": 0.9991,
+    "f2": 0.8515,
+    "f1": 0.6971,
+    "roc_auc": 0.5037,
+    "pr_auc": 0.5357,
+    "confusion_matrix": [
+      [
+        72,
+        10458
+      ],
+      [
+        11,
+        12047
+      ]
+    ],
+    "threshold": 0.2,
+    "support": {
+      "positive": 12058,
+      "negative": 10530
+    }
+  },
+  "metrics_baseline_text": {
+    "precision": 0.916,
+    "recall": 0.9844,
+    "f2": 0.9699,
+    "f1": 0.949,
+    "roc_auc": 0.9934,
+    "pr_auc": 0.9945,
+    "confusion_matrix": [
+      [
+        9441,
+        1089
+      ],
+      [
+        188,
+        11870
+      ]
+    ],
+    "threshold": 0.2,
+    "support": {
+      "positive": 12058,
+      "negative": 10530
+    }
+  },
+  "leakage_notes": "severity_actual and severity_potential are contextual EHS report fields and are NOT included in StructuredFeatureEncoder's BOOLEAN_FIELDS, NUMERIC_FIELDS, or CATEGORICAL_FIELDS and do NOT enter the structured feature vector. There is no confirmed structural leakage via those two fields. is_psif_human_label, psif_label_source, and is_synthetic are also excluded from features. Remaining risk: text-level correlation if free-text narratives echo severity descriptions. This is unquantified and cannot be mitigated via encoder field lists."
+}

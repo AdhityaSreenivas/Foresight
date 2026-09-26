@@ -24,7 +24,6 @@ class PredictView(APIView):
     """
     permission_classes = [CanRunPrediction]
 
-    @transaction.atomic
     def post(self, request, *args, **kwargs):
         serializer = PredictRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -48,18 +47,23 @@ class PredictView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 1.5. Ensure an active model version exists
-        predictor = get_active_predictor()
-        if not predictor:
-            logger.warning("PredictView: No active ModelVersion found.")
-            return Response(
-                {"error": "No active model is currently available to serve predictions."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-
-        # We also need the actual ModelVersion record to link the prediction
-        active_version = ModelVersion.objects.filter(is_active=True).first()
+        # 1.5. Ensure an active model version exists in the registry
+        active_version = (
+            ModelVersion.objects.filter(is_active=True, status=ModelVersion.Status.ACTIVE)
+            .exclude(xgboost_artifact_path="")
+            .first()
+        )
         if not active_version:
+            active_version = (
+                ModelVersion.objects.filter(is_active=True)
+                .exclude(xgboost_artifact_path="")
+                .first()
+            )
+        if not active_version:
+            active_version = ModelVersion.objects.filter(is_active=True).first()
+
+        if not active_version:
+            logger.warning("PredictView: No active ModelVersion found in registry.")
             return Response(
                 {"error": "No active model is currently available to serve predictions."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
@@ -67,9 +71,6 @@ class PredictView(APIView):
 
         # 2. Prepare narrative composite for prediction
         from apps.datasets.ingestion import build_composite_narrative, _normalise_severity_actual, _normalise_severity_potential
-        
-        # We process input to create the Incident (simulating what ingestion does)
-        # Note: we use dataset=None for manual predictions
         
         incident_kwargs = {
             "dataset": None,
@@ -99,68 +100,120 @@ class PredictView(APIView):
         )
         incident_kwargs["composite_narrative"] = composite or None
 
-        # 3. Create Incident
-        incident = Incident.objects.create(**incident_kwargs)
-        from apps.incidents.models import IncidentDataQuality
-        IncidentDataQuality.objects.create(
-            incident=incident,
-            status=gate_res["quality_status"],
-            findings=gate_res["findings"],
-            quality_version=gate_res["quality_version"],
-        )
-
-        # 4. Run Inference
-        record = incident.to_prediction_record()
-        
-        try:
-            pred_output = predictor.predict(record)
-        except Exception as exc:
-            logger.exception("Prediction failed during manual API request.")
-            return Response(
-                {"error": "Inference failed due to an internal model error."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        # 5. Persist PredictionResult
-        prediction_result = PredictionResult.objects.create(
-            incident=incident,
-            model_version=active_version,
-            psif_probability=pred_output.psif_probability,
-            psif_predicted=pred_output.psif_predicted,
-            risk_level=pred_output.risk_level,
-            top_factors=pred_output.top_factors,
-            is_sparse_input=getattr(pred_output, "is_sparse_input", False),
-            evidence_strength=getattr(pred_output, "evidence_strength", "MODERATE"),
-            explanation_detail=getattr(pred_output, "explanation", {}),
-        )
-
-        from apps.incidents.services.embedding import generate_and_persist_embeddings
-        generate_and_persist_embeddings([incident])
-
-        # 5.5 IOGP Classification
-        from apps.predictions.iogp_classifier import classify_iogp_rules
-        from apps.incidents.models import IOGPRuleTag
-
-        fields_to_check = {
-            "description": incident.description,
-            "job_task": incident.job_task,
-            "equipment_involved": incident.equipment_involved,
-            "immediate_cause": incident.immediate_cause,
-            "corrective_actions": incident.corrective_actions,
-            "location": incident.location,
-            "composite_narrative": incident.composite_narrative
-        }
-        iogp_results = classify_iogp_rules(fields_to_check)
-        for res in iogp_results:
-            IOGPRuleTag.objects.create(
+        # 3. Create Incident in its own transaction so it commits immediately
+        with transaction.atomic():
+            incident = Incident.objects.create(**incident_kwargs)
+            from apps.incidents.models import IncidentDataQuality
+            IncidentDataQuality.objects.create(
                 incident=incident,
-                rule=res["rule"],
-                matched_keywords=res["matched_keywords"],
-                matched_fields=res["matched_fields"],
-                classification_method=res["classification_method"],
-                classifier_version=res["classifier_version"],
-                confidence=res["confidence"]
+                status=gate_res["quality_status"],
+                findings=gate_res["findings"],
+                quality_version=gate_res["quality_version"],
             )
+
+        # 4. Run Inference (local predictor if ML runtime present, or Celery ML worker if serverless)
+        predictor = get_active_predictor()
+        if predictor is not None:
+            record = incident.to_prediction_record()
+            try:
+                pred_output = predictor.predict(record)
+            except Exception as exc:
+                logger.exception("Prediction failed during manual API request.")
+                return Response(
+                    {"error": "Inference failed due to an internal model error."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            # Persist PredictionResult
+            prediction_result = PredictionResult.objects.create(
+                incident=incident,
+                model_version=active_version,
+                psif_probability=pred_output.psif_probability,
+                psif_predicted=pred_output.psif_predicted,
+                risk_level=pred_output.risk_level,
+                top_factors=pred_output.top_factors,
+                is_sparse_input=getattr(pred_output, "is_sparse_input", False),
+                evidence_strength=getattr(pred_output, "evidence_strength", "MODERATE"),
+                explanation_detail=getattr(pred_output, "explanation", {}),
+            )
+
+            from apps.incidents.services.embedding import generate_and_persist_embeddings
+            try:
+                generate_and_persist_embeddings([incident])
+            except Exception:
+                pass
+        else:
+            # Serverless edge runtime (e.g. Vercel) -> Delegate to Celery ML Worker
+            from apps.predictions.tasks import run_incident_prediction_task
+            import time
+
+            try:
+                task_res = run_incident_prediction_task.delay(str(incident.id))
+            except Exception as exc:
+                logger.exception("Failed to dispatch prediction task to Celery broker.")
+                return Response(
+                    {"error": "ML inference queue is temporarily unavailable.", "detail": str(exc)},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+
+            # Wait briefly (up to 8s) for dedicated Celery worker to finish
+            prediction_result = None
+            start_time = time.time()
+            while time.time() - start_time < 8.0:
+                prediction_result = PredictionResult.objects.filter(incident=incident).first()
+                if prediction_result:
+                    break
+                time.sleep(0.3)
+
+            if not prediction_result:
+                return Response(
+                    {
+                        "status": "queued",
+                        "incident_id": str(incident.id),
+                        "task_id": task_res.id,
+                        "model_version": active_version.version_label,
+                        "message": "Inference task queued to dedicated ML worker.",
+                    },
+                    status=status.HTTP_202_ACCEPTED,
+                )
+
+        # 5. IOGP Classification
+        from apps.incidents.models import IOGPRuleTag
+        iogp_tags = list(IOGPRuleTag.objects.filter(incident=incident))
+        if not iogp_tags:
+            from apps.predictions.iogp_classifier import classify_iogp_rules
+            fields_to_check = {
+                "description": incident.description,
+                "job_task": incident.job_task,
+                "equipment_involved": incident.equipment_involved,
+                "immediate_cause": incident.immediate_cause,
+                "corrective_actions": incident.corrective_actions,
+                "location": incident.location,
+                "composite_narrative": incident.composite_narrative
+            }
+            iogp_results = classify_iogp_rules(fields_to_check)
+            for res in iogp_results:
+                IOGPRuleTag.objects.create(
+                    incident=incident,
+                    rule=res["rule"],
+                    matched_keywords=res["matched_keywords"],
+                    matched_fields=res["matched_fields"],
+                    classification_method=res["classification_method"],
+                    classifier_version=res.get("classifier_version", "1.0.0"),
+                    confidence=res.get("confidence", 0.0),
+                )
+        else:
+            iogp_results = [
+                {
+                    "rule": tag.rule,
+                    "matched_keywords": tag.matched_keywords,
+                    "matched_fields": tag.matched_fields,
+                    "classification_method": tag.classification_method,
+                    "classifier_version": tag.classifier_version,
+                    "confidence": tag.confidence,
+                }
+                for tag in iogp_tags
+            ]
 
         # 5.6 Build canonical triage stages
         from apps.incidents.services.decision_trace import build_analytical_assessment

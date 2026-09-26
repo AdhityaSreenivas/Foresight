@@ -75,22 +75,7 @@ def process_new_incident_submission(incident: Incident) -> Incident:
             active_version = ModelVersion.objects.filter(is_active=True).first()
 
         if active_version and predictor:
-            record = {
-                "description": incident.description,
-                "corrective_actions": incident.corrective_actions,
-                "witness_statement": incident.witness_statement,
-                "department": incident.department,
-                "location": incident.location,
-                "job_task": incident.job_task,
-                "equipment_involved": incident.equipment_involved,
-                "injury_type": incident.injury_type,
-                "body_part": incident.body_part,
-                "immediate_cause": incident.immediate_cause,
-                "root_cause_category": incident.root_cause_category,
-                "severity_actual": incident.severity_actual,
-                "severity_potential": incident.severity_potential,
-                "near_miss": incident.near_miss,
-            }
+            record = incident.to_prediction_record()
             pred_output = predictor.predict(record)
             PredictionResult.objects.update_or_create(
                 incident=incident,
@@ -105,8 +90,13 @@ def process_new_incident_submission(incident: Incident) -> Incident:
                     "explanation_detail": getattr(pred_output, "explanation", {}),
                 }
             )
+        elif active_version and not predictor:
+            logger.info("Delegating inference for incident %s to Celery ML worker", incident.id)
+            from apps.predictions.tasks import run_incident_prediction_task
+            from django.db import transaction
+            transaction.on_commit(lambda: run_incident_prediction_task.delay(str(incident.id)))
     except Exception as exc:
-        logger.exception("ML inference failed for incident %s: %s", incident.id, exc)
+        logger.exception("ML inference failed or could not be dispatched for incident %s: %s", incident.id, exc)
 
     # 5. Generate and persist embeddings
     try:

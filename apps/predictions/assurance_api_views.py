@@ -264,6 +264,22 @@ class ProductionDiagnosticAPIView(APIView):
             fs_probe["media_root_writable"] = False
             fs_probe["media_root_error"] = str(e)
 
+        # 7. Celery Broker & Worker Probe
+        celery_probe = {}
+        try:
+            from config.celery import app as celery_app
+            inspector = celery_app.control.inspect(timeout=1.5)
+            ping_res = inspector.ping() if inspector else None
+            celery_probe["broker_configured"] = bool(settings.CELERY_BROKER_URL)
+            celery_probe["active_workers"] = list(ping_res.keys()) if ping_res else []
+            celery_probe["worker_count"] = len(ping_res) if ping_res else 0
+            celery_probe["status"] = "WORKERS_ONLINE" if (ping_res and len(ping_res) > 0) else "NO_WORKERS_ONLINE"
+        except Exception as e:
+            celery_probe["status"] = "PROBE_FAILED"
+            celery_probe["error"] = str(e)
+            celery_probe["active_workers"] = []
+            celery_probe["worker_count"] = 0
+
         return Response({
             "status": "ok",
             "database_verification": db_info,
@@ -272,4 +288,5 @@ class ProductionDiagnosticAPIView(APIView):
             "ml_libraries": ml_libs,
             "environment_flags": env_flags,
             "filesystem_probe": fs_probe,
+            "celery_probe": celery_probe,
         }, status=status.HTTP_200_OK)

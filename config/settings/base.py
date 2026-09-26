@@ -178,7 +178,15 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # ── Media files (uploaded datasets) ──────────────────────────────────────────
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / env("MEDIA_ROOT", default="media")
+if os.environ.get("VERCEL"):
+    MEDIA_ROOT = Path("/tmp/media")
+else:
+    MEDIA_ROOT = BASE_DIR / env("MEDIA_ROOT", default="media")
+
+try:
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
+except Exception:
+    pass
 
 # Maximum upload size in bytes (default 250MB, minimum 250MB)
 MAX_UPLOAD_SIZE_MB = max(250, env.int("MAX_UPLOAD_SIZE_MB", default=250))
@@ -209,16 +217,23 @@ REST_FRAMEWORK = {
 }
 
 # ── Celery ────────────────────────────────────────────────────────────────────
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/1")
+_default_redis_url = env("REDIS_URL", default="")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=_default_redis_url or "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=_default_redis_url or "redis://127.0.0.1:6379/1")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=bool(os.environ.get("VERCEL")))
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# Redis TLS configuration (e.g. for Upstash rediss:// endpoints)
+if "rediss://" in CELERY_BROKER_URL:
+    CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": None}
+if "rediss://" in CELERY_RESULT_BACKEND:
+    CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": None}
 
 # Reliability & crash resilience
 CELERY_TASK_ACKS_LATE = True
@@ -227,7 +242,7 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_POOL = env("CELERY_WORKER_POOL", default="solo" if sys.platform == "darwin" else "prefork")
 CELERY_WORKER_CONCURRENCY = env.int("CELERY_WORKER_CONCURRENCY", default=1 if sys.platform == "darwin" else 4)
 
-DEV_SYNC_FALLBACK = env.bool("DEV_SYNC_FALLBACK", default=bool(os.environ.get("VERCEL")))
+DEV_SYNC_FALLBACK = env.bool("DEV_SYNC_FALLBACK", default=False)
 
 # ── Cache Configuration (Redis) ──────────────────────────────────────────────
 IS_TESTING = "test" in sys.argv or "pytest" in sys.modules or env.bool("TESTING", default=False)

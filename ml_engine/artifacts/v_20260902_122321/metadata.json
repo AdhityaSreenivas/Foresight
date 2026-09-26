@@ -1,0 +1,226 @@
+{
+  "model_version": "v_20260902_122321",
+  "bert_model_name": "distilbert-base-uncased",
+  "bert_hidden_dimension": 768,
+  "training_timestamp": "20260902_122321",
+  "random_seed": 42,
+  "train_row_count": 646,
+  "test_row_count": 115,
+  "total_labeled_rows": 761,
+  "positive_count": 152,
+  "negative_count": 609,
+  "train_positive": 129,
+  "train_negative": 517,
+  "structured_feature_names": [
+    "near_miss",
+    "department=Assembly",
+    "department=Chemical Processing",
+    "department=Construction",
+    "department=Electrical",
+    "department=Fabrication",
+    "department=Logistics",
+    "department=Maintenance",
+    "department=Packaging",
+    "department=Painting",
+    "department=Quality Control",
+    "department=Repair",
+    "department=Utilities",
+    "department=Welding",
+    "injury_type=Abrasion",
+    "injury_type=Amputation",
+    "injury_type=Chemical Burn",
+    "injury_type=Contusion/Bruise",
+    "injury_type=Crush Injury",
+    "injury_type=Electric Shock",
+    "injury_type=Eye Injury",
+    "injury_type=Fracture",
+    "injury_type=Hearing Loss",
+    "injury_type=Inhalation",
+    "injury_type=Laceration",
+    "injury_type=None",
+    "injury_type=Puncture",
+    "injury_type=Sprain/Strain",
+    "injury_type=Thermal Burn",
+    "injury_type=_MISSING_",
+    "body_part=Abdomen",
+    "body_part=Chest",
+    "body_part=Head",
+    "body_part=Left Eye",
+    "body_part=Left Foot",
+    "body_part=Left Forearm",
+    "body_part=Left Hand",
+    "body_part=Left Knee",
+    "body_part=Left Leg",
+    "body_part=Left Shoulder",
+    "body_part=Lower Back",
+    "body_part=Neck",
+    "body_part=None",
+    "body_part=Right Eye",
+    "body_part=Right Foot",
+    "body_part=Right Forearm",
+    "body_part=Right Hand",
+    "body_part=Right Knee",
+    "body_part=Right Leg",
+    "body_part=Right Shoulder",
+    "body_part=Upper Back",
+    "body_part=_MISSING_",
+    "immediate_cause=Chemical splash",
+    "immediate_cause=Defective wire sling",
+    "immediate_cause=Distraction",
+    "immediate_cause=Electrical fault",
+    "immediate_cause=Equipment malfunction",
+    "immediate_cause=Excess speed around blind corner",
+    "immediate_cause=Failure to follow procedure",
+    "immediate_cause=Falling object",
+    "immediate_cause=Fatigue",
+    "immediate_cause=Gasket failure under pressure",
+    "immediate_cause=Improper PPE usage",
+    "immediate_cause=Improper tool for task",
+    "immediate_cause=Inadequate lockout/tagout",
+    "immediate_cause=Lifting heavy object with poor posture",
+    "immediate_cause=Obstructed view",
+    "immediate_cause=Pinch point exposure",
+    "immediate_cause=Poor housekeeping",
+    "immediate_cause=Pressure release failure",
+    "immediate_cause=Slipped while holding workpiece",
+    "immediate_cause=Tripping hazard",
+    "immediate_cause=Unsecured load",
+    "immediate_cause=Wet/slippery surface",
+    "immediate_cause=_MISSING_",
+    "root_cause_category=Communication Failure",
+    "root_cause_category=Design Deficiency",
+    "root_cause_category=Equipment Failure",
+    "root_cause_category=Ergonomic",
+    "root_cause_category=Inadequate Guarding",
+    "root_cause_category=Inadequate Maintenance",
+    "root_cause_category=Management System",
+    "root_cause_category=PPE Failure",
+    "root_cause_category=Procedure Violation",
+    "root_cause_category=Supervision Gap",
+    "root_cause_category=Training Deficiency",
+    "root_cause_category=Unsafe Behavior",
+    "root_cause_category=_MISSING_"
+  ],
+  "structured_feature_count": 88,
+  "bert_embedding_dimension": 768,
+  "fused_feature_dimension": 856,
+  "scale_pos_weight": 4.0078,
+  "selected_threshold": 0.1,
+  "risk_bands": {
+    "low_max": 0.25,
+    "medium_max": 0.5,
+    "high_max": 0.75
+  },
+  "xgboost_best_params": {
+    "learning_rate": 0.05,
+    "max_depth": 3,
+    "min_child_weight": 3,
+    "n_estimators": 100
+  },
+  "split_methodology": "85% train / 15% test, stratified",
+  "threshold_methodology": "F2-optimal from 5-fold stratified OOF on training data",
+  "label_audit": {
+    "total_incidents": 761,
+    "human_labeled": 0,
+    "heuristic_labeled": 761,
+    "unlabeled": 0,
+    "training_eligible": 761,
+    "positive": 152,
+    "negative": 609,
+    "positive_pct": 19.97,
+    "class_ratio_neg_pos": 4.01
+  },
+  "metrics_oof": {
+    "precision": 0.2132,
+    "recall": 0.9535,
+    "f2": 0.5627,
+    "f1": 0.3484,
+    "roc_auc": 0.6375,
+    "pr_auc": 0.2886,
+    "confusion_matrix": [
+      [
+        63,
+        454
+      ],
+      [
+        6,
+        123
+      ]
+    ],
+    "threshold": 0.1,
+    "support": {
+      "positive": 129,
+      "negative": 517
+    }
+  },
+  "metrics_final_test": {
+    "precision": 0.2018,
+    "recall": 0.9565,
+    "f2": 0.5473,
+    "f1": 0.3333,
+    "roc_auc": 0.6215,
+    "pr_auc": 0.3742,
+    "confusion_matrix": [
+      [
+        5,
+        87
+      ],
+      [
+        1,
+        22
+      ]
+    ],
+    "threshold": 0.1,
+    "support": {
+      "positive": 23,
+      "negative": 92
+    }
+  },
+  "metrics_baseline_structured": {
+    "precision": 0.2018,
+    "recall": 1.0,
+    "f2": 0.5583,
+    "f1": 0.3358,
+    "roc_auc": 0.5799,
+    "pr_auc": 0.2562,
+    "confusion_matrix": [
+      [
+        1,
+        91
+      ],
+      [
+        0,
+        23
+      ]
+    ],
+    "threshold": 0.1,
+    "support": {
+      "positive": 23,
+      "negative": 92
+    }
+  },
+  "metrics_baseline_text": {
+    "precision": 0.1963,
+    "recall": 0.913,
+    "f2": 0.5276,
+    "f1": 0.3231,
+    "roc_auc": 0.5836,
+    "pr_auc": 0.3467,
+    "confusion_matrix": [
+      [
+        6,
+        86
+      ],
+      [
+        2,
+        21
+      ]
+    ],
+    "threshold": 0.1,
+    "support": {
+      "positive": 23,
+      "negative": 92
+    }
+  },
+  "leakage_notes": "severity_actual and severity_potential are included as features per specification. These same fields determine the heuristic PSIF label. is_psif_human_label, is_psif_heuristic_label, and psif_label_source are excluded from features. Performance on heuristic labels may be inflated because the heuristic target is partly determined by severity fields that are also model inputs."
+}

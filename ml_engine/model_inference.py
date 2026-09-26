@@ -494,13 +494,37 @@ def get_active_predictor(force_reload: bool = False) -> Optional[PSIFPredictor]:
         _active_model_id = None
         return None
 
+    def _resolve_artifact_path(path_str: str | Path | None) -> Optional[Path]:
+        """Resolve an artifact path portably across Docker, local, and production environments."""
+        if not path_str:
+            return None
+        p = Path(path_str)
+        if p.is_file():
+            return p
+        try:
+            from django.conf import settings
+            cand = settings.BASE_DIR / str(path_str).lstrip("/")
+            if cand.is_file():
+                return cand
+        except Exception:
+            pass
+        cand = Path(__file__).resolve().parent / str(path_str).lstrip("/")
+        if cand.is_file():
+            return cand
+        return p
+
     # Verify that the artifact exists on disk; if not, check for a valid ready model with existing artifacts
-    xgb_path = Path(active_version.xgboost_artifact_path) if active_version.xgboost_artifact_path else None
+    xgb_path = _resolve_artifact_path(active_version.xgboost_artifact_path)
+    enc_path = _resolve_artifact_path(active_version.encoder_artifact_path)
     if not xgb_path or not xgb_path.exists():
         valid_fallback = None
         for mv in ModelVersion.objects.exclude(xgboost_artifact_path="").order_by("-is_active", "-trained_at"):
-            if mv.xgboost_artifact_path and Path(mv.xgboost_artifact_path).exists():
+            fb_xgb = _resolve_artifact_path(mv.xgboost_artifact_path)
+            fb_enc = _resolve_artifact_path(mv.encoder_artifact_path)
+            if fb_xgb and fb_xgb.exists() and fb_enc and fb_enc.exists():
                 valid_fallback = mv
+                xgb_path = fb_xgb
+                enc_path = fb_enc
                 break
         if valid_fallback:
             logger.info("Falling back to valid model version %s with existing disk artifacts", valid_fallback.version_label)
@@ -524,8 +548,8 @@ def get_active_predictor(force_reload: bool = False) -> Optional[PSIFPredictor]:
             pass  # fall back to settings defaults
 
         _active_predictor = PSIFPredictor(
-            xgboost_artifact_path=active_version.xgboost_artifact_path,
-            encoder_artifact_path=active_version.encoder_artifact_path,
+            xgboost_artifact_path=xgb_path,
+            encoder_artifact_path=enc_path,
             bert_model_name=active_version.bert_model_name,
             psif_threshold=threshold,
             bert_dim=bert_dim,

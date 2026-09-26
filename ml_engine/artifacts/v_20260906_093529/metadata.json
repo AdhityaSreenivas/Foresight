@@ -1,0 +1,302 @@
+{
+  "model_version": "v_20260906_093529",
+  "training_source": "SYNTHETIC",
+  "validation_basis": "SYNTHETIC DATASET EVALUATION",
+  "disclaimer": "This candidate was trained using synthetic dataset labels and is intended for development and comparative experimentation. The results do not establish real-world HSE predictive validity.",
+  "provenance_composition": {
+    "training_source": "SYNTHETIC",
+    "total_eligible": 1500,
+    "human_count": 0,
+    "heuristic_count": 0,
+    "synthetic_count": 1500,
+    "positive_count": 704,
+    "negative_count": 796,
+    "insufficient_info_excluded": 0,
+    "critical_excluded": 0,
+    "unknown_excluded": 0
+  },
+  "bert_model_name": "distilbert-base-uncased",
+  "bert_hidden_dimension": 768,
+  "training_timestamp": "20260906_093529",
+  "random_seed": 42,
+  "is_candidate": true,
+  "training_status": "READY",
+  "train_row_count": 1275,
+  "test_row_count": 225,
+  "total_labeled_rows": 1500,
+  "positive_count": 704,
+  "negative_count": 796,
+  "train_positive": 598,
+  "train_negative": 677,
+  "structured_feature_names": [
+    "near_miss",
+    "department=_MISSING_",
+    "injury_type=_MISSING_",
+    "body_part=_MISSING_",
+    "immediate_cause=_MISSING_",
+    "root_cause_category=_MISSING_"
+  ],
+  "structured_feature_count": 6,
+  "bert_embedding_dimension": 768,
+  "fused_feature_dimension": 774,
+  "scale_pos_weight": 1.1321,
+  "selected_threshold": 0.5,
+  "risk_bands": {
+    "low_max": 0.25,
+    "medium_max": 0.5,
+    "high_max": 0.75
+  },
+  "xgboost_best_params": {
+    "learning_rate": 0.2,
+    "max_depth": 7,
+    "min_child_weight": 1,
+    "n_estimators": 100
+  },
+  "split_methodology": "85% train / 15% test, stratified",
+  "threshold_methodology": "F2-optimal from 5-fold stratified OOF on training data",
+  "label_audit": {
+    "total_incidents_in_db": 50780,
+    "training_source": "SYNTHETIC",
+    "provenance_counts": {
+      "real_human_psif": 0,
+      "real_human_not_psif": 0,
+      "real_human_insufficient_information": 0,
+      "heuristic_psif": 150,
+      "heuristic_not_psif": 610,
+      "synthetic_evaluation": 150,
+      "unknown_unlabelled": 49870
+    },
+    "composition": {
+      "training_source": "SYNTHETIC",
+      "total_eligible": 1500,
+      "human_count": 0,
+      "heuristic_count": 0,
+      "synthetic_count": 1500,
+      "positive_count": 704,
+      "negative_count": 796,
+      "insufficient_info_excluded": 0,
+      "critical_excluded": 0,
+      "unknown_excluded": 0
+    },
+    "human_eligible": 0,
+    "heuristic_eligible": 760,
+    "training_eligible": 1500,
+    "training_excluded": 50020,
+    "final_positive_count": 704,
+    "final_negative_count": 796,
+    "positive_pct": 46.93,
+    "class_ratio_neg_pos": 1.13,
+    "synthetic_evaluation_excluded": true
+  },
+  "training_snapshot_id": "d2ceb9b8-c6ae-4b90-a2db-f08623b843a6",
+  "training_snapshot_path": "/Users/sas/Developer/prototype_165/ml_engine/artifacts/v_20260906_093529/training_snapshot.json",
+  "dataset_hash": "d502d61e6847b2bdf70b378250363dbfa76466e4224dfb1d1358f4f676d32dcd",
+  "metric_provenance": {
+    "validation_basis": "SYNTHETIC DATASET EVALUATION",
+    "training_source": "SYNTHETIC",
+    "disclaimer": "This candidate was trained using synthetic dataset labels and is intended for development and comparative experimentation. The results do not establish real-world HSE predictive validity.",
+    "provenance_composition": {
+      "training_source": "SYNTHETIC",
+      "total_eligible": 1500,
+      "human_count": 0,
+      "heuristic_count": 0,
+      "synthetic_count": 1500,
+      "positive_count": 704,
+      "negative_count": 796,
+      "insufficient_info_excluded": 0,
+      "critical_excluded": 0,
+      "unknown_excluded": 0
+    },
+    "real_human_ground_truth_metrics": null,
+    "heuristic_evaluation_metrics": null,
+    "synthetic_simulation_metrics": {
+      "metrics_oof": {
+        "precision": 0.9884,
+        "recall": 0.9933,
+        "f2": 0.9923,
+        "f1": 0.9908,
+        "roc_auc": 0.9992,
+        "pr_auc": 0.999,
+        "confusion_matrix": [
+          [
+            670,
+            7
+          ],
+          [
+            4,
+            594
+          ]
+        ],
+        "threshold": 0.5,
+        "support": {
+          "positive": 598,
+          "negative": 677
+        }
+      },
+      "metrics_final_test": {
+        "precision": 1.0,
+        "recall": 0.9906,
+        "f2": 0.9924,
+        "f1": 0.9953,
+        "roc_auc": 0.9999,
+        "pr_auc": 0.9999,
+        "confusion_matrix": [
+          [
+            119,
+            0
+          ],
+          [
+            1,
+            105
+          ]
+        ],
+        "threshold": 0.5,
+        "support": {
+          "positive": 106,
+          "negative": 119
+        }
+      },
+      "metrics_baseline_structured": {
+        "precision": 0.4711,
+        "recall": 1.0,
+        "f2": 0.8166,
+        "f1": 0.6405,
+        "roc_auc": 0.5,
+        "pr_auc": 0.4711,
+        "confusion_matrix": [
+          [
+            0,
+            119
+          ],
+          [
+            0,
+            106
+          ]
+        ],
+        "threshold": 0.5,
+        "support": {
+          "positive": 106,
+          "negative": 119
+        }
+      },
+      "metrics_baseline_text": {
+        "precision": 1.0,
+        "recall": 0.9906,
+        "f2": 0.9924,
+        "f1": 0.9953,
+        "roc_auc": 0.9999,
+        "pr_auc": 0.9999,
+        "confusion_matrix": [
+          [
+            119,
+            0
+          ],
+          [
+            1,
+            105
+          ]
+        ],
+        "threshold": 0.5,
+        "support": {
+          "positive": 106,
+          "negative": 119
+        }
+      },
+      "test_sample_size": 225
+    },
+    "notes": "This candidate was trained using synthetic dataset labels and is intended for development and comparative experimentation. The results do not establish real-world HSE predictive validity."
+  },
+  "metrics_oof": {
+    "precision": 0.9884,
+    "recall": 0.9933,
+    "f2": 0.9923,
+    "f1": 0.9908,
+    "roc_auc": 0.9992,
+    "pr_auc": 0.999,
+    "confusion_matrix": [
+      [
+        670,
+        7
+      ],
+      [
+        4,
+        594
+      ]
+    ],
+    "threshold": 0.5,
+    "support": {
+      "positive": 598,
+      "negative": 677
+    }
+  },
+  "metrics_final_test": {
+    "precision": 1.0,
+    "recall": 0.9906,
+    "f2": 0.9924,
+    "f1": 0.9953,
+    "roc_auc": 0.9999,
+    "pr_auc": 0.9999,
+    "confusion_matrix": [
+      [
+        119,
+        0
+      ],
+      [
+        1,
+        105
+      ]
+    ],
+    "threshold": 0.5,
+    "support": {
+      "positive": 106,
+      "negative": 119
+    }
+  },
+  "metrics_baseline_structured": {
+    "precision": 0.4711,
+    "recall": 1.0,
+    "f2": 0.8166,
+    "f1": 0.6405,
+    "roc_auc": 0.5,
+    "pr_auc": 0.4711,
+    "confusion_matrix": [
+      [
+        0,
+        119
+      ],
+      [
+        0,
+        106
+      ]
+    ],
+    "threshold": 0.5,
+    "support": {
+      "positive": 106,
+      "negative": 119
+    }
+  },
+  "metrics_baseline_text": {
+    "precision": 1.0,
+    "recall": 0.9906,
+    "f2": 0.9924,
+    "f1": 0.9953,
+    "roc_auc": 0.9999,
+    "pr_auc": 0.9999,
+    "confusion_matrix": [
+      [
+        119,
+        0
+      ],
+      [
+        1,
+        105
+      ]
+    ],
+    "threshold": 0.5,
+    "support": {
+      "positive": 106,
+      "negative": 119
+    }
+  },
+  "leakage_notes": "severity_actual and severity_potential are used ONLY to construct the heuristic PSIF label (ml_engine/training/weak_labeling.py). They are NOT included in StructuredFeatureEncoder's BOOLEAN_FIELDS, NUMERIC_FIELDS, or CATEGORICAL_FIELDS and do NOT enter the structured feature vector. There is no confirmed structural leakage via those two fields. is_psif_human_label, is_psif_heuristic_label, and psif_label_source are also excluded from features. Remaining risk: text-level correlation if free-text narratives echo severity assessments used by the heuristic label. This is unquantified and cannot be mitigated via encoder field lists."
+}
