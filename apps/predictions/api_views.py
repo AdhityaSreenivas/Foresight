@@ -541,7 +541,10 @@ class ModelActivateAPIView(APIView):
         import json
         from pathlib import Path
         import joblib
-        import xgboost as xgb
+        try:
+            import xgboost as xgb
+        except ImportError:
+            xgb = None
 
         # 8. Check authorized admin permission
         if not request.user.is_staff and getattr(request.user, "role", None) != "admin":
@@ -600,14 +603,15 @@ class ModelActivateAPIView(APIView):
                 {"error": f"Activation safety gate failed: model.json file not found at {model_file}."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        try:
-            booster = xgb.Booster()
-            booster.load_model(str(model_file))
-        except Exception as e:
-            return Response(
-                {"error": f"Activation safety gate failed: Corrupted XGBoost model file: {e}."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if xgb is not None:
+            try:
+                booster = xgb.Booster()
+                booster.load_model(str(model_file))
+            except Exception as e:
+                return Response(
+                    {"error": f"Activation safety gate failed: Corrupted XGBoost model file: {e}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # 6. Check encoder.joblib exists and loads successfully
         if not candidate.encoder_artifact_path:

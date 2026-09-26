@@ -1,5 +1,8 @@
 import os
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
 from django.core.cache import cache
 import logging
 
@@ -15,8 +18,8 @@ def get_industrial_image(query='industrial safety worker', orientation='landscap
     """
     fallback_image = '/static/img/hero.jpg' if orientation == 'landscape' else '/static/img/auth_hero.jpg'
     
-    if not PEXELS_API_KEY:
-        logger.info("PEXELS_API_KEY not found. Returning local fallback imagery.")
+    if not PEXELS_API_KEY or requests is None:
+        logger.info("PEXELS_API_KEY not found or requests unavailable. Returning local fallback imagery.")
         return fallback_image
 
     cache_key = f"pexels_img_{query}_{orientation}"
