@@ -236,20 +236,50 @@ if "rediss://" in CELERY_RESULT_BACKEND:
     CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": None}
 
 # Upstash / remote Redis keepalive and resilience options
-CELERY_REDIS_SOCKET_KEEPALIVE = True
+import socket
+
+if sys.platform == "darwin":
+    _TCP_KEEPIDLE = getattr(socket, "TCP_KEEPALIVE", 0x10)
+else:
+    _TCP_KEEPIDLE = getattr(socket, "TCP_KEEPIDLE", 4)
+_TCP_KEEPINTVL = getattr(socket, "TCP_KEEPINTVL", 0x101 if sys.platform == "darwin" else 5)
+_TCP_KEEPCNT = getattr(socket, "TCP_KEEPCNT", 0x102 if sys.platform == "darwin" else 6)
+
+_redis_socket_keepalive_options = {
+    _TCP_KEEPIDLE: 10,
+    _TCP_KEEPINTVL: 5,
+    _TCP_KEEPCNT: 3,
+}
+
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "socket_keepalive": True,
+    "socket_keepalive_options": _redis_socket_keepalive_options,
     "retry_on_timeout": True,
-    "socket_timeout": 30.0,
-    "socket_connect_timeout": 30.0,
-    "health_check_interval": 25,
+    "socket_timeout": 15.0,
+    "socket_connect_timeout": 15.0,
+    "health_check_interval": 10,
+    "brpop_timeout": 5,
+    "visibility_timeout": 3600,
 }
-CELERY_REDIS_BACKEND_TRANSPORT_OPTIONS = {
-    "socket_keepalive": True,
-    "retry_on_timeout": True,
-    "socket_timeout": 30.0,
-    "socket_connect_timeout": 30.0,
-    "health_check_interval": 25,
+
+# Redis Result Backend configuration (Celery RedisBackend specific settings)
+CELERY_REDIS_SOCKET_KEEPALIVE = True
+CELERY_REDIS_RETRY_ON_TIMEOUT = True
+CELERY_REDIS_SOCKET_TIMEOUT = 15.0
+CELERY_REDIS_SOCKET_CONNECT_TIMEOUT = 15.0
+CELERY_REDIS_BACKEND_HEALTH_CHECK_INTERVAL = 10
+
+# Celery Beat Periodic Watchdog Schedule
+CELERY_BEAT_SCHEDULE = {
+    "watchdog-recover-stale-datasets": {
+        "task": "apps.datasets.tasks.watchdog_recover_stale_datasets_task",
+        "schedule": 60.0,
+        "args": (60,),
+    },
+    "compute-pattern-alerts": {
+        "task": "apps.dashboard.tasks.compute_pattern_detection_alerts",
+        "schedule": 300.0,
+    },
 }
 
 # Reliability & crash resilience

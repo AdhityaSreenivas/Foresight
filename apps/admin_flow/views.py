@@ -796,6 +796,13 @@ class AdminFlowLiveStatusAPI(APIView):
         if not dataset:
             dataset = get_admin_flow_datasets().order_by("-created_at").first()
 
+        if dataset and dataset.status in ("processing", "retrying"):
+            try:
+                from apps.datasets.recovery import check_and_recover_dataset
+                dataset = check_and_recover_dataset(dataset, stale_timeout_seconds=30)
+            except Exception as e:
+                logger.debug("Live status recovery check failed: %s", e)
+
         if dataset:
             incidents_qs = get_admin_flow_incidents().filter(dataset=dataset)
         else:
