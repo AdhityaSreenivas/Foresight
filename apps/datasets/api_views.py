@@ -313,6 +313,9 @@ class ProcessDatasetView(APIView):
         try:
             task = process_task.delay(str(dataset.id))
             task_id = getattr(task, "id", None)
+            dataset.current_task_id = task_id
+            dataset.last_heartbeat_at = now
+            dataset.save(update_fields=["current_task_id", "last_heartbeat_at"])
             logger.info("Dataset processing dispatched via Celery: dataset=%s task_id=%s", dataset.id, task_id)
         except Exception as broker_exc:
             from django.conf import settings

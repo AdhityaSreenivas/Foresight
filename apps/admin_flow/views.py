@@ -5,6 +5,8 @@ Dedicated, fully isolated views for demonstration evaluators.
 Every view strictly enforces the Admin Flow access control contract and data scope.
 """
 import logging
+import sys
+from django.utils import timezone
 
 
 from django.db.models import Count, Q, Avg
@@ -187,7 +189,11 @@ class AdminFlowUploadDatasetView(AdminFlowRequiredMixin, TemplateView):
             else:
                 try:
                     from apps.datasets.tasks import process_dataset
-                    process_dataset.delay(str(dataset.id))
+                    task = process_dataset.delay(str(dataset.id))
+                    dataset.current_task_id = getattr(task, "id", None)
+                    dataset.last_heartbeat_at = timezone.now()
+                    dataset.save(update_fields=["current_task_id", "last_heartbeat_at"])
+                    logger.info("Admin Flow dataset %s dispatched via Celery: task_id=%s", dataset.id, dataset.current_task_id)
                 except Exception as broker_err:
                     logger.warning("Celery broker dispatch failed in Admin Flow (%s) — using fallback thread", broker_err)
                     import threading

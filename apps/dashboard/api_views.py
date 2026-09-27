@@ -1,7 +1,10 @@
+import logging
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+
+logger = logging.getLogger(__name__)
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
 from apps.incidents.models import Incident
